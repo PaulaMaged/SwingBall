@@ -1,20 +1,41 @@
 using UnityEngine;
+using UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets;
+using UnityEngine.XR.OpenXR.Input;
 
 public class ReverseSpeed : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    public Transform poleTransform;
+
+    [SerializeField]
+    private float ropeLength;
+
+    private Rigidbody rigidBody;
+    private Vector3 relativePosition = new(-3, 0, 0);
     private RotatePivot rotatePivotScript;
+
+    private Vector3 offset;
+
     void Start()
     {
         rotatePivotScript = GetComponentInParent<RotatePivot>();
+        rigidBody = GetComponent<Rigidbody>();
+        offset = transform.position - poleTransform.position;
     }
 
-    public void OnTriggerEnter(Collider other)
+    private void FixedUpdate()
     {
-        Debug.Log("Triggered");
-        if(other.gameObject.CompareTag("Racket"))
-        {
-            rotatePivotScript.rotationSpeed *= -1;
-        }
+        rigidBody.angularVelocity = Vector3.zero;
+        rigidBody.linearVelocity = Vector3.zero;
+    }
+
+    public void OnCollisionEnter(Collision other)
+    {
+        Debug.Log("Change direction collision");
+        Vector3 contactNormal = other.contacts[0].normal;
+        Vector3 bounceDirection = Vector3.Reflect(offset, contactNormal);
+        bounceDirection.Normalize();
+
+        rotatePivotScript.ChangeDirection(bounceDirection);
+
     }
 }
