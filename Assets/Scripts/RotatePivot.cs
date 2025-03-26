@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem.Controls;
+using static UnityEngine.GridBrushBase;
 
 public class RotatePivot : MonoBehaviour
 {
@@ -11,6 +12,7 @@ public class RotatePivot : MonoBehaviour
     public float rotationSpeed = 1;
 
     private Vector3 offset;
+    private Vector3 rotationAxis;
 
     public void Start()
     {
@@ -21,16 +23,13 @@ public class RotatePivot : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        //Vector3 radial = (ball.transform.position - transform.position).normalized;
-        //Vector3 rotationAxis = Vector3.Cross(radial, rotationDirection).normalized;
-
-
-        Vector3 rotationAxis = Vector3.Cross(offset, rotationDirection).normalized;
-        transform.RotateAround(transform.position, rotationAxis, Time.deltaTime * rotationSpeed);
+            Quaternion deltaRotation = Quaternion.AngleAxis(rotationSpeed * Time.deltaTime, rotationAxis);
+            transform.rotation *= deltaRotation;
     }
-
     public void ChangeDirection(Vector3 newDirection)
     {
         rotationDirection = newDirection;
+        rotationAxis = Vector3.Cross(offset, rotationDirection).normalized;
+        Debug.DrawRay(transform.position, rotationAxis, Color.yellow, 2f);
     }
 }

@@ -6,7 +6,7 @@ public class ShowCollisionDebugInfo : MonoBehaviour
     {
         Vector3 startPoint = collision.contacts[0].point;
         Vector3 normalDirection = collision.contacts[0].normal;
-        Debug.DrawRay(startPoint, normalDirection, Color.red, 1f);
+        Debug.DrawRay(startPoint, normalDirection, Color.red, 2f);
     }
 
 }

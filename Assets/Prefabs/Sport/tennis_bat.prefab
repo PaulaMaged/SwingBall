@@ -389,7 +389,7 @@ GameObject:
   - component: {fileID: 3657178777034281964}
   m_Layer: 0
   m_Name: tennis_bat
-  m_TagString: Untagged
+  m_TagString: Racket
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -434,8 +434,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 0.32098347, y: 0.41559076, z: 0.051195923}
-  m_Center: {x: -0.0035800934, y: 0.58738565, z: -0.0039671864}
+  m_Size: {x: 0.32098347, y: 0.5, z: 0.1}
+  m_Center: {x: -0.0035800934, y: 0.58738565, z: 0.0071118213}
 --- !u!54 &3657178777034281964
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -444,7 +444,7 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5436868260460024349}
   serializedVersion: 4
-  m_Mass: 1
+  m_Mass: 0.3
   m_Drag: 0
   m_AngularDrag: 0.05
   m_CenterOfMass: {x: 0, y: 0, z: 0}
@@ -458,8 +458,8 @@ Rigidbody:
     m_Bits: 0
   m_ImplicitCom: 1
   m_ImplicitTensor: 1
-  m_UseGravity: 1
-  m_IsKinematic: 1
+  m_UseGravity: 0
+  m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
