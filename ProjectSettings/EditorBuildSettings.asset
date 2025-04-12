@@ -6,11 +6,14 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/PlayerControllerTest.unity
+    path: Assets/MyAssets/Scenes/PlayerControllerTest.unity
     guid: 99c9720ab356a0642a771bea13969a05
   - enabled: 1
-    path: Assets/Scenes/MultiplayerTest.unity
+    path: Assets/MyAssets/Scenes/Multiplayer/MultiplayerTest.unity
     guid: d7f76b94478eb90488aea26692def23f
+  - enabled: 1
+    path: Assets/MyAssets/Scenes/Multiplayer/MultiplayerSwingBall.unity
+    guid: 320cb4451f1cd444cba3f2b70e062332
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
     com.unity.xr.management.loader_settings: {fileID: 11400000, guid: e94d081c855f7474c895723c15b7ba39, type: 2}
