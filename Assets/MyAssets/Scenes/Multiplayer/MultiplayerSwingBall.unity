@@ -555,6 +555,7 @@ GameObject:
   - component: {fileID: 738995346}
   - component: {fileID: 738995345}
   - component: {fileID: 738995347}
+  - component: {fileID: 738995349}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -589,6 +590,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4bf58e184de364c438ccb749bb239a7e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ShowTopMostFoldoutHeaderGroup: 1
   ball: {fileID: 6452027078451532429}
   poleTransform: {fileID: 1488511845}
 --- !u!114 &738995346
@@ -603,6 +605,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 366340121b49a2b4fbd76da0950da8d4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ShowTopMostFoldoutHeaderGroup: 1
   players: []
   playerClientIds: 
   playerPositions: []
@@ -646,6 +649,18 @@ MonoBehaviour:
   AutoObjectParentSync: 1
   SyncOwnerTransformWhenParented: 1
   AllowOwnerToParent: 0
+--- !u!114 &738995349
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 738995343}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2b1d0f052f861bc4a9a316b59aa5a626, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &851698585
 GameObject:
   m_ObjectHideFlags: 0
@@ -869,7 +884,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
   followPlayer: 1
-  deltaDistance: 0.1
   curveDuration: 1
 --- !u!1 &1488511843
 GameObject:
@@ -903,40 +917,7 @@ Transform:
   - {fileID: 1389334781734439045}
   m_Father: {fileID: 1636617707}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1636617706
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1636617707}
-  m_Layer: 0
-  m_Name: SwingBall
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1636617707
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1636617706}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 1488511845}
-  - {fileID: 97115447}
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1001 &1924507847
+--- !u!1001 &1527604754
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
@@ -993,6 +974,39 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 18ddb545287c546e19cc77dc9fbb2189, type: 3}
+--- !u!1 &1636617706
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1636617707}
+  m_Layer: 0
+  m_Name: SwingBall
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1636617707
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1636617706}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1488511845}
+  - {fileID: 97115447}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2134205961
 GameObject:
   m_ObjectHideFlags: 0
@@ -1108,9 +1122,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 2134205961}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5e6fce708b903844392023678a808dea, type: 3}
+  m_Script: {fileID: 11500000, guid: 5e6760ad6c6e18448be8d33e6d0203b9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  connectionTimeout: 1
 --- !u!4 &1389334781734439045
 Transform:
   m_ObjectHideFlags: 0
@@ -1246,9 +1261,9 @@ GameObject:
   - component: {fileID: 2287854402110385552}
   - component: {fileID: 1267984355}
   - component: {fileID: 6452027078451532430}
-  - component: {fileID: 1267984360}
   - component: {fileID: 6452027078451532431}
   - component: {fileID: 6452027078451532432}
+  - component: {fileID: 1267984360}
   m_Layer: 0
   m_Name: MyTennisBall
   m_TagString: Untagged
@@ -1332,8 +1347,8 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   NetworkRigidbodyBaseExpanded: 0
   UseRigidBodyForMotion: 0
-  AutoUpdateKinematicState: 1
-  AutoSetKinematicOnDespawn: 1
+  AutoUpdateKinematicState: 0
+  AutoSetKinematicOnDespawn: 0
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -1345,4 +1360,4 @@ SceneRoots:
   - {fileID: 851698587}
   - {fileID: 2134205964}
   - {fileID: 593125585}
-  - {fileID: 1924507847}
+  - {fileID: 1527604754}

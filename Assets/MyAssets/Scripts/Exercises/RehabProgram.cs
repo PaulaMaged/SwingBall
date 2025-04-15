@@ -5,6 +5,11 @@ using UnityEngine.UI;
 using Unity.Netcode;
 using Unity.VisualScripting;
 using System;
+using Unity.Collections;
+using UnityEngine.TextCore.LowLevel;
+using UnityEditor.Experimental.GraphView;
+using UnityEngine.InputSystem;
+using Unity.Android.Gradle.Manifest;
 
 public class RehabProgram : NetworkBehaviour
 {
@@ -14,10 +19,20 @@ public class RehabProgram : NetworkBehaviour
     public Transform contentParent;
     public GameObject ProgressCanvasPrefab;
     private GameObject ProgressCanvasInstance;
+
+    [SerializeField] private GameObject ReferenceCharacterPrefab;
+    private GameObject ReferenceCharacterInstance;
+    private Animator ReferenceCharacterAnimator;
+    
     private Dictionary<string, TMP_Text> FieldNameReferencePair = new();
     private NetworkVariable<ExerciseProgress> exerciseProgress = new(writePerm: NetworkVariableWritePermission.Owner);
 
-    private int currentExerciseIndex = 0;
+    public bool IsPatient { get; private set; } = true;
+
+    private int currentExerciseIndex = -1;
+
+    [SerializeField] private InputActionReference StartExerciseButton;
+    [SerializeField] private InputActionReference PoseConfirmationButton;
 
     public void Awake()
     {
@@ -29,6 +44,8 @@ public class RehabProgram : NetworkBehaviour
 
         if (!IsHost) return;
 
+        IsPatient = false;
+        exerciseProgress.Value = new ExerciseProgress(currentExerciseIndex);
         ConfigureExercises();
     }
 
@@ -41,38 +58,42 @@ public class RehabProgram : NetworkBehaviour
             //replace with exercise name
             entry.transform.Find("Exercise Name").GetComponent<TMP_Text>().text = exercise.Name;
 
-            //attach listener on value change to update exercise value
-            GameObject SetsGO = entry.transform.Find("Sets").gameObject;
-            TMP_Text setsUIText = SetsGO.transform.Find("value").GetComponent<TMP_Text>();
+            ConfigureSlider(
+                parent: entry.transform.Find("Sets").gameObject,
+                initialValue: exercise.Sets,
+                onValueChanged: (newValue) => exercise.Sets = (int)newValue
+                );
+            
+            ConfigureSlider(
+                parent: entry.transform.Find("Reps").gameObject,
+                initialValue: exercise.Reps,
+                onValueChanged: (newValue) => exercise.Reps = (int)newValue
+                );
 
-            Slider setsSlider = SetsGO.transform.Find("Slider").GetComponent<Slider>();
-            setsSlider.onValueChanged.AddListener((value) =>
-            {
-                exercise.Sets = (int)value;
-                setsUIText.text = value.ToString();
-            });
-
-            GameObject RepsGO = entry.transform.Find("Reps").gameObject;
-            TMP_Text repsUIText = RepsGO.transform.Find("value").GetComponent<TMP_Text>();
-
-            Slider repsSlider = RepsGO.transform.Find("Slider").GetComponent<Slider>();
-            repsSlider.onValueChanged.AddListener((value) =>
-            {
-                exercise.Reps = (int)value;
-                repsUIText.text = value.ToString();
-
-            });
-
-            GameObject BreakTimeGO = entry.transform.Find("BreakTime").gameObject;
-            TMP_Text breakTimeUIText = BreakTimeGO.transform.Find("value").GetComponent<TMP_Text>();
-
-            Slider BreakTimeSlider = BreakTimeGO.transform.Find("Slider").GetComponent<Slider>();
-            BreakTimeSlider.onValueChanged.AddListener((value) =>
-            {
-                exercise.breakTimeSeconds = (int)value;
-                breakTimeUIText.text = value.ToString();
-            });
+            ConfigureSlider(
+                parent: entry.transform.Find("BreakTime").gameObject,
+                initialValue: exercise.breakTimeSeconds,
+                onValueChanged: (newValue) => exercise.breakTimeSeconds = (int)newValue
+                );
         }
+    }
+
+    private void ConfigureSlider(GameObject parent, int initialValue, Action<float> onValueChanged)
+    {
+        TMP_Text textComponent = parent.transform.Find("value").GetComponent<TMP_Text>();
+
+
+        textComponent.text = initialValue.ToString();
+
+        Slider valueSlider = parent.transform.Find("Slider").GetComponent<Slider>();
+        valueSlider.value = initialValue;
+
+        valueSlider.onValueChanged.AddListener((newValue) =>
+        {
+            onValueChanged(newValue);
+            textComponent.text = newValue.ToString();
+        });
+
     }
 
     public bool IsProgramCompleted() {
@@ -82,48 +103,6 @@ public class RehabProgram : NetworkBehaviour
             return false;
     }
 
-    //manage exercises
-    private void ExecuteExercises()
-    {
-        //check if exercise is completed
-        //if(IsExerciseCompleted())
-        //{
-        //    currentExerciseIndex++;
-        //    if(IsProgramCompleted())
-        //    {
-        //        //HandleProgramFinished();
-        //        Debug.Log("Finished Program");
-        //        return;
-        //    } else
-        //    {
-        //        exerciseProgress.SetupExercise(currentExerciseIndex);
-        //    }
-        //}
-
-        //check if currently taking break
-        //if (IsBreakTime())
-        //{
-        //    UpdateBreakTime();
-        //    return;
-        //}
-
-        //
-        throw new NotImplementedException();
-    }
-
-    public bool IsExerciseCompleted()
-    {
-        //bool RepsCompleted = Exercises[currentExerciseIndex].Reps == exerciseProgress.repsDone;
-        //bool SetsCompleted = Exercises[currentExerciseIndex].Sets == exerciseProgress.setsDone;
-
-        //if(RepsCompleted && SetsCompleted)
-        //    return true;
-        //else
-        //    return false;
-
-        throw new NotImplementedException();
-    }
-
     [Rpc(SendTo.ClientsAndHost)]
     public void InitiateExercisesRpc()
     {
@@ -131,12 +110,66 @@ public class RehabProgram : NetworkBehaviour
         Vector3 canvasPosition = BallManager.instance.poleTransform.position + Vector3.forward * 10 + Vector3.up * 4;
         Quaternion canvasRotation = Quaternion.identity;
         ProgressCanvasInstance = Instantiate(ProgressCanvasPrefab, canvasPosition, canvasRotation);
+        ReferenceCharacterInstance = Instantiate(ReferenceCharacterPrefab);
+        ReferenceCharacterAnimator = ReferenceCharacterInstance.GetComponent<Animator>();
         CacheUIFields();
-        UpdateProgressUI();
         exerciseProgress.OnValueChanged += UpdateProgressUI;
+        PoseConfirmationButton.action.started += SetupAnchorPoint;
 
-        //Start Setting BallPositions through serverRPC as ball is owned by server
+        if (!IsOwner) return;
+        SetupNextExercise();
+    }
 
+    [Rpc(SendTo.ClientsAndHost)]
+    public void PlayReferenceCharacterAnimationRpc()
+    {
+        ReferenceCharacterAnimator.Play(Exercises[currentExerciseIndex + 1].Name);
+    }
+
+    //called on owner side
+    public void SetupNextExercise()
+    {
+        //increments index by one locally so that the networkvariable isn't waited for
+        PlayReferenceCharacterAnimationRpc();
+
+        currentExerciseIndex++;
+        //link with canvas
+        exerciseProgress.Value = new ExerciseProgress(currentExerciseIndex);
+
+        //reset information from server side
+        MoveToNewExerciseRpc();
+
+        //indicator for what the current static pose required is and when it is matched
+    }
+
+    [Rpc(SendTo.Server)]
+    public void MoveToNewExerciseRpc()
+    {
+        BallManager.instance.SetBallPositionToIdle();
+        PlayerManager.instance.ClearBallHomePositions();
+        StartExerciseButton.action.started += StartExercise;
+    }
+
+    public void StartExercise(InputAction.CallbackContext context)
+    {
+        StartExerciseRpc();
+    }
+
+    [Rpc(SendTo.Server)]
+    public void StartExerciseRpc()
+    {
+        if (!PlayerManager.instance.IsAllBallHomePositionsSet()) return;
+
+        BallManager.instance.SetupBall();
+        StartExerciseButton.action.started -= StartExercise;
+    }
+
+    public void SetupAnchorPoint(InputAction.CallbackContext context)
+    {
+        Debug.Log($"Called Pose Confirmation Function with ClientId: {NetworkManager.Singleton.LocalClientId}");
+        if (IsPatient && !PoseManager.instance.HasSatisfiedPoseAccuracy()) return; //for the local instance to find out the accuracy of its avatar
+
+        PlayerManager.instance.SetBallHomePositionRpc(NetworkManager.Singleton.LocalClientId);
     }
 
     public void CacheUIFields()
@@ -147,7 +180,6 @@ public class RehabProgram : NetworkBehaviour
         foreach(TMP_Text tmp in exerciseStatsFields)
         {
             string gameObjectName = tmp.gameObject.name;
-            Debug.Log($"GameObject Name: {gameObjectName}");
 
             if(gameObjectName == "Reps")
             {
@@ -165,10 +197,8 @@ public class RehabProgram : NetworkBehaviour
         }
 
     }
-
     public void UpdateProgressUI(ExerciseProgress previous, ExerciseProgress current)
     {
-        Debug.Log("UI Update Trigger");
         TMP_Text tmp;
 
         FieldNameReferencePair.TryGetValue("Reps", out tmp);
@@ -184,35 +214,31 @@ public class RehabProgram : NetworkBehaviour
         tmp.text = current.breakTimeLeft.ToString();
     }
 
-    public void UpdateProgressUI()
+    public ExerciseConfiguration[] GetExerciseConfigurations()
     {
-        Debug.Log("UI Update Trigger");
-        TMP_Text tmp;
+        ExerciseConfiguration[] exerciseConfigurations = new ExerciseConfiguration[Exercises.Count];
+        for(int i = 0; i < Exercises.Count; i++)
+        {
+            Exercise exercise = Exercises[i];
+            ExerciseConfiguration exerciseConfiguration = new(exercise);
+            exerciseConfigurations[i] = exerciseConfiguration;
+        }
 
-        FieldNameReferencePair.TryGetValue("Reps", out tmp);
-        tmp.text = exerciseProgress.Value.repsDone.ToString();
-
-        FieldNameReferencePair.TryGetValue("Sets", out tmp);
-        tmp.text = exerciseProgress.Value.setsDone.ToString();
-
-        FieldNameReferencePair.TryGetValue("ExerciseName", out tmp);
-        tmp.text = Exercises[exerciseProgress.Value.exerciseIndex].name;
-
-        FieldNameReferencePair.TryGetValue("BreakTime", out tmp);
-        tmp.text = exerciseProgress.Value.breakTimeLeft.ToString();
+        return exerciseConfigurations;
     }
 
-    public void SetupNextExercise()
+    [Rpc(SendTo.Owner)] 
+    public void SyncExerciseConfigurationRpc(ExerciseConfiguration[] exerciseConfigurations)
     {
-        currentExerciseIndex++;
+        for(int i = 0; i < exerciseConfigurations.Length; i++) 
+        {
+            ExerciseConfiguration exerciseConfiguration = exerciseConfigurations[i];
+            Exercise exercise = Exercises[i];
 
-        exerciseProgress.Value = new ExerciseProgress(currentExerciseIndex);
-
-        //setup home positions for players -- pressing button whilst inside of 
-
-        //link with canvas
-
-        //indicator for what the current static pose required is and when it is matched
+            exercise.Reps = exerciseConfiguration.RepCount;
+            exercise.Sets = exerciseConfiguration.SetCount;
+            exercise.breakTimeSeconds = exerciseConfiguration.BreakTimeSeconds;
+        }
     }
 
     public struct ExerciseProgress : INetworkSerializable 
@@ -240,6 +266,26 @@ public class RehabProgram : NetworkBehaviour
             serializer.SerializeValue(ref repsDone);
             serializer.SerializeValue(ref setsDone);
             serializer.SerializeValue(ref breakTimeLeft);
+        }
+    }
+
+    public struct ExerciseConfiguration : INetworkSerializable
+    {
+        public int RepCount;
+        public int SetCount;
+        public int BreakTimeSeconds;
+
+        public ExerciseConfiguration(Exercise exercise)
+        {
+            RepCount = exercise.Reps;
+            SetCount = exercise.Sets;
+            BreakTimeSeconds = exercise.breakTimeSeconds;
+        }
+        public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
+        {
+            serializer.SerializeValue(ref RepCount);
+            serializer.SerializeValue(ref SetCount);
+            serializer.SerializeValue(ref BreakTimeSeconds);
         }
     }
 }

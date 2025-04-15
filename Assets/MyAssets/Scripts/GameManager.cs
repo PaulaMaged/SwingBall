@@ -21,15 +21,14 @@ public class GameManager : NetworkBehaviour
     public void StartGame()
     {
         PlayerManager.instance.SetPlayerPositions();
-        //PlayerManager.instance.InitiateHomePositions();
-        //BallManager.instance.SetupBall();
-
+        GameStarted = true;
         ProgramUI.SetActive(false);
         _RehabProgram = ExerciseProgram.GetComponentInChildren<RehabProgram>();
 
         //handoff ownership of rehabProgram to client
         ulong clientId = Array.Find<ulong>(PlayerManager.instance.playerClientIds, id => id != 0);
         ExerciseProgram.GetComponent<NetworkObject>().ChangeOwnership(clientId);
+        _RehabProgram.SyncExerciseConfigurationRpc(_RehabProgram.GetExerciseConfigurations());
         _RehabProgram.InitiateExercisesRpc();
     }
 
@@ -39,7 +38,6 @@ public class GameManager : NetworkBehaviour
 
         if(!NetworkManager.Singleton.IsHost)
         {
-            gameObject.SetActive(false);
             return;
         }
 

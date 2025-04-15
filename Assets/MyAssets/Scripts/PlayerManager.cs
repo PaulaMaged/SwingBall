@@ -1,3 +1,5 @@
+using Mono.Cecil;
+using System;
 using System.Linq;
 using Unity.Netcode;
 using Unity.VisualScripting;
@@ -5,7 +7,7 @@ using Unity.XR.CoreUtils;
 using UnityEditor;
 using UnityEngine;
 
-public class PlayerManager : MonoBehaviour
+public class PlayerManager : NetworkBehaviour
 {
     public static PlayerManager instance;
 
@@ -44,7 +46,6 @@ public class PlayerManager : MonoBehaviour
         int radius = distanceToPole;
 
         Vector3 startPosition = BallManager.instance.poleTransform.position;
-        Debug.Log($"offset position for players: {startPosition}");
 
         for(int i = 0; i < playerPositions.Length; i++)
         {
@@ -56,14 +57,31 @@ public class PlayerManager : MonoBehaviour
         }
     }
 
-    public void InitiateHomePositions()
+    public Vector3 GetBallAnchorPositionForLocalPlayer()
     {
-        for (int i = 0; i < homePositions.Length; i++)
-        {
-            Rackets[i] = players[i].GetNamedChild("Bat");
-            homePositions[i] = Rackets[i].GetNamedChild("BallAnchor").transform.position;
-            Debug.Log("Home Position " + i + ": " + homePositions[i]);
-        }
+        ulong localClientId = NetworkManager.Singleton.LocalClientId;
+        int playerIndex = Array.FindIndex<ulong>(playerClientIds, playerClientId => playerClientId == localClientId);
+        return Rackets[playerIndex].GetNamedChild("BallAnchor").transform.position;
+    }
+
+    [Rpc(SendTo.Server)]
+    public void SetBallHomePositionRpc(ulong clientId)
+    {
+        int playerIndex = Array.FindIndex<ulong>(playerClientIds, playerClientId => playerClientId == clientId);
+        Debug.Log($"The Player Index to set ball home position at is: {playerIndex}");
+        homePositions[playerIndex] = Rackets[playerIndex].GetNamedChild("BallAnchor").transform.position;
+    }
+
+    public bool IsAllBallHomePositionsSet()
+    {
+        bool IsAllHomePositionsSet = homePositions.All(homePosition => homePosition != default);
+        Debug.Log($"Can Game start? : {(IsAllHomePositionsSet? "Yes" : "No")}");
+        return IsAllHomePositionsSet;
+    }
+
+    public void ClearBallHomePositions()
+    {
+        homePositions.Initialize();
     }
 
     public bool AddPlayer(ulong playerNetworkObjectId)
@@ -78,6 +96,8 @@ public class PlayerManager : MonoBehaviour
         }
         playerClientIds[playerCount] = playerNetworkObject.OwnerClientId;
         players[playerCount] = player;
+        Rackets[playerCount] = players[playerCount].GetNamedChild("RBat");
+
         playerCount++;
         return true;
     }
@@ -92,8 +112,14 @@ public class PlayerManager : MonoBehaviour
         return players[(currentPlayerIndex + 1) % playerCount];
     }
 
-    public void SwitchTurn()
+    [Rpc(SendTo.ClientsAndHost)]
+    public void SwitchTurnRpc()
     {
+        if(RehabProgram.Instance.IsPatient)
+        {
+
+        }
+
         // Disable current bats's collider
         Rackets[currentPlayerIndex].GetComponent<Collider>().enabled = false;
         // Move to next player
@@ -102,11 +128,8 @@ public class PlayerManager : MonoBehaviour
         Rackets[currentPlayerIndex].GetComponent<Collider>().enabled = true;
     }
 
-    public Vector3 GetCurrentPlayerHomePosition()
+    public Vector3 GetCurrentPlayerBallHomePosition()
     {
-        //Debug statement
-        Vector3 currentPosition = Rackets[currentPlayerIndex].GetNamedChild("BallAnchor").transform.position;
-
         return homePositions[currentPlayerIndex];
     }
 
@@ -119,7 +142,7 @@ public class PlayerManager : MonoBehaviour
 
             PlayerNetworkManager playerNetworkManager = player.GetComponent<PlayerNetworkManager>();
 
-            playerNetworkManager.UpdatePlayerPositionClientRpc(playerPositions[i++]);
+            playerNetworkManager.UpdatePlayerPositionAndRotationRpc(playerPositions[i++]);
         }
     }
 }

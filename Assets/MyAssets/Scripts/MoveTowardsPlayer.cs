@@ -8,7 +8,6 @@ public class MoveTowardsPlayer : NetworkBehaviour
 {
     public bool followPlayer = false;
 
-    public float deltaDistance = 0.1f;
     private Vector3 hitDirection = Vector3.zero;
     private Vector3 previousPosition = Vector3.zero;
 
@@ -26,8 +25,7 @@ public class MoveTowardsPlayer : NetworkBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
-        Debug.Log($"Collided with game object name: {collision.gameObject.name}");
-        if (!followPlayer || !GameManager.Instance.GameStarted) return;
+        if (!IsServer || !followPlayer || !GameManager.Instance.GameStarted) return;
 
         if(isCoroutineRunning) StopCoroutine(coroutine);
 
@@ -55,7 +53,7 @@ public class MoveTowardsPlayer : NetworkBehaviour
 
         if (collision.gameObject.CompareTag("Racket"))
         {
-            PlayerManager.instance.SwitchTurn();
+            PlayerManager.instance.SwitchTurnRpc();
         }
 
         Vector3 p0;
@@ -64,7 +62,7 @@ public class MoveTowardsPlayer : NetworkBehaviour
 
         p0 = collision.contacts[0].point;
         p1 = p0 + hitDirection.normalized * 5f;
-        p2 = PlayerManager.instance.GetCurrentPlayerHomePosition();
+        p2 = PlayerManager.instance.GetCurrentPlayerBallHomePosition();
 
         //the bezier curve points visualization;
         Debug.DrawLine(p0, p1, Color.blue, 2f);

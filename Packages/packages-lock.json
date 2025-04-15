@@ -265,7 +265,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.xr.core-utils": {
-      "version": "file:com.unity.xr.core-utils@c0df0dd5bced",
+      "version": "file:com.unity.xr.core-utils",
       "depth": 0,
       "source": "embedded",
       "dependencies": {
@@ -318,6 +318,13 @@
         "com.unity.inputsystem": "1.6.3",
         "com.unity.xr.core-utils": "2.3.0"
       }
+    },
+    "com.veriorpies.parrelsync": {
+      "version": "https://github.com/VeriorPies/ParrelSync.git?path=/ParrelSync",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "610157ad762084380380148ba8ce14e266a6da97"
     },
     "com.unity.modules.accessibility": {
       "version": "1.0.0",
