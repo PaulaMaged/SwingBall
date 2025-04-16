@@ -1,3 +1,4 @@
+using System.Collections;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem.XR;
@@ -20,6 +21,7 @@ public class PlayerNetworkManager : NetworkBehaviour
         //by default, all components for player movement are off for reasons beyond this comment
         EnablePlayerMovement();
         var netObjId = GetComponent<NetworkObject>().NetworkObjectId;
+        
         UpdatePlayerListRpc(netObjId);
 
         //Ensure player's camera shows on screen
@@ -40,7 +42,7 @@ public class PlayerNetworkManager : NetworkBehaviour
     [Rpc(SendTo.Server)]
     void UpdatePlayerListRpc(ulong playerNetworkObjectId)
     {
-        PlayerManager.instance.AddPlayer(playerNetworkObjectId);
+        StartCoroutine(PlayerManager.instance.AddPlayer(playerNetworkObjectId));
     }
 
     [Rpc(SendTo.Owner)]

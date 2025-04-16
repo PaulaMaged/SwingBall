@@ -20,7 +20,8 @@ public class GameManager : NetworkBehaviour
     //called by host through canvas
     public void StartGame()
     {
-        PlayerManager.instance.SetPlayerPositions();
+        PlayerManager.instance.SetupPlayerFieldsOnClientRpc();
+        PlayerManager.instance.PlacePlayers();
         GameStarted = true;
         ProgramUI.SetActive(false);
         _RehabProgram = ExerciseProgram.GetComponentInChildren<RehabProgram>();

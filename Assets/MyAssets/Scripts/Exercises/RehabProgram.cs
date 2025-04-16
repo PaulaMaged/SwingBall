@@ -10,6 +10,8 @@ using UnityEngine.TextCore.LowLevel;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine.InputSystem;
 using Unity.Android.Gradle.Manifest;
+using System.Collections;
+using DemoCode;
 
 public class RehabProgram : NetworkBehaviour
 {
@@ -23,16 +25,20 @@ public class RehabProgram : NetworkBehaviour
     [SerializeField] private GameObject ReferenceCharacterPrefab;
     private GameObject ReferenceCharacterInstance;
     private Animator ReferenceCharacterAnimator;
-    
+
     private Dictionary<string, TMP_Text> FieldNameReferencePair = new();
     private NetworkVariable<ExerciseProgress> exerciseProgress = new(writePerm: NetworkVariableWritePermission.Owner);
 
     public bool IsPatient { get; private set; } = true;
+    public bool IsBreakTime { get; private set; } = false;
 
     private int currentExerciseIndex = -1;
 
     [SerializeField] private InputActionReference StartExerciseButton;
     [SerializeField] private InputActionReference PoseConfirmationButton;
+
+    //subscribe to event of collision with player
+
 
     public void Awake()
     {
@@ -63,7 +69,7 @@ public class RehabProgram : NetworkBehaviour
                 initialValue: exercise.Sets,
                 onValueChanged: (newValue) => exercise.Sets = (int)newValue
                 );
-            
+
             ConfigureSlider(
                 parent: entry.transform.Find("Reps").gameObject,
                 initialValue: exercise.Reps,
@@ -96,8 +102,9 @@ public class RehabProgram : NetworkBehaviour
 
     }
 
-    public bool IsProgramCompleted() {
-        if (currentExerciseIndex >= Exercises.Count)
+    public bool IsProgramCompleted()
+    {
+        if (currentExerciseIndex == Exercises.Count)
             return true;
         else
             return false;
@@ -113,17 +120,95 @@ public class RehabProgram : NetworkBehaviour
         ReferenceCharacterInstance = Instantiate(ReferenceCharacterPrefab);
         ReferenceCharacterAnimator = ReferenceCharacterInstance.GetComponent<Animator>();
         CacheUIFields();
+
         exerciseProgress.OnValueChanged += UpdateProgressUI;
         PoseConfirmationButton.action.started += SetupAnchorPoint;
 
         if (!IsOwner) return;
         SetupNextExercise();
+
+    }
+
+    //conditional statements for context checking
+    [Rpc(SendTo.Owner)]
+    public void OnMovementExecutionRpc()
+    {
+        if (IsBreakTime)
+        {
+            Debug.Log("No reps count during break");
+            return;
+        }
+
+        if (!PoseManager.instance.HasSatisfiedPoseAccuracy()) return;
+
+        HandleRep();
+    }
+
+    //responsible for arbitrating the side effects of a rep
+    public void HandleRep()
+    {
+        exerciseProgress.Value = exerciseProgress.Value.AddRep();
+
+        bool FinishedSet = false;
+
+        if (IsRepCountReached()) {
+            exerciseProgress.Value = exerciseProgress.Value.AddSet();
+            FinishedSet = true;
+        }
+
+        if (IsSetCountReached())
+        {
+            SetupNextExercise();
+            return;
+        }
+
+        if (FinishedSet)
+        {
+            exerciseProgress.Value = exerciseProgress.Value.AddBreak();
+            StartCoroutine(InitiateBreakTime());
+        }
+    }
+
+    public IEnumerator InitiateBreakTime()
+    {
+        IsBreakTime = true;
+        BallManager.instance.SetBallPositionToIdleRpc();
+
+        while (exerciseProgress.Value.breakTimeLeft > 0)
+        {
+            yield return new WaitForSeconds(1);
+            exerciseProgress.Value = exerciseProgress.Value.DecrementBreakTime(1);
+        }
+
+        FinishBreak();
+    }
+
+    public void FinishBreak()
+    {
+        IsBreakTime = false;
+        BallManager.instance.SetupBallRpc();
+    }
+
+    public bool IsSetCountReached()
+    {
+        return exerciseProgress.Value.setsDone == Exercises[currentExerciseIndex].Sets;
+    }
+
+    public bool IsRepCountReached()
+    {
+        return exerciseProgress.Value.repsDone == Exercises[currentExerciseIndex].Reps;
     }
 
     [Rpc(SendTo.ClientsAndHost)]
     public void PlayReferenceCharacterAnimationRpc()
     {
-        ReferenceCharacterAnimator.Play(Exercises[currentExerciseIndex + 1].Name);
+        if (exerciseProgress.Value.exerciseIndex + 1 == Exercises.Count)
+        {
+            //this marks the end of the game, have the reference character play a joyful animation :D
+            ReferenceCharacterAnimator.Play("Finish");
+        }
+        else
+            ReferenceCharacterAnimator.Play(Exercises[exerciseProgress.Value.exerciseIndex + 1].Name);
     }
 
     //called on owner side
@@ -133,21 +218,51 @@ public class RehabProgram : NetworkBehaviour
         PlayReferenceCharacterAnimationRpc();
 
         currentExerciseIndex++;
-        //link with canvas
-        exerciseProgress.Value = new ExerciseProgress(currentExerciseIndex);
 
         //reset information from server side
-        MoveToNewExerciseRpc();
+        SetGameToIdleRpc();
+
+        if (!IsProgramCompleted())
+        {
+            MoveToNewExerciseRpc();
+        }
+        else
+        {
+            //Call method responsible for finishing up the game
+            Debug.Log("Game Finished");
+            FinishProgramRpc();
+            return;
+        }
+
+        //link with canvas
+        exerciseProgress.Value = new ExerciseProgress(currentExerciseIndex);
+        Debug.Log($"The Exercise's Details: {Exercises[currentExerciseIndex]}");
 
         //indicator for what the current static pose required is and when it is matched
+    }
+
+    [Rpc(SendTo.Everyone)]
+    public void FinishProgramRpc()
+    {
+        //unsubscribe from events
+        PoseConfirmationButton.action.started -= SetupAnchorPoint;
+        exerciseProgress.OnValueChanged -= UpdateProgressUI;
+
+        //despawn canvas
+        Destroy(ProgressCanvasInstance);
     }
 
     [Rpc(SendTo.Server)]
     public void MoveToNewExerciseRpc()
     {
-        BallManager.instance.SetBallPositionToIdle();
-        PlayerManager.instance.ClearBallHomePositions();
         StartExerciseButton.action.started += StartExercise;
+    }
+
+    [Rpc(SendTo.Server)]
+    public void SetGameToIdleRpc()
+    {
+        BallManager.instance.SetBallPositionToIdleRpc();
+        PlayerManager.instance.ClearBallHomePositions();
     }
 
     public void StartExercise(InputAction.CallbackContext context)
@@ -160,7 +275,7 @@ public class RehabProgram : NetworkBehaviour
     {
         if (!PlayerManager.instance.IsAllBallHomePositionsSet()) return;
 
-        BallManager.instance.SetupBall();
+        BallManager.instance.SetupBallRpc();
         StartExerciseButton.action.started -= StartExercise;
     }
 
@@ -176,21 +291,24 @@ public class RehabProgram : NetworkBehaviour
     {
         //add TMP to dictionary
         TMP_Text[] exerciseStatsFields = ProgressCanvasInstance.transform.Find("Values").GetComponentsInChildren<TMP_Text>();
-        
-        foreach(TMP_Text tmp in exerciseStatsFields)
+
+        foreach (TMP_Text tmp in exerciseStatsFields)
         {
             string gameObjectName = tmp.gameObject.name;
 
-            if(gameObjectName == "Reps")
+            if (gameObjectName == "Reps")
             {
                 FieldNameReferencePair.Add("Reps", tmp);
-            } else if(gameObjectName == "Sets")
+            }
+            else if (gameObjectName == "Sets")
             {
                 FieldNameReferencePair.Add("Sets", tmp);
-            } else if(gameObjectName == "ExerciseName")
+            }
+            else if (gameObjectName == "ExerciseName")
             {
                 FieldNameReferencePair.Add("ExerciseName", tmp);
-            } else if( gameObjectName == "BreakTime")
+            }
+            else if (gameObjectName == "BreakTime")
             {
                 FieldNameReferencePair.Add("BreakTime", tmp);
             }
@@ -217,7 +335,7 @@ public class RehabProgram : NetworkBehaviour
     public ExerciseConfiguration[] GetExerciseConfigurations()
     {
         ExerciseConfiguration[] exerciseConfigurations = new ExerciseConfiguration[Exercises.Count];
-        for(int i = 0; i < Exercises.Count; i++)
+        for (int i = 0; i < Exercises.Count; i++)
         {
             Exercise exercise = Exercises[i];
             ExerciseConfiguration exerciseConfiguration = new(exercise);
@@ -227,10 +345,10 @@ public class RehabProgram : NetworkBehaviour
         return exerciseConfigurations;
     }
 
-    [Rpc(SendTo.Owner)] 
+    [Rpc(SendTo.Owner)]
     public void SyncExerciseConfigurationRpc(ExerciseConfiguration[] exerciseConfigurations)
     {
-        for(int i = 0; i < exerciseConfigurations.Length; i++) 
+        for (int i = 0; i < exerciseConfigurations.Length; i++)
         {
             ExerciseConfiguration exerciseConfiguration = exerciseConfigurations[i];
             Exercise exercise = Exercises[i];
@@ -241,7 +359,7 @@ public class RehabProgram : NetworkBehaviour
         }
     }
 
-    public struct ExerciseProgress : INetworkSerializable 
+    public struct ExerciseProgress : INetworkSerializable
     {
         public int exerciseIndex;
         public int repsDone;
@@ -256,9 +374,35 @@ public class RehabProgram : NetworkBehaviour
             breakTimeLeft = 0;
         }
 
-        public void AddRep() { repsDone++; }
+        public ExerciseProgress AddRep()
+        {
+            ExerciseProgress copy = this;
+            copy.repsDone++;
+            return copy;
+        }
 
-        public void AddSet() { setsDone++; }
+        public ExerciseProgress AddSet()
+        {
+            ExerciseProgress copy = this;
+            copy.repsDone = 0;
+            copy.setsDone++;
+            copy.breakTimeLeft = 0;
+            return copy;
+        }
+
+        public ExerciseProgress AddBreak()
+        {
+            ExerciseProgress copy = this;
+            copy.breakTimeLeft = RehabProgram.Instance.Exercises[exerciseIndex].breakTimeSeconds;
+            return copy;
+        }
+
+        public ExerciseProgress DecrementBreakTime(int value)
+        {
+            ExerciseProgress copy = this;
+            copy.breakTimeLeft -= value;
+            return copy;
+        }
 
         public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
         {

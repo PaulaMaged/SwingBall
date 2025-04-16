@@ -1,5 +1,6 @@
 using Mono.Cecil;
 using System;
+using System.Collections;
 using System.Linq;
 using Unity.Netcode;
 using Unity.VisualScripting;
@@ -10,6 +11,8 @@ using UnityEngine;
 public class PlayerManager : NetworkBehaviour
 {
     public static PlayerManager instance;
+    public NetworkList<NetworkObjectReference> playerNetworkObjectRefs;
+    public NetworkVariable<int> currentPlayerTurnIndex = new(0);
 
     public GameObject[] players;
     public ulong[] playerClientIds;
@@ -17,7 +20,6 @@ public class PlayerManager : NetworkBehaviour
     private int playerCount = 0;
     private int maximumPlayerCount = 2;
     private Vector3[] homePositions;
-    private int currentPlayerIndex = 0;
     public Vector3[] playerPositions;
     public int distanceToPole = 5;
 
@@ -28,8 +30,10 @@ public class PlayerManager : NetworkBehaviour
             instance = this;
         }
 
+        playerNetworkObjectRefs = new();
+
         playerPositions = new Vector3[maximumPlayerCount];
-        SetPlayerPositions(playerPositions);
+        SetPlayerPositions();
 
         players = new GameObject[maximumPlayerCount];
         playerClientIds = new ulong[maximumPlayerCount];
@@ -38,7 +42,17 @@ public class PlayerManager : NetworkBehaviour
         Rackets = new GameObject[maximumPlayerCount];
     }
 
-    public void SetPlayerPositions(Vector3[] playerPositions)
+    public override void OnNetworkSpawn()
+    {
+        base.OnNetworkSpawn();
+
+        if(IsServer)
+        {
+            playerNetworkObjectRefs.Clear();
+            Debug.Log("Server has cleared player network refs");
+        }
+    }
+    public void SetPlayerPositions()
     {
         //use unit circle to set player positions
         int angleIncrement = 360 / maximumPlayerCount;
@@ -72,6 +86,18 @@ public class PlayerManager : NetworkBehaviour
         homePositions[playerIndex] = Rackets[playerIndex].GetNamedChild("BallAnchor").transform.position;
     }
 
+    [Rpc(SendTo.NotServer)]
+    public void SetupPlayerFieldsOnClientRpc()
+    {
+        foreach (NetworkObjectReference playerNetworkObjectRef in playerNetworkObjectRefs)
+        {
+            if (playerNetworkObjectRef.TryGet(out NetworkObject playerNetworkObject))
+            {
+                StartCoroutine(AddPlayer(playerNetworkObject.NetworkObjectId));
+            }
+        }
+    }
+
     public bool IsAllBallHomePositionsSet()
     {
         bool IsAllHomePositionsSet = homePositions.All(homePosition => homePosition != default);
@@ -81,59 +107,53 @@ public class PlayerManager : NetworkBehaviour
 
     public void ClearBallHomePositions()
     {
-        homePositions.Initialize();
+        homePositions = new Vector3[playerCount];
     }
 
-    public bool AddPlayer(ulong playerNetworkObjectId)
+    public IEnumerator AddPlayer(ulong playerNetworkObjectId)
     {
+        while (!IsSpawned) yield return null;
+
         NetworkObject playerNetworkObject = NetworkManager.Singleton.SpawnManager.SpawnedObjects[playerNetworkObjectId];
         GameObject player = playerNetworkObject.gameObject;
 
         if (playerCount == maximumPlayerCount)
         {
             Debug.Log("maximum player count reached");
-            return false;
+            yield break;
         }
+
+        if(IsServer) playerNetworkObjectRefs.Add(new NetworkObjectReference(playerNetworkObject));
+
         playerClientIds[playerCount] = playerNetworkObject.OwnerClientId;
         players[playerCount] = player;
         Rackets[playerCount] = players[playerCount].GetNamedChild("RBat");
 
         playerCount++;
-        return true;
     }
 
     public GameObject GetCurrentPlayer()
     {
-        return players[currentPlayerIndex];
+        return players[currentPlayerTurnIndex.Value];
     }
 
     public GameObject GetNextPlayer()
     {
-        return players[(currentPlayerIndex + 1) % playerCount];
+        return players[(currentPlayerTurnIndex.Value + 1) % playerCount];
     }
 
-    [Rpc(SendTo.ClientsAndHost)]
+    [Rpc(SendTo.Server)]
     public void SwitchTurnRpc()
     {
-        if(RehabProgram.Instance.IsPatient)
-        {
-
-        }
-
-        // Disable current bats's collider
-        Rackets[currentPlayerIndex].GetComponent<Collider>().enabled = false;
-        // Move to next player
-        currentPlayerIndex = (currentPlayerIndex + 1) % players.Length;
-        // Enable new current player's collider
-        Rackets[currentPlayerIndex].GetComponent<Collider>().enabled = true;
+        currentPlayerTurnIndex.Value = (currentPlayerTurnIndex.Value + 1) % players.Length;
     }
 
     public Vector3 GetCurrentPlayerBallHomePosition()
     {
-        return homePositions[currentPlayerIndex];
+        return homePositions[currentPlayerTurnIndex.Value];
     }
 
-    public void SetPlayerPositions()
+    public void PlacePlayers()
     {
         int i = 0;
         foreach(var player in players)

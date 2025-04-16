@@ -8,7 +8,7 @@ public class BallManager : NetworkBehaviour
 
     public GameObject ball;
     private Vector3 BallPositionInitial;
-    private MoveTowardsPlayer ballMovementScript;
+    public MoveTowardsPlayer ballMovementScript;
     public Transform poleTransform;
 
     private Vector3 startPosition;
@@ -20,7 +20,8 @@ public class BallManager : NetworkBehaviour
         BallPositionInitial = ball.transform.position;
     }
 
-    public void SetupBall()
+    [Rpc(SendTo.Server)]
+    public void SetupBallRpc()
     {
         Vector3 ballHomePosition = PlayerManager.instance.GetCurrentPlayerBallHomePosition();
 
@@ -30,9 +31,10 @@ public class BallManager : NetworkBehaviour
         ballMovementScript.followPlayer = true;
     }
 
-    public void SetBallPositionToIdle()
+    [Rpc(SendTo.Server)]
+    public void SetBallPositionToIdleRpc()
     {
-        ballMovementScript.followPlayer = false;
-        ball.transform.position = BallPositionInitial;
+        Debug.Log(BallPositionInitial);
+        ballMovementScript.StopMovement(BallPositionInitial);
     }
 }

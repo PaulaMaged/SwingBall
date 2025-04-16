@@ -16,6 +16,7 @@ public class MoveTowardsPlayer : NetworkBehaviour
 
     private IEnumerator coroutine;
     private bool isCoroutineRunning = false;
+    private BallCollisionInfo LastBallCollisionInfo = new();
 
     // Update is called once per frame
     void Update()
@@ -23,16 +24,33 @@ public class MoveTowardsPlayer : NetworkBehaviour
         previousPosition = transform.position;
     }
 
-    private void OnCollisionEnter(Collision collision)
+    public void StopMovement(Vector3 position = default)
     {
-        if (!IsServer || !followPlayer || !GameManager.Instance.GameStarted) return;
+        followPlayer = false;
+        StopCoroutine();
 
-        if(isCoroutineRunning) StopCoroutine(coroutine);
+        if(position != default)
+        {
+            transform.position = position;
+            Debug.Log($"Ball at initial position {transform.position}");
+        }
+    }
+
+    public void StopCoroutine()
+    {
+        if(isCoroutineRunning) {
+            StopCoroutine(coroutine);
+            isCoroutineRunning = false;
+        }
+    }
+
+    private void SetBallPath(BallCollisionInfo ballCollisionInfo)
+    {
+        Collision collision = ballCollisionInfo.collision;
+        Vector3 inDirection = ballCollisionInfo.BallInDirection;
 
         Vector3 inNormal = collision.contacts[0].normal;
         Vector3 contactPoint = collision.contacts[0].point;
-
-        Vector3 inDirection = transform.position - previousPosition;
 
         Vector3 outDirection;
 
@@ -51,11 +69,6 @@ public class MoveTowardsPlayer : NetworkBehaviour
 
         hitDirection = outDirection;
 
-        if (collision.gameObject.CompareTag("Racket"))
-        {
-            PlayerManager.instance.SwitchTurnRpc();
-        }
-
         Vector3 p0;
         Vector3 p1;
         Vector3 p2;
@@ -73,13 +86,31 @@ public class MoveTowardsPlayer : NetworkBehaviour
         isCoroutineRunning = true;
     }
 
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (!IsServer || !followPlayer || !GameManager.Instance.GameStarted) return;
+
+        StopCoroutine();
+
+        LastBallCollisionInfo.Update(transform.position - previousPosition, collision);
+
+        if (collision.gameObject.CompareTag("Racket"))
+        {
+            //only call the movement execution if the client is the one responsible for the hit(the patient)
+            if(collision.transform.root.gameObject == PlayerManager.instance.players[1]) RehabProgram.Instance.OnMovementExecutionRpc();
+            PlayerManager.instance.SwitchTurnRpc();
+        }
+
+        SetBallPath(LastBallCollisionInfo);
+    }
+
     private IEnumerator FollowBezierCurveToPlayer(Vector3 p0, Vector3 p1, Vector3 p2)
     {
         float t = 0f;
 
         while (t <= 1f)
         {
-            if (!followPlayer) yield return null;
+            if (!followPlayer) yield break;
 
             t += Time.deltaTime / curveDuration;
             transform.position = Mathf.Pow(1 - t, 2) * p0 +
@@ -91,5 +122,16 @@ public class MoveTowardsPlayer : NetworkBehaviour
 
         transform.position = p2;
         isCoroutineRunning = false;
+    }
+
+    private struct BallCollisionInfo
+    {
+        public Vector3 BallInDirection;
+        public Collision collision;
+
+        public void Update(Vector3 BallInDirection, Collision collision) {
+            this.BallInDirection = BallInDirection;
+            this.collision = collision;
+        } 
     }
 }
