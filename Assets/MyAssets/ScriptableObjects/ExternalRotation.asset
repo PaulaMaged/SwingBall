@@ -13,7 +13,9 @@ MonoBehaviour:
   m_Name: ExternalRotation
   m_EditorClassIdentifier: 
   Name: ExternalRotation
-  motion: {fileID: 0}
-  Reps: 6
-  Sets: 2
+  Motion: {fileID: 0}
+  StartPose: {fileID: 0}
+  EndPose: {fileID: 0}
+  Reps: 8
+  Sets: 1
   breakTimeSeconds: 5

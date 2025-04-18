@@ -13,7 +13,9 @@ MonoBehaviour:
   m_Name: ArmAbduction
   m_EditorClassIdentifier: 
   Name: ArmAbduction
-  motion: {fileID: 0}
-  Reps: 6
+  Motion: {fileID: 0}
+  StartPose: {fileID: 0}
+  EndPose: {fileID: 0}
+  Reps: 8
   Sets: 2
   breakTimeSeconds: 5

@@ -13,7 +13,9 @@ MonoBehaviour:
   m_Name: InternalRotation
   m_EditorClassIdentifier: 
   Name: InternalRotation
-  motion: {fileID: 0}
+  Motion: {fileID: 0}
+  StartPose: {fileID: 0}
+  EndPose: {fileID: 0}
   Reps: 6
-  Sets: 2
+  Sets: 1
   breakTimeSeconds: 5

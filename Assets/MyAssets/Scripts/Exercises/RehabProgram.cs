@@ -15,6 +15,8 @@ using DemoCode;
 
 public class RehabProgram : NetworkBehaviour
 {
+
+    #region Variables
     public static RehabProgram Instance;
     public List<Exercise> Exercises;
     public GameObject ExerciseEntryPrefab;
@@ -24,10 +26,9 @@ public class RehabProgram : NetworkBehaviour
 
     [SerializeField] private GameObject ReferenceCharacterPrefab;
     private GameObject ReferenceCharacterInstance;
-    private Animator ReferenceCharacterAnimator;
 
     private Dictionary<string, TMP_Text> FieldNameReferencePair = new();
-    private NetworkVariable<ExerciseProgress> exerciseProgress = new(writePerm: NetworkVariableWritePermission.Owner);
+    public NetworkVariable<ExerciseProgress> exerciseProgress { get; private set; } = new(writePerm: NetworkVariableWritePermission.Owner);
 
     public bool IsPatient { get; private set; } = true;
     public bool IsBreakTime { get; private set; } = false;
@@ -37,8 +38,7 @@ public class RehabProgram : NetworkBehaviour
     [SerializeField] private InputActionReference StartExerciseButton;
     [SerializeField] private InputActionReference PoseConfirmationButton;
 
-    //subscribe to event of collision with player
-
+    #endregion
 
     public void Awake()
     {
@@ -117,14 +117,18 @@ public class RehabProgram : NetworkBehaviour
         Vector3 canvasPosition = BallManager.instance.poleTransform.position + Vector3.forward * 10 + Vector3.up * 4;
         Quaternion canvasRotation = Quaternion.identity;
         ProgressCanvasInstance = Instantiate(ProgressCanvasPrefab, canvasPosition, canvasRotation);
+
         ReferenceCharacterInstance = Instantiate(ReferenceCharacterPrefab);
-        ReferenceCharacterAnimator = ReferenceCharacterInstance.GetComponent<Animator>();
+        PoseManager.instance.SetAnimator(ReferenceCharacterInstance.GetComponent<Animator>());
+
         CacheUIFields();
 
         exerciseProgress.OnValueChanged += UpdateProgressUI;
         PoseConfirmationButton.action.started += SetupAnchorPoint;
 
         if (!IsOwner) return;
+
+        currentExerciseIndex = 0;
         SetupNextExercise();
 
     }
@@ -139,9 +143,10 @@ public class RehabProgram : NetworkBehaviour
             return;
         }
 
-        if (!PoseManager.instance.HasSatisfiedPoseAccuracy()) return;
+        if (!PoseManager.instance.HasCompletedMotion()) return;
 
         HandleRep();
+        PoseManager.instance.NextPose();
     }
 
     //responsible for arbitrating the side effects of a rep
@@ -158,7 +163,7 @@ public class RehabProgram : NetworkBehaviour
 
         if (IsSetCountReached())
         {
-            SetupNextExercise();
+            OnExerciseFinished();
             return;
         }
 
@@ -166,6 +171,26 @@ public class RehabProgram : NetworkBehaviour
         {
             exerciseProgress.Value = exerciseProgress.Value.AddBreak();
             StartCoroutine(InitiateBreakTime());
+        }
+    }
+
+    private void OnExerciseFinished()
+    {
+        currentExerciseIndex++;
+
+        //reset information from server side
+        SetGameToIdleRpc();
+
+        if (!IsProgramCompleted())
+        {
+            SetupNextExercise();
+        }
+        else
+        {
+            //Call method responsible for finishing up the game
+            Debug.Log("Game Finished");
+            FinishProgramRpc();
+            return;
         }
     }
 
@@ -199,46 +224,18 @@ public class RehabProgram : NetworkBehaviour
         return exerciseProgress.Value.repsDone == Exercises[currentExerciseIndex].Reps;
     }
 
-    [Rpc(SendTo.ClientsAndHost)]
-    public void PlayReferenceCharacterAnimationRpc()
-    {
-        if (exerciseProgress.Value.exerciseIndex + 1 == Exercises.Count)
-        {
-            //this marks the end of the game, have the reference character play a joyful animation :D
-            ReferenceCharacterAnimator.Play("Finish");
-        }
-        else
-            ReferenceCharacterAnimator.Play(Exercises[exerciseProgress.Value.exerciseIndex + 1].Name);
-    }
-
     //called on owner side
     public void SetupNextExercise()
     {
-        //increments index by one locally so that the networkvariable isn't waited for
-        PlayReferenceCharacterAnimationRpc();
-
-        currentExerciseIndex++;
-
-        //reset information from server side
-        SetGameToIdleRpc();
-
-        if (!IsProgramCompleted())
-        {
-            MoveToNewExerciseRpc();
-        }
-        else
-        {
-            //Call method responsible for finishing up the game
-            Debug.Log("Game Finished");
-            FinishProgramRpc();
-            return;
-        }
-
         //link with canvas
         exerciseProgress.Value = new ExerciseProgress(currentExerciseIndex);
         Debug.Log($"The Exercise's Details: {Exercises[currentExerciseIndex]}");
 
-        //indicator for what the current static pose required is and when it is matched
+        //set pose to match anchor point with
+        Debug.Log($"Current Exercise Index: {currentExerciseIndex}");
+        PlayExerciseAnimationRpc(false, currentExerciseIndex, PoseStates.End);
+
+        SetupStartExerciseButtonRpc();
     }
 
     [Rpc(SendTo.Everyone)]
@@ -252,8 +249,9 @@ public class RehabProgram : NetworkBehaviour
         Destroy(ProgressCanvasInstance);
     }
 
+    
     [Rpc(SendTo.Server)]
-    public void MoveToNewExerciseRpc()
+    public void SetupStartExerciseButtonRpc()
     {
         StartExerciseButton.action.started += StartExercise;
     }
@@ -276,7 +274,30 @@ public class RehabProgram : NetworkBehaviour
         if (!PlayerManager.instance.IsAllBallHomePositionsSet()) return;
 
         BallManager.instance.SetupBallRpc();
+        PlayExerciseAnimationRpc(true);
         StartExerciseButton.action.started -= StartExercise;
+    }
+
+    [Rpc(SendTo.Server)]
+    public void DebugRpc(string message, int value)
+    {
+        Debug.Log($"Message: {message}\nData: {value}");
+    }
+
+    [Rpc(SendTo.ClientsAndHost)]
+    public void PlayExerciseAnimationRpc(bool IsStartNow, int exerciseIndex = -1, PoseStates poseState = PoseStates.Start)
+    {
+        Debug.Log("Setup Pose");
+        if (exerciseIndex == -1)
+        {
+            exerciseIndex = exerciseProgress.Value.exerciseIndex;
+        }
+
+        PoseManager.instance.SetupPose(Exercises[exerciseIndex].Name, IsStartNow);
+
+        if(poseState != PoseStates.Start) PoseManager.instance.SetAvatarPose(poseState);
+
+        Debug.Log("Player end Pose");
     }
 
     public void SetupAnchorPoint(InputAction.CallbackContext context)

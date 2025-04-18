@@ -592,6 +592,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
   ball: {fileID: 6452027078451532429}
+  ballMovementScript: {fileID: 0}
   poleTransform: {fileID: 1488511845}
 --- !u!114 &738995346
 MonoBehaviour:
@@ -606,6 +607,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
+  currentPlayerTurnIndex:
+    m_InternalValue: 0
   players: []
   playerClientIds: 
   playerPositions: []
@@ -661,6 +664,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2b1d0f052f861bc4a9a316b59aa5a626, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ShowTopMostFoldoutHeaderGroup: 1
+  maxRandomValueStart: 1000
+  maxRandomValueEnd: 10
 --- !u!1 &851698585
 GameObject:
   m_ObjectHideFlags: 0
@@ -1088,7 +1094,7 @@ MonoBehaviour:
     NetworkIdRecycleDelay: 120
     RpcHashSize: 0
     LoadSceneTimeOut: 120
-    SpawnTimeout: 10
+    SpawnTimeout: 30
     EnableNetworkLogs: 1
     NetworkTopology: 0
     UseCMBService: 0
