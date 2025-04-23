@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using com.rfilkov.kinect;
+using System.Linq;
 
 
 namespace com.rfilkov.components
@@ -10,7 +11,7 @@ namespace com.rfilkov.components
     /// <summary>
     /// Static pose detector check whether the user's pose matches a predefined, static model's pose.
     /// </summary>
-    public class StaticPoseDetector : MonoBehaviour
+    public class StaticPoseDetectorDebug : MonoBehaviour
     {
         [Tooltip("User avatar model, who needs to reach the target pose.")]
         public PoseModelHelper avatarModel;
@@ -149,7 +150,7 @@ namespace com.rfilkov.components
 
             if(kinectManager != null && kinectManager.IsInitialized())
             {
-                if (avatarModel != null && avatarController && kinectManager.IsUserTracked(avatarController.playerId))
+                if (avatarModel != null /*&& AvatarController && kinectManager.IsUserTracked(avatarController.playerId)*/)
                 {
                     // get current avatar pose
                     GetAvatarPose(fCurrentTime, isMirrored);
@@ -230,21 +231,42 @@ namespace com.rfilkov.components
                 {
                     Transform poseTransform1 = poseModel.GetBoneTransform(poseModel.GetBoneIndexByJoint(joint, isMirrored));
                     Transform poseTransform2 = poseModel.GetBoneTransform(poseModel.GetBoneIndexByJoint(nextJoint, isMirrored));
-
+                    Debug.DrawLine(poseTransform1.position, poseTransform2.position, Color.red, 1);
                     if (poseTransform1 != null && poseTransform2 != null)
                     {
                         pose.avBoneDirs[i] = (poseTransform2.position - poseTransform1.position).normalized;
                     }
                 }
             }
-
-            // add pose to the list
-            alSavedPoses.Add(pose);
+            
+            if(isPosesEqual(pose)) alSavedPoses.Add(pose);
 
             // restore model rotation
-            poseModel.transform.rotation = poseModelRotation;
+            //poseModel.transform.rotation = poseModelRotation;
         }
 
+        // summary: checks whether the new model pose is different from the last stored one.
+        // pose: the current model pose captured
+        // return: true if pose is equal to last model pose saved, otherwise false
+        // edge cases: when no previous poses exist to compare against, the function returns true to allow for adding poses
+        private bool isPosesEqual(PoseModelData pose)
+        {
+            Vector3[] modelBoneDirs = pose.avBoneDirs;
+            if (alSavedPoses.Count == 0) return true;
+
+            Vector3[] lastStoredBoneDirs = alSavedPoses.Last().avBoneDirs;
+            
+
+            for(int i = 0; i < pose.avBoneDirs.Length; i++)
+            {
+                Vector3 modelBoneDir = pose.avBoneDirs[i];
+                Vector3 lastStoredBoneDir = lastStoredBoneDirs[i];
+                if (Vector3.Angle(lastStoredBoneDir, modelBoneDir) != 0) return false;
+            }
+
+            Debug.Log("Poses are equal, no need for redundant model poses");
+            return true;
+        }
 
         // gets the current avatar pose
         private void GetAvatarPose(float fCurrentTime, bool isMirrored)
@@ -269,7 +291,7 @@ namespace com.rfilkov.components
                 {
                     Transform avatarTransform1 = avatarModel.GetBoneTransform(avatarModel.GetBoneIndexByJoint(joint, isMirrored));
                     Transform avatarTransform2 = avatarModel.GetBoneTransform(avatarModel.GetBoneIndexByJoint(nextJoint, isMirrored));
-
+                    Debug.DrawLine(avatarTransform1.position, avatarTransform2.position, Color.red, 1);
                     if (avatarTransform1 != null && avatarTransform2 != null)
                     {
                         poseAvatar.avBoneDirs[i] = (avatarTransform2.position - avatarTransform1.position).normalized;
@@ -317,11 +339,17 @@ namespace com.rfilkov.components
                         fDiff = 90f;
 
                     fAngleDiff += fDiff;
+
+                    if(fDiff < 10)
+                    {
+                        Debug.Log("Nice Match");
+                    }
+
                     fMaxDiff += 90f;  // we assume the max diff could be 90 degrees
 
                     if (sbDebug != null)
                     {
-                        sbDebug.AppendFormat("SP: {0}, {1} - angle: {2:F0}, match: {3:F0}%", p, poseJoints[i], fDiff, (1f - fDiff / 90f) * 100f);
+                        sbDebug.AppendFormat("SP: {0}, {1} - angle diff: {2:F0}, match: {3:F0}%", p, poseJoints[i], fDiff, (1f - fDiff / 90f) * 100f);
                         sbDebug.AppendLine();
                     }
                 }
