@@ -48,7 +48,7 @@ namespace com.rfilkov.components
         /// <returns>The bone index.</returns>
         /// <param name="joint">Joint type</param>
         /// <param name="bMirrored">If set to <c>true</c> gets the mirrored joint index.</param>
-        public int GetBoneIndexByJoint(KinectInterop.JointType joint, bool bMirrored)
+        public static int GetBoneIndexByJoint(KinectInterop.JointType joint, bool bMirrored)
         {
             int boneIndex = -1;
 
@@ -195,6 +195,35 @@ namespace com.rfilkov.components
             {KinectInterop.JointType.KneeLeft, 18},
             {KinectInterop.JointType.AnkleLeft, 19},
             {KinectInterop.JointType.FootLeft, 20},
+        };
+
+        public static readonly Dictionary<KinectInterop.JointType, KinectInterop.JointType> mirrorJointMap2JointMap = new()
+        {
+            {KinectInterop.JointType.Pelvis, KinectInterop.JointType.Pelvis},
+            {KinectInterop.JointType.SpineNaval, KinectInterop.JointType.SpineNaval},
+            {KinectInterop.JointType.SpineChest, KinectInterop.JointType.SpineChest},
+            {KinectInterop.JointType.Neck, KinectInterop.JointType.Neck},
+            {KinectInterop.JointType.Head, KinectInterop.JointType.Head},
+
+            {KinectInterop.JointType.ClavicleLeft, KinectInterop.JointType.ClavicleRight},
+            {KinectInterop.JointType.ShoulderLeft, KinectInterop.JointType.ShoulderRight},
+            {KinectInterop.JointType.ElbowLeft, KinectInterop.JointType.ElbowRight},
+            {KinectInterop.JointType.WristLeft, KinectInterop.JointType.WristRight},
+
+            {KinectInterop.JointType.ClavicleRight, KinectInterop.JointType.ClavicleLeft},
+            {KinectInterop.JointType.ShoulderRight, KinectInterop.JointType.ShoulderLeft},
+            {KinectInterop.JointType.ElbowRight, KinectInterop.JointType.ElbowLeft},
+            {KinectInterop.JointType.WristRight, KinectInterop.JointType.WristLeft},
+
+            {KinectInterop.JointType.HipLeft, KinectInterop.JointType.HipRight},
+            {KinectInterop.JointType.KneeLeft, KinectInterop.JointType.KneeRight},
+            {KinectInterop.JointType.AnkleLeft, KinectInterop.JointType.AnkleRight},
+            {KinectInterop.JointType.FootLeft, KinectInterop.JointType.FootRight},
+
+            {KinectInterop.JointType.HipRight, KinectInterop.JointType.HipLeft},
+            {KinectInterop.JointType.KneeRight, KinectInterop.JointType.KneeLeft},
+            {KinectInterop.JointType.AnkleRight, KinectInterop.JointType.AnkleLeft},
+            {KinectInterop.JointType.FootRight, KinectInterop.JointType.FootLeft},
         };
 
     }

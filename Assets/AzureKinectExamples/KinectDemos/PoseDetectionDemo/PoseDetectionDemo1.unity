@@ -274,7 +274,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   deviceStreamingMode: 2
   deviceIndex: 0
-  recordingFile: D:/Paula/Documents/Workspace/Unity/User-Representations/KinectRecordings/output.mkv
+  recordingFile: D:/Paula/Documents/Workspace/Unity/User-Representations/KinectRecordings/Azure
+    Kinect-003.mkv
   minDistance: 0.5
   maxDistance: 10
   pointCloudResolution: 0
@@ -482,7 +483,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 100096, guid: 7c2275071e631c74294c10c9bc18232a, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 400006, guid: 7c2275071e631c74294c10c9bc18232a, type: 3}
       propertyPath: m_LocalRotation.w
@@ -857,6 +858,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 01b562c99f7410c408567281ef62ff02, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &753341783
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 753341779}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4eeb2ebf2aeaf5342945514202e375b3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  KeyMap: {fileID: 11400000, guid: 87780e2071db42f40a21af7931a4fbef, type: 2}
 --- !u!1 &862113976
 GameObject:
   m_ObjectHideFlags: 0
@@ -1144,7 +1158,7 @@ PrefabInstance:
     - target: {fileID: 9500000, guid: ae23d50304c93b9418b65cec8f9fe954, type: 3}
       propertyPath: m_Controller
       value: 
-      objectReference: {fileID: 9100000, guid: 80de43c8dc4dcad4baf68bb293b8a3c0, type: 2}
+      objectReference: {fileID: 0}
     - target: {fileID: 9500000, guid: ae23d50304c93b9418b65cec8f9fe954, type: 3}
       propertyPath: m_ApplyRootMotion
       value: 0
@@ -1156,6 +1170,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 100176, guid: ae23d50304c93b9418b65cec8f9fe954, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1253256098}
+    - targetCorrespondingSourceObject: {fileID: 100176, guid: ae23d50304c93b9418b65cec8f9fe954, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1253256101}
   m_SourcePrefab: {fileID: 100100000, guid: ae23d50304c93b9418b65cec8f9fe954, type: 3}
 --- !u!1 &1253256094 stripped
 GameObject:
@@ -1174,6 +1191,41 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 01b562c99f7410c408567281ef62ff02, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &1253256101
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1253256094}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 06c52c07402f7274cab64e484b1bddc9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playerIndex: 0
+  mirroredMovement: 0
+  verticalMovement: 1
+  horizontalMovement: 1
+  externalRootMotion: 1
+  externalHeadRotation: 0
+  externalHandRotations: 0
+  fingerOrientations: 0
+  moveRate: 1
+  smoothFactor: 10
+  lateUpdateAvatar: 0
+  offsetNode: {fileID: 0}
+  posRelativeToCamera: {fileID: 0}
+  posRelOverlayColor: 0
+  posRelInvertedZ: 0
+  groundedFeet: 0
+  applyMuscleLimits: 0
+  flipLeftRight: 1
+  horizontalOffset: 0
+  verticalOffset: 0
+  forwardOffset: 0
+  useUnscaledTime: 0
+  boneColliderRadius: 0
 --- !u!1 &1320639842
 GameObject:
   m_ObjectHideFlags: 0
@@ -1321,12 +1373,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   avatarModel: {fileID: 1253256098}
-  poseModel: {fileID: 710639530}
-  poseJoints: 0600000007000000
+  poseModel: {fileID: 753341780}
+  exercise: {fileID: 11400000, guid: 8b10fc7194cfff744b0f85e54568b204, type: 2}
   delayAllowed: 0
-  timeBetweenChecks: 0.1
-  matchThreshold: 0.7
+  timeBetweenChecks: 1
+  matchThreshold: 0.85
+  slerpDurationSecondsFallback: 2
   infoText: {fileID: 718983935}
+  skipJointSlerpKeyEnum: 34
+  AccuracySettleTimeSeconds: 0
 --- !u!1 &1457580206
 GameObject:
   m_ObjectHideFlags: 0
@@ -1535,7 +1590,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 100176, guid: ae23d50304c93b9418b65cec8f9fe954, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 400176, guid: ae23d50304c93b9418b65cec8f9fe954, type: 3}
       propertyPath: m_RootOrder
@@ -1570,6 +1625,10 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 9500000, guid: ae23d50304c93b9418b65cec8f9fe954, type: 3}
+      propertyPath: m_Controller
+      value: 
+      objectReference: {fileID: 9100000, guid: 80de43c8dc4dcad4baf68bb293b8a3c0, type: 2}
+    - target: {fileID: 9500000, guid: ae23d50304c93b9418b65cec8f9fe954, type: 3}
       propertyPath: m_ApplyRootMotion
       value: 0
       objectReference: {fileID: 0}
@@ -1580,6 +1639,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 100176, guid: ae23d50304c93b9418b65cec8f9fe954, type: 3}
       insertIndex: -1
       addedObject: {fileID: 753341780}
+    - targetCorrespondingSourceObject: {fileID: 100176, guid: ae23d50304c93b9418b65cec8f9fe954, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 753341783}
   m_SourcePrefab: {fileID: 100100000, guid: ae23d50304c93b9418b65cec8f9fe954, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:

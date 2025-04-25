@@ -4,7 +4,11 @@ using System.Collections.Generic;
 using System.Text;
 using com.rfilkov.kinect;
 using System.Linq;
-
+using Windows.Kinect;
+using UnityEngine.InputSystem.Controls;
+using UnityEngine.InputSystem;
+using Unity.VisualScripting;
+using System;
 
 namespace com.rfilkov.components
 {
@@ -20,7 +24,10 @@ namespace com.rfilkov.components
         public PoseModelHelper poseModel;
 
         [Tooltip("List of joints to compare.")]
-        public List<KinectInterop.JointType> poseJoints = new List<KinectInterop.JointType>();
+        private List<KinectInterop.JointType> poseJoints = new();
+
+        [Tooltip("For testing the joint weights applied")]
+        public Exercise exercise;
 
         [Tooltip("Allowed delay in pose match, in seconds. 0 means no delay allowed.")]
         [Range(0f, 10f)]
@@ -34,8 +41,18 @@ namespace com.rfilkov.components
         [Range(0.5f, 1f)]
         public float matchThreshold = 0.7f;
 
+        [Tooltip("Duration for slerping in seconds")]
+        [Range(0f, 10f)]
+        public float slerpDurationSecondsFallback;
+
         [Tooltip("GUI-Text to display information messages.")]
         public UnityEngine.UI.Text infoText;
+
+        [Tooltip("Key to be used to skip a joint slerp")]
+        public Key skipJointSlerpKeyEnum;
+
+        //the list body joint weights
+        private Dictionary<KinectInterop.JointType, JointInfo> joint2WeightAndMaxAngles = new();
 
         // whether the pose is matched or not
         private bool bPoseMatched = false;
@@ -54,13 +71,11 @@ namespace com.rfilkov.components
         // uncomment to get debug info
         private StringBuilder sbDebug = new StringBuilder();
 
-
-
         // data for each saved pose
-        public class PoseModelData
+        private class PoseModelData
         {
             public float fTime;
-            public Vector3[] avBoneDirs;
+            public Quaternion[] avBoneOrientations;
         }
 
         // list of saved pose data
@@ -69,9 +84,13 @@ namespace com.rfilkov.components
         // current avatar pose
         private PoseModelData poseAvatar = new PoseModelData();
 
-        // last time the model pose was saved 
-        private float lastPoseSavedTime = 0f;
+        private bool IsMirrored;
 
+        //slerping related
+        private Coroutine SlerpJointsSequentiallyCoroutine;
+        private KeyControl SkipJointSlerpKey;
+
+        [SerializeField] float AccuracySettleTimeSeconds;
 
         /// <summary>
         /// Determines whether the target pose is matched or not.
@@ -92,176 +111,179 @@ namespace com.rfilkov.components
             return fMatchPercent;
         }
 
-
-        /// <summary>
-        /// Gets the time of the best matching pose.
-        /// </summary>
-        /// <returns>Time of the best matching pose.</returns>
-        public float GetMatchPoseTime()
-        {
-            return fMatchPoseTime;
-        }
-
-
-        /// <summary>
-        /// Gets the last check time.
-        /// </summary>
-        /// <returns>The last check time.</returns>
-        public float GetPoseCheckTime()
-        {
-            return lastPoseSavedTime;
-        }
-
-
         private void Awake()
         {
-            if(avatarModel)
+            if (avatarModel)
             {
                 initialAvatarRotation = avatarModel.transform.rotation;
                 avatarController = avatarModel.gameObject.GetComponent<AvatarController>();
             }
 
-            if(poseModel)
+            if (poseModel)
             {
                 initialPoseRotation = poseModel.transform.rotation;
             }
         }
 
+        private void Start()
+        {
+            SkipJointSlerpKey = Keyboard.current[skipJointSlerpKeyEnum];
+            SetJoints();
+        }
 
         void Update()
         {
-            KinectManager kinectManager = KinectManager.Instance;
-
             // get mirrored state
-            bool isMirrored = avatarController ? avatarController.mirroredMovement : true;  // true by default
+            IsMirrored = avatarController ? avatarController.mirroredMovement : false;  // false by default
 
-            // current time
-            float fCurrentTime = Time.realtimeSinceStartup;
-
-            // save model pose, if needed
-            if ((fCurrentTime - lastPoseSavedTime) >= timeBetweenChecks)
+            if (avatarModel != null)
             {
-                lastPoseSavedTime = fCurrentTime;
+                // get the difference
+                GetPoseDifference(IsMirrored);
 
-                // remove old poses and save current one
-                RemoveOldSavedPoses(fCurrentTime);
-                AddCurrentPoseToSaved(fCurrentTime, isMirrored);
-            }
-
-            if(kinectManager != null && kinectManager.IsInitialized())
-            {
-                if (avatarModel != null /*&& AvatarController && kinectManager.IsUserTracked(avatarController.playerId)*/)
+                if (infoText != null)
                 {
-                    // get current avatar pose
-                    GetAvatarPose(fCurrentTime, isMirrored);
-
-                    // get the difference
-                    GetPoseDifference(isMirrored);
-
-                    if (infoText != null)
-                    {
-                        //string sPoseMessage = string.Format("Pose match: {0:F0}% {1:F1}s ago {2}", fMatchPercent * 100f, Time.realtimeSinceStartup - fMatchPoseTime,
-                        //                                    (bPoseMatched ? "- Matched" : ""));
-                        string sPoseMessage = string.Format("Pose match: {0:F0}% {1}", fMatchPercent * 100f, (bPoseMatched ? "- Matched" : ""));
-                        if (sbDebug != null)
-                            sPoseMessage += sbDebug.ToString();
-                        infoText.text = sPoseMessage;
-                    }
+                    //string sPoseMessage = string.Format("Pose match: {0:F0}% {1:F1}s ago {2}", fMatchPercent * 100f, Time.realtimeSinceStartup - fMatchPoseTime,
+                    //                                    (bPoseMatched ? "- Matched" : ""));
+                    string sPoseMessage = string.Format("Pose match: {0:F0}% {1}", fMatchPercent * 100, (fMatchPercent >= matchThreshold ? "- Matched" : ""));
+                    if (sbDebug != null)
+                        sPoseMessage += sbDebug.ToString();
+                    infoText.text = sPoseMessage;
                 }
-                else
-                {
-                    // no user found
-                    fMatchPercent = 0f;
-                    fMatchPoseTime = 0f;
-                    bPoseMatched = false;
+            }
+            else
+            {
+                // no user found
+                fMatchPercent = 0f;
+                fMatchPoseTime = 0f;
+                bPoseMatched = false;
 
-                    if (infoText != null)
-                    {
-                        infoText.text = "Try to follow the model pose.";
-                    }
+                if (infoText != null)
+                {
+                    infoText.text = "Try to follow the model pose.";
                 }
             }
         }
 
-
-        // removes saved poses older than delayAllowed from the list
-        private void RemoveOldSavedPoses(float fCurrentTime)
+        [ContextMenu("Set Exercise Joints")]
+        // Fix for the foreach loop causing multiple errors
+        public void SetJoints()
         {
-            for (int i = alSavedPoses.Count - 1; i >= 0; i--)
+            joint2WeightAndMaxAngles = exercise.Joint2WeightAndMaxAngle;
+
+            poseJoints.Clear();
+            foreach (KeyValuePair<KinectInterop.JointType, JointInfo> jointData in joint2WeightAndMaxAngles)
             {
-                if ((fCurrentTime - alSavedPoses[i].fTime) >= delayAllowed)
-                {
-                    alSavedPoses.RemoveAt(i);
-                }
+                poseJoints.Add(jointData.Key);
             }
         }
 
-
-        // adds current pose of poseModel to the saved poses list
-        private void AddCurrentPoseToSaved(float fCurrentTime, bool isMirrored)
+        /// <summary>
+        /// Interpolates the avatar's joints to match those of the reference
+        /// </summary>
+        [ContextMenu("Start Slerping")]
+        private void StartSlerping()
         {
-            KinectManager kinectManager = KinectManager.Instance;
-            if (kinectManager == null || poseModel == null || poseJoints == null)
-                return;
+            if (avatarController != null) avatarController.enabled = false;
+            GetAvatarPose();
 
-            PoseModelData pose = new PoseModelData();
-            pose.fTime = fCurrentTime;
-            pose.avBoneDirs = new Vector3[poseJoints.Count];
-
-            // save model rotation
-            Quaternion poseModelRotation = poseModel.transform.rotation;
-
-            if(avatarController)
+            List<(Transform from, Transform to)> avatarJoint2ReferenceJoint = new();
+            foreach (var joint in poseJoints)
             {
-                ulong avatarUserId = avatarController.playerId;
-                bool isAvatarMirrored = avatarController.mirroredMovement;
-
-                Quaternion userRotation = kinectManager.GetUserOrientation(avatarUserId, !isAvatarMirrored);
-                poseModel.transform.rotation = initialPoseRotation * userRotation;
-
+                Transform avatarJointTransform = avatarModel.GetBoneTransform(PoseModelHelper.GetBoneIndexByJoint(joint, IsMirrored));
+                Transform referenceJointTransform = poseModel.GetBoneTransform(PoseModelHelper.GetBoneIndexByJoint(joint, IsMirrored));
+                avatarJoint2ReferenceJoint.Add((avatarJointTransform, referenceJointTransform));
             }
 
-            int jointCount = kinectManager.GetJointCount();
+            SlerpJointsSequentiallyCoroutine = StartCoroutine(SlerpJointsSequentially(avatarJoint2ReferenceJoint));
+        }
+
+        /// <summary>
+        /// Stops the slerping of avatar onto reference and resets orientation of joints
+        /// </summary>
+        [ContextMenu("Reset pose from slerped")]
+        private void ResetFromSlerping()
+        {
+            if (avatarController != null) avatarController.enabled = true;
+
+            if (SlerpJointsSequentiallyCoroutine != null)
+            {
+                StopCoroutine(SlerpJointsSequentiallyCoroutine);
+                SlerpJointsSequentiallyCoroutine = null;
+            }
+
             for (int i = 0; i < poseJoints.Count; i++)
             {
-                KinectInterop.JointType joint = poseJoints[i];
-                KinectInterop.JointType nextJoint = kinectManager.GetNextJoint(joint);
-
-                if (nextJoint != joint && (int)nextJoint >= 0 && (int)nextJoint < jointCount)
-                {
-                    Transform poseTransform1 = poseModel.GetBoneTransform(poseModel.GetBoneIndexByJoint(joint, isMirrored));
-                    Transform poseTransform2 = poseModel.GetBoneTransform(poseModel.GetBoneIndexByJoint(nextJoint, isMirrored));
-                    Debug.DrawLine(poseTransform1.position, poseTransform2.position, Color.red, 1);
-                    if (poseTransform1 != null && poseTransform2 != null)
-                    {
-                        pose.avBoneDirs[i] = (poseTransform2.position - poseTransform1.position).normalized;
-                    }
-                }
+                Transform avatarJointTransform = avatarModel.GetBoneTransform(PoseModelHelper.GetBoneIndexByJoint(poseJoints[i], IsMirrored));
+                avatarJointTransform.localRotation = poseAvatar.avBoneOrientations[i];
             }
-            
-            if(isPosesEqual(pose)) alSavedPoses.Add(pose);
+        }
 
-            // restore model rotation
-            //poseModel.transform.rotation = poseModelRotation;
+        /// <summary>
+        /// For each joint inside of poseJoints, a slerping process takes place to map the joint to the reference joint
+        /// using an coroutine
+        /// </summary>
+        /// <param name="a2b"> a transform dictionary indicating start and end joint transforms for the avatar and reference characters respectively</param>
+        /// <param name="durations"> list of durations for interpolating each joint. If null, the fallback slerp duration variable is used</param>
+        private IEnumerator SlerpJointsSequentially(List<(Transform from, Transform to)> a2b, float[] durations = null)
+        {
+            int i = 0;
+            foreach ((Transform a, Transform b) in a2b)
+            {
+                Debug.Log($"Started Slerping <size=15><b>{poseJoints[i]}</b></size> joint");
+                yield return StartCoroutine(SlerpJointCoroutine(a, b, durations != null && i < durations.Length ? durations[i] : slerpDurationSecondsFallback));
+                Debug.Log($"Finished Slerping <size=15><b>{poseJoints[i]}</b></size> joint");
+                i++;
+            }
+
+            Debug.Log("Finished Slerping <b>all</b> <color=#ff0000>joints</color>");
+            SlerpJointsSequentiallyCoroutine = null;
+        }
+
+        /// <summary>
+        /// maps the avatar's joint to the reference joint using quaternion slerp
+        /// </summary>
+        /// <param name="index">Index of pose joint</param>
+        /// <param name="a">Quaternion to slerp From</param>
+        /// <param name="b">Quaternion to slerp To</param>
+        /// <param name="duration">the duration which the slerping process takes</param>
+        private IEnumerator SlerpJointCoroutine(Transform a, Transform b, float duration)
+        {
+            float timeCount = 0f;
+            Quaternion startRot = a.localRotation;
+            Quaternion endRot = b.localRotation;
+
+            while (timeCount < duration)
+            {
+                if (startRot == endRot) yield break;
+
+                if (SkipJointSlerpKey.wasPressedThisFrame) break;
+
+                timeCount += Time.deltaTime;
+                a.localRotation = Quaternion.Slerp(startRot, endRot, timeCount / duration);
+                yield return null;
+            }
+
+            a.localRotation = endRot;
         }
 
         // summary: checks whether the new model pose is different from the last stored one.
         // pose: the current model pose captured
         // return: true if pose is equal to last model pose saved, otherwise false
         // edge cases: when no previous poses exist to compare against, the function returns true to allow for adding poses
-        private bool isPosesEqual(PoseModelData pose)
+        private bool IsPosesEqual(PoseModelData pose)
         {
-            Vector3[] modelBoneDirs = pose.avBoneDirs;
+            Quaternion[] modelBoneDirs = pose.avBoneOrientations;
             if (alSavedPoses.Count == 0) return true;
 
-            Vector3[] lastStoredBoneDirs = alSavedPoses.Last().avBoneDirs;
-            
+            Quaternion[] lastStoredBoneDirs = alSavedPoses.Last().avBoneOrientations;
 
-            for(int i = 0; i < pose.avBoneDirs.Length; i++)
+
+            for (int i = 0; i < pose.avBoneOrientations.Length; i++)
             {
-                Vector3 modelBoneDir = pose.avBoneDirs[i];
-                Vector3 lastStoredBoneDir = lastStoredBoneDirs[i];
-                if (Vector3.Angle(lastStoredBoneDir, modelBoneDir) != 0) return false;
+                Quaternion modelBoneDir = pose.avBoneOrientations[i];
+                Quaternion lastStoredBoneDir = lastStoredBoneDirs[i];
+                if (Quaternion.Angle(lastStoredBoneDir, modelBoneDir) != 0) return false;
             }
 
             Debug.Log("Poses are equal, no need for redundant model poses");
@@ -269,48 +291,51 @@ namespace com.rfilkov.components
         }
 
         // gets the current avatar pose
-        private void GetAvatarPose(float fCurrentTime, bool isMirrored)
+        private void GetAvatarPose()
         {
             KinectManager kinectManager = KinectManager.Instance;
             if (kinectManager == null || avatarModel == null || poseJoints == null)
                 return;
 
-            poseAvatar.fTime = fCurrentTime;
-            if (poseAvatar.avBoneDirs == null)
+            if (poseAvatar.avBoneOrientations == null)
             {
-                poseAvatar.avBoneDirs = new Vector3[poseJoints.Count];
+                poseAvatar.avBoneOrientations = new Quaternion[poseJoints.Count];
             }
 
             for (int i = 0; i < poseJoints.Count; i++)
             {
                 KinectInterop.JointType joint = poseJoints[i];
-                KinectInterop.JointType nextJoint = kinectManager.GetNextJoint(joint);
-
-                int jointCount = kinectManager.GetJointCount();
-                if (nextJoint != joint && (int)nextJoint >= 0 && (int)nextJoint < jointCount)
-                {
-                    Transform avatarTransform1 = avatarModel.GetBoneTransform(avatarModel.GetBoneIndexByJoint(joint, isMirrored));
-                    Transform avatarTransform2 = avatarModel.GetBoneTransform(avatarModel.GetBoneIndexByJoint(nextJoint, isMirrored));
-                    Debug.DrawLine(avatarTransform1.position, avatarTransform2.position, Color.red, 1);
-                    if (avatarTransform1 != null && avatarTransform2 != null)
-                    {
-                        poseAvatar.avBoneDirs[i] = (avatarTransform2.position - avatarTransform1.position).normalized;
-                    }
-                }
+                Transform jointTransform = avatarModel.GetBoneTransform(PoseModelHelper.GetBoneIndexByJoint(joint, IsMirrored));
+                Quaternion jointOrientation = jointTransform.localRotation;
+                poseAvatar.avBoneOrientations[i] = jointOrientation;
+                Debug.DrawRay(jointTransform.position, jointOrientation.eulerAngles.normalized, Color.green);
             }
         }
 
+        private Quaternion GetJointOrientation(PoseModelHelper model, KinectInterop.JointType joint, bool IsMirrored, bool isLocal)
+        {
+            Transform jointTransform = model.GetBoneTransform(PoseModelHelper.GetBoneIndexByJoint(joint, IsMirrored));
+
+            if (isLocal)
+            {
+                Quaternion qJoint = jointTransform.localRotation;
+                Debug.DrawRay(jointTransform.position, qJoint.eulerAngles.normalized, Color.green);
+
+                return jointTransform.localRotation;
+            }
+            else
+            {
+                Quaternion qJoint = jointTransform.rotation;
+                Debug.DrawRay(jointTransform.position, qJoint.eulerAngles.normalized, Color.green);
+                return jointTransform.rotation;
+            }
+
+        }
 
         // gets the difference between the avatar pose and the list of saved poses
-        private void GetPoseDifference(bool isMirrored)
+        private void GetPoseDifference(bool IsMirrored)
         {
-            // by-default values
-            bPoseMatched = false;
-            fMatchPercent = 0f;
-            fMatchPoseTime = 0f;
-
-            KinectManager kinectManager = KinectManager.Instance;
-            if (poseJoints == null || poseAvatar.avBoneDirs == null)
+            if (poseJoints.Count == 0)
                 return;
 
             if (sbDebug != null)
@@ -319,49 +344,46 @@ namespace com.rfilkov.components
                 sbDebug.AppendLine();
             }
 
-            // check the difference with saved poses, starting from the last one
-            for (int p = alSavedPoses.Count - 1; p >= 0; p--)
+            float totalWeighedMatch = 0f;
+
+            for (int i = 0; i < poseJoints.Count; i++)
             {
-                float fAngleDiff = 0f;
-                float fMaxDiff = 0f;
+                //Replace with obtaining from the original reference
+                Quaternion qPoseBone = GetJointOrientation(poseModel, poseJoints[i], IsMirrored, true);
+                Quaternion qAvatarBone = GetJointOrientation(avatarModel, poseJoints[i], IsMirrored, true);
 
-                PoseModelData poseModel = alSavedPoses[p];
-                for (int i = 0; i < poseJoints.Count; i++)
+                float fDiff = Quaternion.Angle(qPoseBone, qAvatarBone);
+
+                int maxAngle;
+                float jointWeight;
+
+                if (!joint2WeightAndMaxAngles.TryGetValue(poseJoints[i], out JointInfo jointInfo))
                 {
-                    Vector3 vPoseBone = poseModel.avBoneDirs[i];
-                    Vector3 vAvatarBone = poseAvatar.avBoneDirs[i];
-
-                    if (vPoseBone == Vector3.zero || vAvatarBone == Vector3.zero)
-                        continue;
-
-                    float fDiff = Vector3.Angle(vPoseBone, vAvatarBone);
-                    if (fDiff > 90f)
-                        fDiff = 90f;
-
-                    fAngleDiff += fDiff;
-
-                    if(fDiff < 10)
-                    {
-                        Debug.Log("Nice Match");
-                    }
-
-                    fMaxDiff += 90f;  // we assume the max diff could be 90 degrees
-
-                    if (sbDebug != null)
-                    {
-                        sbDebug.AppendFormat("SP: {0}, {1} - angle diff: {2:F0}, match: {3:F0}%", p, poseJoints[i], fDiff, (1f - fDiff / 90f) * 100f);
-                        sbDebug.AppendLine();
-                    }
+                    maxAngle = 90;
+                    jointWeight = 1.0f / poseJoints.Count;
+                    throw new InvalidOperationException("The joint information list is missing some keys");
+                }
+                else
+                {
+                    maxAngle = jointInfo.MaxAngle;
+                    jointWeight = jointInfo.Weight;
                 }
 
-                float fPoseMatch = fMaxDiff > 0f ? (1f - fAngleDiff / fMaxDiff) : 0f;
-                if (fPoseMatch > fMatchPercent)
+                fDiff = Mathf.Clamp(fDiff, 0, maxAngle);
+
+                float weighedMatch = (1 - (fDiff / maxAngle)) * jointWeight;
+                totalWeighedMatch += weighedMatch;
+
+                if (sbDebug != null)
                 {
-                    fMatchPercent = fPoseMatch;
-                    fMatchPoseTime = poseModel.fTime;
-                    bPoseMatched = (fMatchPercent >= matchThreshold);
+                    sbDebug.AppendFormat("{0} - angle diff: {1:F0}, Max Angle: {4}, match: {2:F0}%, total Effect: {3:F2}", poseJoints[i], fDiff, (1f - fDiff / maxAngle) * 100f, weighedMatch, maxAngle);
+                    sbDebug.AppendLine();
                 }
             }
+
+            float matchChange = totalWeighedMatch - fMatchPercent;
+            fMatchPercent = AccuracySettleTimeSeconds == 0 ? totalWeighedMatch : fMatchPercent + matchChange * Time.deltaTime * AccuracySettleTimeSeconds;
+            bPoseMatched = fMatchPercent >= matchThreshold;
         }
 
     }
