@@ -51,7 +51,7 @@ namespace com.rfilkov.components
         private AvatarController avatarController = null;
 
         // uncomment to get debug info
-        private StringBuilder sbDebug = null; // new StringBuilder();
+        private StringBuilder sbDebug = new StringBuilder();
 
 
 
@@ -228,8 +228,8 @@ namespace com.rfilkov.components
 
                 if (nextJoint != joint && (int)nextJoint >= 0 && (int)nextJoint < jointCount)
                 {
-                    Transform poseTransform1 = poseModel.GetBoneTransform(poseModel.GetBoneIndexByJoint(joint, isMirrored));
-                    Transform poseTransform2 = poseModel.GetBoneTransform(poseModel.GetBoneIndexByJoint(nextJoint, isMirrored));
+                    Transform poseTransform1 = poseModel.GetBoneTransform(PoseModelHelper.GetBoneIndexByJoint(joint, isMirrored));
+                    Transform poseTransform2 = poseModel.GetBoneTransform(PoseModelHelper.GetBoneIndexByJoint(nextJoint, isMirrored));
 
                     if (poseTransform1 != null && poseTransform2 != null)
                     {
@@ -267,8 +267,8 @@ namespace com.rfilkov.components
                 int jointCount = kinectManager.GetJointCount();
                 if (nextJoint != joint && (int)nextJoint >= 0 && (int)nextJoint < jointCount)
                 {
-                    Transform avatarTransform1 = avatarModel.GetBoneTransform(avatarModel.GetBoneIndexByJoint(joint, isMirrored));
-                    Transform avatarTransform2 = avatarModel.GetBoneTransform(avatarModel.GetBoneIndexByJoint(nextJoint, isMirrored));
+                    Transform avatarTransform1 = avatarModel.GetBoneTransform(PoseModelHelper.GetBoneIndexByJoint(joint, isMirrored));
+                    Transform avatarTransform2 = avatarModel.GetBoneTransform(PoseModelHelper.GetBoneIndexByJoint(nextJoint, isMirrored));
 
                     if (avatarTransform1 != null && avatarTransform2 != null)
                     {

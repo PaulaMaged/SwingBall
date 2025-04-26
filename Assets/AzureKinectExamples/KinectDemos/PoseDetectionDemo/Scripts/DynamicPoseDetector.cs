@@ -195,8 +195,8 @@ namespace com.rfilkov.components
 
                 if (nextJoint != joint && nextJoint >= 0 && (int)nextJoint < numJoints)
                 {
-                    Transform poseTransform1 = poseModel.GetBoneTransform(poseModel.GetBoneIndexByJoint(joint, isMirrored));
-                    Transform poseTransform2 = poseModel.GetBoneTransform(poseModel.GetBoneIndexByJoint(nextJoint, isMirrored));
+                    Transform poseTransform1 = poseModel.GetBoneTransform(PoseModelHelper.GetBoneIndexByJoint(joint, isMirrored));
+                    Transform poseTransform2 = poseModel.GetBoneTransform(PoseModelHelper.GetBoneIndexByJoint(nextJoint, isMirrored));
 
                     if (poseTransform1 != null && poseTransform2 != null)
                     {
@@ -234,8 +234,8 @@ namespace com.rfilkov.components
 
                 if (nextJoint != joint && nextJoint >= 0 && (int)nextJoint < numJoints)
                 {
-                    Transform avatarTransform1 = avatarModel.GetBoneTransform(avatarModel.GetBoneIndexByJoint(joint, isMirrored));
-                    Transform avatarTransform2 = avatarModel.GetBoneTransform(avatarModel.GetBoneIndexByJoint(nextJoint, isMirrored));
+                    Transform avatarTransform1 = avatarModel.GetBoneTransform(PoseModelHelper.GetBoneIndexByJoint(joint, isMirrored));
+                    Transform avatarTransform2 = avatarModel.GetBoneTransform(PoseModelHelper.GetBoneIndexByJoint(nextJoint, isMirrored));
 
                     if (avatarTransform1 != null && avatarTransform2 != null)
                     {
