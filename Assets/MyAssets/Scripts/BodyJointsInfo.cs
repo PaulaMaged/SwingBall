@@ -3,7 +3,6 @@ using com.rfilkov.kinect;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using Windows.Kinect;
 
 [CreateAssetMenu(fileName = "BodyJointsInfo", menuName = "Scriptable Objects/BodyJointsInfo")]
 public class BodyJointsInfo : ScriptableObject

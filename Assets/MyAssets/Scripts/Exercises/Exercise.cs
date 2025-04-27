@@ -2,7 +2,6 @@ using com.rfilkov.kinect;
 using System.Collections.Generic;
 using System;
 using UnityEngine;
-using Unity.VisualScripting;
 
 [CreateAssetMenu(fileName = "NewExercise", menuName = "Rehab/Exercise")]
 public class Exercise : ScriptableObject

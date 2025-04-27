@@ -1,4 +1,4 @@
-using System.Collections;
+using com.rfilkov.components;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem.XR;
@@ -18,12 +18,16 @@ public class PlayerNetworkManager : NetworkBehaviour
             return;
         }
 
+        Transform spawnPoint = GameManager.Instance.SpawnPoint;
+        //sets this player's transform
+
         //by default, all components for player movement are off for reasons beyond this comment
-        EnablePlayerMovement();
+        //EnablePlayerMovement();
         var netObjId = GetComponent<NetworkObject>().NetworkObjectId;
         
         UpdatePlayerListRpc(netObjId);
 
+        SetPlayerTransformData(spawnPoint.position, spawnPoint.rotation);
         //Ensure player's camera shows on screen
         mainCamera.depth = 5;
     }
@@ -36,7 +40,8 @@ public class PlayerNetworkManager : NetworkBehaviour
             trackedPoseDriver.enabled = true;
         }
 
-        GetComponentInChildren<InputActionManager>().enabled = true;
+        GetComponent<InputActionManager>().enabled = true;
+        GetComponent<AvatarController>().enabled = true;
     }
 
     [Rpc(SendTo.Server)]
@@ -48,10 +53,24 @@ public class PlayerNetworkManager : NetworkBehaviour
     [Rpc(SendTo.Owner)]
     public void UpdatePlayerPositionAndRotationRpc(Vector3 newPosition, Quaternion newRotation = default)
     {
+        Debug.Log($"Our Lovely Quaternion {newRotation}");
+        SetPlayerTransformData(newPosition, newRotation);
+    }
+
+    private void SetPlayerTransformData(Vector3 newPosition, Quaternion? newRotation = null)
+    {
         transform.position = newPosition;
-        Vector3 newRotationDirection = BallManager.instance.poleTransform.position - NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject().transform.position;
-        newRotationDirection.y = 0; //look parallel to surface
-        newRotation = Quaternion.LookRotation(newRotationDirection);
-        transform.rotation = newRotation;
+
+        if(newRotation == null)
+        {
+            Transform playerTransform = NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject().transform;
+            Vector3 polePosition = BallManager.instance.poleTransform.position;
+            Vector3 newRotationDirection = polePosition - playerTransform.position;
+            newRotationDirection.y = 0; //look parallel to surface
+            newRotation = Quaternion.LookRotation(newRotationDirection);
+            playerTransform.rotation = newRotation.Value;
+        }
+
+        transform.rotation = newRotation.Value;
     }
 }

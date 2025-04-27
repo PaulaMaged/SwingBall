@@ -1,8 +1,5 @@
 using System.Collections;
-using TreeEditor;
-using Unity.XR.CoreUtils;
 using UnityEngine;
-using Unity.Netcode;
 
 public class BallPath : MonoBehaviour
 {

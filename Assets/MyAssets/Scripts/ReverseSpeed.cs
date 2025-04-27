@@ -1,6 +1,4 @@
 using UnityEngine;
-using UnityEngine.XR.Interaction.Toolkit.Samples.StarterAssets;
-using UnityEngine.XR.OpenXR.Input;
 
 public class ReverseSpeed : MonoBehaviour
 {

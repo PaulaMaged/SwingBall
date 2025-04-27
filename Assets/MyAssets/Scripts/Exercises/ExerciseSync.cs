@@ -2,7 +2,6 @@ using UnityEngine;
 using Unity.Netcode;
 using UnityEngine.UI;
 using System.Collections.Generic;
-using TMPro;
 
 public class ExerciseSync : NetworkBehaviour
 {
@@ -14,8 +13,10 @@ public class ExerciseSync : NetworkBehaviour
     {
         Exercise = exercise;
 
-        Data = new(writePerm: NetworkVariableWritePermission.Server);
-        Data.Value = new(exercise);
+        Data = new(writePerm: NetworkVariableWritePermission.Server)
+        {
+            Value = new(exercise)
+        };
     }
 }
 

@@ -1,6 +1,4 @@
 using UnityEngine;
-using UnityEngine.InputSystem.Controls;
-using static UnityEngine.GridBrushBase;
 
 public class RotatePivot : MonoBehaviour
 {

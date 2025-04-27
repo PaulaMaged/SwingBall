@@ -1,27 +1,28 @@
-using Mono.Cecil;
 using System;
 using System.Collections;
 using System.Linq;
 using Unity.Netcode;
-using Unity.VisualScripting;
 using Unity.XR.CoreUtils;
-using UnityEditor;
 using UnityEngine;
 
 public class PlayerManager : NetworkBehaviour
 {
     public static PlayerManager instance;
-    public NetworkList<NetworkObjectReference> playerNetworkObjectRefs;
-    public NetworkVariable<int> currentPlayerTurnIndex = new(0);
 
-    public GameObject[] players;
-    public ulong[] playerClientIds;
-    public GameObject[] Rackets { get; private set; }
+
+    public int distanceToPole = 5;
+
+    public GameObject[] Players { get; private set; }
+    public ulong[] PlayerClientIds { get; private set; }
+    public GameObject[] Rackets { get; private set;}
+    public Vector3[] PlayerPositions { get; private set; }
+
     private int playerCount = 0;
     private int maximumPlayerCount = 2;
     private Vector3[] homePositions;
-    public Vector3[] playerPositions;
-    public int distanceToPole = 5;
+
+    private NetworkList<NetworkObjectReference> playerNetworkObjectRefs;
+    private NetworkVariable<int> currentPlayerTurnIndex = new(0);
 
     private void Awake()
     {
@@ -32,25 +33,14 @@ public class PlayerManager : NetworkBehaviour
 
         playerNetworkObjectRefs = new();
 
-        playerPositions = new Vector3[maximumPlayerCount];
+        PlayerPositions = new Vector3[maximumPlayerCount];
         SetPlayerPositions();
 
-        players = new GameObject[maximumPlayerCount];
-        playerClientIds = new ulong[maximumPlayerCount];
+        Players = new GameObject[maximumPlayerCount];
+        PlayerClientIds = new ulong[maximumPlayerCount];
 
         homePositions = new Vector3[maximumPlayerCount];
         Rackets = new GameObject[maximumPlayerCount];
-    }
-
-    public override void OnNetworkSpawn()
-    {
-        base.OnNetworkSpawn();
-
-        if(IsServer)
-        {
-            playerNetworkObjectRefs.Clear();
-            Debug.Log("Server has cleared player network refs");
-        }
     }
     public void SetPlayerPositions()
     {
@@ -61,27 +51,27 @@ public class PlayerManager : NetworkBehaviour
 
         Vector3 startPosition = BallManager.instance.poleTransform.position;
 
-        for(int i = 0; i < playerPositions.Length; i++)
+        for(int i = 0; i < PlayerPositions.Length; i++)
         {
             float angle = (currentAngle + i * angleIncrement) * Mathf.Deg2Rad;
             float positionX = (Mathf.Cos(angle) * radius) + startPosition.x;
             float positionZ = (Mathf.Sin(angle) * radius) + startPosition.z;
 
-            playerPositions[i] = new Vector3(positionX, 0, positionZ);
+            PlayerPositions[i] = new Vector3(positionX, 0, positionZ);
         }
     }
 
     public Vector3 GetBallAnchorPositionForLocalPlayer()
     {
         ulong localClientId = NetworkManager.Singleton.LocalClientId;
-        int playerIndex = Array.FindIndex<ulong>(playerClientIds, playerClientId => playerClientId == localClientId);
+        int playerIndex = Array.FindIndex<ulong>(PlayerClientIds, playerClientId => playerClientId == localClientId);
         return Rackets[playerIndex].GetNamedChild("BallAnchor").transform.position;
     }
 
     [Rpc(SendTo.Server)]
     public void SetBallHomePositionRpc(ulong clientId)
     {
-        int playerIndex = Array.FindIndex<ulong>(playerClientIds, playerClientId => playerClientId == clientId);
+        int playerIndex = Array.FindIndex<ulong>(PlayerClientIds, playerClientId => playerClientId == clientId);
         Debug.Log($"The Player Index to set ball home position at is: {playerIndex}");
         homePositions[playerIndex] = Rackets[playerIndex].GetNamedChild("BallAnchor").transform.position;
     }
@@ -125,27 +115,27 @@ public class PlayerManager : NetworkBehaviour
 
         if(IsServer) playerNetworkObjectRefs.Add(new NetworkObjectReference(playerNetworkObject));
 
-        playerClientIds[playerCount] = playerNetworkObject.OwnerClientId;
-        players[playerCount] = player;
-        Rackets[playerCount] = players[playerCount].GetNamedChild("RBat");
+        PlayerClientIds[playerCount] = playerNetworkObject.OwnerClientId;
+        Players[playerCount] = player;
+        Rackets[playerCount] = Players[playerCount].GetNamedChild("RBat");
 
         playerCount++;
     }
 
     public GameObject GetCurrentPlayer()
     {
-        return players[currentPlayerTurnIndex.Value];
+        return Players[currentPlayerTurnIndex.Value];
     }
 
     public GameObject GetNextPlayer()
     {
-        return players[(currentPlayerTurnIndex.Value + 1) % playerCount];
+        return Players[(currentPlayerTurnIndex.Value + 1) % playerCount];
     }
 
     [Rpc(SendTo.Server)]
     public void SwitchTurnRpc()
     {
-        currentPlayerTurnIndex.Value = (currentPlayerTurnIndex.Value + 1) % players.Length;
+        currentPlayerTurnIndex.Value = (currentPlayerTurnIndex.Value + 1) % Players.Length;
     }
 
     public Vector3 GetCurrentPlayerBallHomePosition()
@@ -156,13 +146,13 @@ public class PlayerManager : NetworkBehaviour
     public void PlacePlayers()
     {
         int i = 0;
-        foreach(var player in players)
+        foreach(var player in Players)
         {
             if (player == null) continue;
 
             PlayerNetworkManager playerNetworkManager = player.GetComponent<PlayerNetworkManager>();
 
-            playerNetworkManager.UpdatePlayerPositionAndRotationRpc(playerPositions[i++]);
+            playerNetworkManager.UpdatePlayerPositionAndRotationRpc(PlayerPositions[i++]);
         }
     }
 }

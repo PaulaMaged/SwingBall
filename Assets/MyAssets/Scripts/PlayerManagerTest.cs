@@ -1,8 +1,4 @@
-using System.Linq;
-using Unity.Netcode;
-using Unity.VisualScripting;
 using Unity.XR.CoreUtils;
-using UnityEditor;
 using UnityEngine;
 
 public class PlayerManagerTest : MonoBehaviour

@@ -1,7 +1,6 @@
 using UnityEngine;
-using UnityEngine.InputSystem;
 using Unity.Netcode;
-using Unity.Netcode.Components;
+using UnityEngine.InputSystem;
 public class PlayerControllerNetwork : NetworkBehaviour
 {
     [SerializeField] private GameObject _cameraHolder;

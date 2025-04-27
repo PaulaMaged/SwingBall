@@ -1,0 +1,19 @@
+{
+    "name": "AzureKinect",
+    "rootNamespace": "",
+    "references": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false,
+    "compilerOptions": {
+        "additionalCompilerArguments": [
+            "-nowarn:0618"
+        ]
+    }
+}

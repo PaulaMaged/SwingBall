@@ -1,5 +1,4 @@
 using Unity.Netcode;
-using Unity.XR.CoreUtils;
 using UnityEngine;
 
 public class BallManager : NetworkBehaviour
@@ -8,10 +7,11 @@ public class BallManager : NetworkBehaviour
 
     public GameObject ball;
     private Vector3 BallPositionInitial;
-    public MoveTowardsPlayer ballMovementScript;
     public Transform poleTransform;
 
+    private MoveTowardsPlayer ballMovementScript;
     private Vector3 startPosition;
+    
 
     private void Awake()
     {

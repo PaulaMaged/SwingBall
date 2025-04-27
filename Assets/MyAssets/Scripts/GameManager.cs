@@ -1,6 +1,5 @@
 using System;
 using Unity.Netcode;
-using Unity.VisualScripting;
 using UnityEngine;
 
 public class GameManager : NetworkBehaviour
@@ -9,6 +8,8 @@ public class GameManager : NetworkBehaviour
     public bool GameStarted { get; private set; } = false;
 
     [SerializeField] private GameObject ExerciseProgram;
+    public Transform SpawnPoint;
+
     private GameObject ProgramUI;
     private RehabProgram _RehabProgram;
 
@@ -27,7 +28,7 @@ public class GameManager : NetworkBehaviour
         _RehabProgram = ExerciseProgram.GetComponentInChildren<RehabProgram>();
 
         //handoff ownership of rehabProgram to client
-        ulong clientId = Array.Find<ulong>(PlayerManager.instance.playerClientIds, id => id != 0);
+        ulong clientId = Array.Find<ulong>(PlayerManager.instance.PlayerClientIds, id => id != 0);
         ExerciseProgram.GetComponent<NetworkObject>().ChangeOwnership(clientId);
         _RehabProgram.SyncExerciseConfigurationRpc(_RehabProgram.GetExerciseConfigurations());
         _RehabProgram.InitiateExercisesRpc();
@@ -47,7 +48,7 @@ public class GameManager : NetworkBehaviour
 
         ProgramUI = ExerciseProgram.transform.GetComponentInChildren<Canvas>(true).gameObject;
         ProgramUI.SetActive(true);
-        Camera camera = NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject().transform.Find("XR-Player").GetComponent<XRRigReferences>().Camera.GetComponent<Camera>();
+        Camera camera = NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject().transform.GetComponent<XRRigReferences>().Camera.GetComponent<Camera>();
         ExerciseProgram.GetComponentInChildren<Canvas>().worldCamera = camera;
     }
 }

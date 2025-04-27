@@ -1,6 +1,4 @@
 using System.Collections;
-using TreeEditor;
-using Unity.XR.CoreUtils;
 using UnityEngine;
 using Unity.Netcode;
 
@@ -97,7 +95,7 @@ public class MoveTowardsPlayer : NetworkBehaviour
         if (collision.gameObject.CompareTag("Racket"))
         {
             //only call the movement execution if the client is the one responsible for the hit(the patient)
-            if(collision.transform.root.gameObject == PlayerManager.instance.players[1]) RehabProgram.Instance.OnMovementExecutionRpc();
+            if(collision.transform.root.gameObject == PlayerManager.instance.Players[1]) RehabProgram.Instance.OnMovementExecutionRpc();
             PlayerManager.instance.SwitchTurnRpc();
         }
 

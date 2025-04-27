@@ -1,8 +1,6 @@
 using System;
 using System.Collections;
-using Unity.Mathematics;
 using Unity.Netcode;
-using Unity.VisualScripting;
 using UnityEngine;
 
 public class PoseManager : NetworkBehaviour

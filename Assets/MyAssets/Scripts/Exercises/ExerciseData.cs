@@ -1,10 +1,9 @@
 using Unity.Collections;
 using Unity.Netcode;
-using UnityEngine;
 
 public struct ExerciseData : INetworkSerializable
 {
-    public FixedString64Bytes Name;
+    public FixedString64Bytes Name; 
     public int Reps;
     public int Sets;
     public int breakTimeSeconds;

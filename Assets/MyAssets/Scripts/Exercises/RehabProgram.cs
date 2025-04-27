@@ -1,17 +1,11 @@
 using UnityEngine;
 using System.Collections.Generic;
-using TMPro;
 using UnityEngine.UI;
-using Unity.Netcode;
-using Unity.VisualScripting;
 using System;
-using Unity.Collections;
-using UnityEngine.TextCore.LowLevel;
-using UnityEditor.Experimental.GraphView;
-using UnityEngine.InputSystem;
-using Unity.Android.Gradle.Manifest;
 using System.Collections;
-using DemoCode;
+using Unity.Netcode;
+using UnityEngine.InputSystem;
+using TMPro;
 
 public class RehabProgram : NetworkBehaviour
 {
