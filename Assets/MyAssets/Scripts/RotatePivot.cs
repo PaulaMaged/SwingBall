@@ -21,8 +21,8 @@ public class RotatePivot : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-            Quaternion deltaRotation = Quaternion.AngleAxis(rotationSpeed * Time.deltaTime, rotationAxis);
-            transform.rotation *= deltaRotation;
+        Quaternion deltaRotation = Quaternion.AngleAxis(rotationSpeed * Time.deltaTime, rotationAxis);
+        transform.rotation *= deltaRotation;
     }
     public void ChangeDirection(Vector3 newDirection)
     {

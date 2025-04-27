@@ -14,7 +14,7 @@ public class PlayerManager : NetworkBehaviour
 
     public GameObject[] Players { get; private set; }
     public ulong[] PlayerClientIds { get; private set; }
-    public GameObject[] Rackets { get; private set;}
+    public GameObject[] Rackets { get; private set; }
     public Vector3[] PlayerPositions { get; private set; }
 
     private int playerCount = 0;
@@ -51,7 +51,7 @@ public class PlayerManager : NetworkBehaviour
 
         Vector3 startPosition = BallManager.instance.poleTransform.position;
 
-        for(int i = 0; i < PlayerPositions.Length; i++)
+        for (int i = 0; i < PlayerPositions.Length; i++)
         {
             float angle = (currentAngle + i * angleIncrement) * Mathf.Deg2Rad;
             float positionX = (Mathf.Cos(angle) * radius) + startPosition.x;
@@ -91,7 +91,7 @@ public class PlayerManager : NetworkBehaviour
     public bool IsAllBallHomePositionsSet()
     {
         bool IsAllHomePositionsSet = homePositions.All(homePosition => homePosition != default);
-        Debug.Log($"Can Game start? : {(IsAllHomePositionsSet? "Yes" : "No")}");
+        Debug.Log($"Can Game start? : {(IsAllHomePositionsSet ? "Yes" : "No")}");
         return IsAllHomePositionsSet;
     }
 
@@ -113,7 +113,7 @@ public class PlayerManager : NetworkBehaviour
             yield break;
         }
 
-        if(IsServer) playerNetworkObjectRefs.Add(new NetworkObjectReference(playerNetworkObject));
+        if (IsServer) playerNetworkObjectRefs.Add(new NetworkObjectReference(playerNetworkObject));
 
         PlayerClientIds[playerCount] = playerNetworkObject.OwnerClientId;
         Players[playerCount] = player;
@@ -146,7 +146,7 @@ public class PlayerManager : NetworkBehaviour
     public void PlacePlayers()
     {
         int i = 0;
-        foreach(var player in Players)
+        foreach (var player in Players)
         {
             if (player == null) continue;
 

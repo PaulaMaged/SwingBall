@@ -12,7 +12,8 @@ public class BodyJointsInfo : ScriptableObject
     private Dictionary<KinectInterop.JointType, int> _joint2MaxAngle;
     public Dictionary<KinectInterop.JointType, int> Joint2MaxAngle
     {
-        get {
+        get
+        {
             _joint2MaxAngle ??= JointMaxAngleList.ToDictionary();
 
             return _joint2MaxAngle;
@@ -29,7 +30,7 @@ public class BodyJointsInfo : ScriptableObject
         public Dictionary<KinectInterop.JointType, int> ToDictionary()
         {
             Dictionary<KinectInterop.JointType, int> joint2MaxAngle = new();
-            foreach(var item in items)
+            foreach (var item in items)
             {
                 joint2MaxAngle.Add(item.JointType, item.JointMaxAngle);
                 KinectInterop.JointType mirroredJoint = PoseModelHelper.mirrorJointMap2JointMap[item.JointType];

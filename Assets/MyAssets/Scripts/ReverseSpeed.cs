@@ -34,7 +34,7 @@ public class ReverseSpeed : MonoBehaviour
         inDirection.Normalize();
         Vector3 reflectedDirection = Vector3.Reflect(inDirection, contactNormal).normalized;
         Vector3 projectedDirection = Vector3.ProjectOnPlane(reflectedDirection, offset).normalized;
-        
+
         Debug.DrawRay(contactPoint, inDirection * 2f, Color.gray, 2f);
         Debug.DrawRay(contactPoint, contactNormal, Color.red, 2f);
         Debug.DrawRay(contactPoint, reflectedDirection * 10f, Color.green, 2f);

@@ -1,7 +1,7 @@
-using UnityEngine;
-using Unity.Netcode;
-using UnityEngine.UI;
 using System.Collections.Generic;
+using Unity.Netcode;
+using UnityEngine;
+using UnityEngine.UI;
 
 public class ExerciseSync : NetworkBehaviour
 {

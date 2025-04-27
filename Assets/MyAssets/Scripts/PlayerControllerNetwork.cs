@@ -1,5 +1,5 @@
-using UnityEngine;
 using Unity.Netcode;
+using UnityEngine;
 using UnityEngine.InputSystem;
 public class PlayerControllerNetwork : NetworkBehaviour
 {
@@ -39,7 +39,8 @@ public class PlayerControllerNetwork : NetworkBehaviour
         {
             this.enabled = false;
             return;
-        } else
+        }
+        else
         {
             _cameraHolder.SetActive(true);
         }

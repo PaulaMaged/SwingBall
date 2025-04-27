@@ -72,7 +72,7 @@ public class PlayerController : MonoBehaviour
         _input = context.ReadValue<Vector2>();
     }
 
-    private void Jump(InputAction.CallbackContext context) 
+    private void Jump(InputAction.CallbackContext context)
     {
         if (!IsGrounded()) return;
 

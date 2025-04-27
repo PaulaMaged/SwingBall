@@ -58,7 +58,7 @@ namespace com.rfilkov.kinect
         bool GestureCancelled(ulong userId, int userIndex, GestureType gesture,
                               KinectInterop.JointType joint);
     }
-
+      
 
     /// <summary>
     /// Kinect gesture types.
@@ -498,7 +498,7 @@ namespace com.rfilkov.kinect
         {
             gestureListeners.Clear();
 
-            MonoBehaviour[] monoScripts = FindObjectsOfType<MonoBehaviour>() as MonoBehaviour[];
+            MonoBehaviour[] monoScripts = FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None);
             foreach (MonoBehaviour monoScript in monoScripts)
             {
                 if ((monoScript is GestureListenerInterface) && monoScript.enabled)

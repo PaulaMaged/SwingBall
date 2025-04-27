@@ -25,7 +25,7 @@ public class BallPath : MonoBehaviour
     {
         if (!followPlayer || !GameManagerTest.Instance.GameStarted) return;
 
-        if(isCoroutineRunning) StopCoroutine(coroutine);
+        if (isCoroutineRunning) StopCoroutine(coroutine);
 
         Vector3 inNormal = collision.contacts[0].normal;
         Vector3 contactPoint = collision.contacts[0].point;
@@ -79,7 +79,7 @@ public class BallPath : MonoBehaviour
     {
         //get forward vector from player to pole
         Vector3 forward = BallManagerTest.instance.poleTransform.position - transform.position;
-        if(Vector3.Dot(forward, inDirection) < 0)
+        if (Vector3.Dot(forward, inDirection) < 0)
         {
             Debug.Log("Flipped inDirection");
             return -inDirection;

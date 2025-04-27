@@ -11,7 +11,7 @@ public class BallManager : NetworkBehaviour
 
     private MoveTowardsPlayer ballMovementScript;
     private Vector3 startPosition;
-    
+
 
     private void Awake()
     {

@@ -121,7 +121,7 @@ namespace com.rfilkov.components
             }
 
             // find scene lights
-            Light[] sceneLights = GameObject.FindObjectsOfType<Light>();
+            Light[] sceneLights = GameObject.FindObjectsByType<Light>(FindObjectsSortMode.None);
             lighting.SetLightsAndBounds(sceneLights, transform.position, new Vector3(20f, 20f, 20f));
         }
 

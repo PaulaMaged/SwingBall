@@ -17,13 +17,14 @@ public class MoveBat : MonoBehaviour
 
     private void Update()
     {
-        if(isMoving)
+        if (isMoving)
         {
             if (coroutine != null) return;
 
             transform.position = initPosition;
             coroutine = StartCoroutine(Sway());
-        } else
+        }
+        else
         {
             if (coroutine == null) return;
             StopCoroutine(coroutine);
@@ -34,9 +35,9 @@ public class MoveBat : MonoBehaviour
     private IEnumerator Sway()
     {
         float delta = 0;
-        while(true)
+        while (true)
         {
-            if(Mathf.Abs(delta) > offset)
+            if (Mathf.Abs(delta) > offset)
             {
                 deltaMovement *= -1;
             }

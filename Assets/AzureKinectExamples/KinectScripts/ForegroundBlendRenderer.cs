@@ -66,7 +66,7 @@ namespace com.rfilkov.components
 
             if (backgroundRemovalManager == null)
             {
-                backgroundRemovalManager = FindObjectOfType<BackgroundRemovalManager>();
+                backgroundRemovalManager = FindFirstObjectByType<BackgroundRemovalManager>();
             }
 
             // get distance to back image
@@ -108,7 +108,7 @@ namespace com.rfilkov.components
             }
 
             // find scene lights
-            Light[] sceneLights = GameObject.FindObjectsOfType<Light>();
+            Light[] sceneLights = GameObject.FindObjectsByType<Light>(FindObjectsSortMode.None);
             lighting.SetLightsAndBounds(sceneLights, transform.position, new Vector3(20f, 20f, 20f));
 
             //Debug.Log("sceneLights: " + sceneLights.Length);

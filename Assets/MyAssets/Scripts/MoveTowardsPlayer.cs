@@ -1,6 +1,6 @@
 using System.Collections;
-using UnityEngine;
 using Unity.Netcode;
+using UnityEngine;
 
 public class MoveTowardsPlayer : NetworkBehaviour
 {
@@ -27,7 +27,7 @@ public class MoveTowardsPlayer : NetworkBehaviour
         followPlayer = false;
         StopCoroutine();
 
-        if(position != default)
+        if (position != default)
         {
             transform.position = position;
             Debug.Log($"Ball at initial position {transform.position}");
@@ -36,7 +36,8 @@ public class MoveTowardsPlayer : NetworkBehaviour
 
     public void StopCoroutine()
     {
-        if(isCoroutineRunning) {
+        if (isCoroutineRunning)
+        {
             StopCoroutine(coroutine);
             isCoroutineRunning = false;
         }
@@ -55,13 +56,14 @@ public class MoveTowardsPlayer : NetworkBehaviour
         if (inDirection == Vector3.zero)
         {
             outDirection = collision.contacts[0].normal;
-        } else
+        }
+        else
         {
             outDirection = Vector3.Reflect(inDirection, inNormal);
         }
 
         //debug vectors
-        Debug.DrawRay(contactPoint, inDirection * 5f, Color.magenta , 2f);
+        Debug.DrawRay(contactPoint, inDirection * 5f, Color.magenta, 2f);
         Debug.DrawRay(contactPoint, inNormal * 5f, Color.red, 2f);
         Debug.DrawRay(contactPoint, outDirection * 5f, Color.green, 2f);
 
@@ -95,7 +97,7 @@ public class MoveTowardsPlayer : NetworkBehaviour
         if (collision.gameObject.CompareTag("Racket"))
         {
             //only call the movement execution if the client is the one responsible for the hit(the patient)
-            if(collision.transform.root.gameObject == PlayerManager.instance.Players[1]) RehabProgram.Instance.OnMovementExecutionRpc();
+            if (collision.transform.root.gameObject == PlayerManager.instance.Players[1]) RehabProgram.Instance.OnMovementExecutionRpc();
             PlayerManager.instance.SwitchTurnRpc();
         }
 
@@ -127,9 +129,10 @@ public class MoveTowardsPlayer : NetworkBehaviour
         public Vector3 BallInDirection;
         public Collision collision;
 
-        public void Update(Vector3 BallInDirection, Collision collision) {
+        public void Update(Vector3 BallInDirection, Collision collision)
+        {
             this.BallInDirection = BallInDirection;
             this.collision = collision;
-        } 
+        }
     }
 }

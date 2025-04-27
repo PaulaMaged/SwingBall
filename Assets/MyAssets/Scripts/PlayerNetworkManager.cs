@@ -24,7 +24,7 @@ public class PlayerNetworkManager : NetworkBehaviour
         //by default, all components for player movement are off for reasons beyond this comment
         //EnablePlayerMovement();
         var netObjId = GetComponent<NetworkObject>().NetworkObjectId;
-        
+
         UpdatePlayerListRpc(netObjId);
 
         SetPlayerTransformData(spawnPoint.position, spawnPoint.rotation);
@@ -35,7 +35,7 @@ public class PlayerNetworkManager : NetworkBehaviour
     public void EnablePlayerMovement()
     {
         TrackedPoseDriver[] trackedPoseDrivers = GetComponentsInChildren<TrackedPoseDriver>();
-        foreach(TrackedPoseDriver trackedPoseDriver in trackedPoseDrivers)
+        foreach (TrackedPoseDriver trackedPoseDriver in trackedPoseDrivers)
         {
             trackedPoseDriver.enabled = true;
         }
@@ -61,7 +61,7 @@ public class PlayerNetworkManager : NetworkBehaviour
     {
         transform.position = newPosition;
 
-        if(newRotation == null)
+        if (newRotation == null)
         {
             Transform playerTransform = NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject().transform;
             Vector3 polePosition = BallManager.instance.poleTransform.position;

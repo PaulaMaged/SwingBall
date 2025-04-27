@@ -26,7 +26,7 @@ namespace com.rfilkov.components
 
             if(backgroundRemovalManager == null)
             {
-                backgroundRemovalManager = FindObjectOfType<BackgroundRemovalManager>();
+                backgroundRemovalManager = FindFirstObjectByType<BackgroundRemovalManager>();
             }
 
             if (kinectManager && kinectManager.IsInitialized() && backgroundRemovalManager && backgroundRemovalManager.enabled)

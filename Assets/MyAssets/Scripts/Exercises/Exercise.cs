@@ -1,6 +1,6 @@
 using com.rfilkov.kinect;
-using System.Collections.Generic;
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "NewExercise", menuName = "Rehab/Exercise")]
@@ -89,7 +89,7 @@ public class Exercise : ScriptableObject
         }
 
         // If total weight exceeds 1, reset weights or display a warning
-        if (totalWeight > 1f )
+        if (totalWeight > 1f)
         {
 
             // Option 2: Alternatively, you could display a message or reset everything

@@ -1,6 +1,6 @@
-using UnityEngine;
-using UnityEditor.Animations;  // Required for AnimatorController access at runtime
 using System.Collections.Generic;
+using UnityEditor.Animations;  // Required for AnimatorController access at runtime
+using UnityEngine;
 using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(Animator))]

@@ -1,4 +1,3 @@
-using UnityEngine;
 using Unity.Netcode.Components;
 using UnityEngine.InputSystem;
 public class OwnerNetworkAnimator : NetworkAnimator
@@ -15,7 +14,7 @@ public class OwnerNetworkAnimator : NetworkAnimator
     }
     private void Update()
     {
-        if(Keyboard.current.digit1Key.wasPressedThisFrame)
+        if (Keyboard.current.digit1Key.wasPressedThisFrame)
         {
 
             this.SetTrigger("TrSwing");

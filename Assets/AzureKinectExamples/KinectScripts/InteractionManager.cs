@@ -205,7 +205,7 @@ namespace com.rfilkov.components
         public static InteractionManager GetInstance(int playerIndex, bool leftHandInteraction, bool rightHandInteraction)
         {
             // find the proper interaction manager
-            MonoBehaviour[] monoScripts = FindObjectsOfType(typeof(MonoBehaviour)) as MonoBehaviour[];
+            MonoBehaviour[] monoScripts = FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None);
 
             foreach (MonoBehaviour monoScript in monoScripts)
             {
@@ -432,7 +432,7 @@ namespace com.rfilkov.components
             // try to automatically detect the available interaction listeners in the scene
             if (interactionListeners.Count == 0)
             {
-                MonoBehaviour[] monoScripts = FindObjectsOfType(typeof(MonoBehaviour)) as MonoBehaviour[];
+                MonoBehaviour[] monoScripts = FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None);
 
                 foreach (MonoBehaviour monoScript in monoScripts)
                 {

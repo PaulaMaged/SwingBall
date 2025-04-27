@@ -38,7 +38,7 @@ public class GameManager : NetworkBehaviour
     {
         base.OnNetworkSpawn();
 
-        if(!NetworkManager.Singleton.IsHost)
+        if (!NetworkManager.Singleton.IsHost)
         {
             return;
         }

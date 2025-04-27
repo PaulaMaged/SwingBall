@@ -14,14 +14,15 @@ public class DebugTransform : MonoBehaviour
 
     private void Update()
     {
-        if(!coroutineActivationState)
+        if (!coroutineActivationState)
         {
             if (coroutine != null)
             {
                 StopCoroutine(coroutine);
                 coroutineActivationState = false;
             }
-        } else
+        }
+        else
         {
             if (coroutine == null)
             {
@@ -33,7 +34,7 @@ public class DebugTransform : MonoBehaviour
 
     public IEnumerator printStatus()
     {
-        while(true)
+        while (true)
         {
             Debug.Log(transform.rotation.eulerAngles);
             yield return new WaitForSeconds(timeBetweenDebugLogs);

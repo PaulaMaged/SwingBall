@@ -3085,7 +3085,7 @@ namespace com.rfilkov.kinect
 
                 // locate the available depth-sensor interfaces in the scene
                 List<DepthSensorBase> sensorInts = new List<DepthSensorBase>();
-                sensorInts.AddRange(gameObject.GetComponents<DepthSensorBase>());  // FindObjectsOfType<MonoBehaviour>();
+                sensorInts.AddRange(gameObject.GetComponents<DepthSensorBase>());  // FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None);
                 sensorInts.AddRange(gameObject.GetComponentsInChildren<DepthSensorBase>());
 
                 // check for multi-camera config

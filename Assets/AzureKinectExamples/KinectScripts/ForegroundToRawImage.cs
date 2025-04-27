@@ -21,7 +21,7 @@ namespace com.rfilkov.components
             rawImage = GetComponent<RawImage>();
 
             kinectManager = KinectManager.Instance;
-            backManager = FindObjectOfType<BackgroundRemovalManager>();
+            backManager = FindFirstObjectByType<BackgroundRemovalManager>();
         }
 
 

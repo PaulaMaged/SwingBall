@@ -1,6 +1,6 @@
 using System.Collections;
-using UnityEngine;
 using Unity.Netcode;
+using UnityEngine;
 
 public class SetupPeerType : MonoBehaviour
 {

@@ -1,5 +1,5 @@
-using UnityEngine;
 using System.Collections.Generic;
+using UnityEngine;
 using UnityEngine.InputSystem;
 
 [CreateAssetMenu(fileName = "KeyToAnimationMap", menuName = "Debug/KeyToAnimationMap")]

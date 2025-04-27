@@ -29,7 +29,7 @@ public class PoseManager : NetworkBehaviour
 
     private bool FakeBool()
     {
-        int randomInt = UnityEngine.Random.Range(0, currentPoseState == PoseStates.Start? maxRandomValueStart : maxRandomValueEnd);
+        int randomInt = UnityEngine.Random.Range(0, currentPoseState == PoseStates.Start ? maxRandomValueStart : maxRandomValueEnd);
 
         Debug.Log($"Random Value Is: {randomInt}");
         if (randomInt == 0) return true;
@@ -60,7 +60,8 @@ public class PoseManager : NetworkBehaviour
             Debug.Log("Start Pose Satisfied");
             IsPoseCycleComplete = true;
             currentPoseState = PoseStates.End;
-        } else if (currentPoseState == PoseStates.End)
+        }
+        else if (currentPoseState == PoseStates.End)
         {
             Debug.Log("End Pose Satisfied");
             IsPoseCycleComplete = false;
@@ -73,7 +74,7 @@ public class PoseManager : NetworkBehaviour
 
     private IEnumerator ListenToPoseCompletion()
     {
-        while(!HasSatisfiedPoseAccuracy())
+        while (!HasSatisfiedPoseAccuracy())
         {
             yield return null;
         }
@@ -84,7 +85,7 @@ public class PoseManager : NetworkBehaviour
 
     internal void SetupPose(string exerciseName, bool IsStartNow = true)
     {
-          if(animator == null)
+        if (animator == null)
         {
             throw new NullReferenceException("Can't Setup Pose without having setup an animator");
         }
@@ -94,8 +95,8 @@ public class PoseManager : NetworkBehaviour
 
         StopAllCoroutines();
         IsPoseCycleComplete = false;
-        
-        if(IsStartNow) StartCoroutine(ListenToPoseCompletion());
+
+        if (IsStartNow) StartCoroutine(ListenToPoseCompletion());
 
     }
 
@@ -108,7 +109,7 @@ public class PoseManager : NetworkBehaviour
 
     public string GetPoseName(PoseStates poseState)
     {
-        switch(poseState)
+        switch (poseState)
         {
             case PoseStates.None: return "Empty";
             case PoseStates.Start: return ExerciseName + "Start";

@@ -1,10 +1,10 @@
-﻿using UnityEngine;
+﻿using com.rfilkov.kinect;
+using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Text;
-using com.rfilkov.kinect;
 using System.Linq;
-using System;
+using System.Text;
+using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
 
@@ -367,7 +367,7 @@ namespace com.rfilkov.components
                 //Replace with obtaining from the original reference
                 Quaternion qPoseBone = GetJointOrientation(poseModel, poseJoints[i], IsMirrored, true);
                 Quaternion qAvatarBone = GetJointOrientation(avatarModel, poseJoints[i], IsMirrored, true);
-                
+
                 float fDiff = Quaternion.Angle(qPoseBone, qAvatarBone);
                 //get vector along bone if exists
                 Transform startBoneTransform = avatarModel.GetBoneTransform(PoseModelHelper.GetBoneIndexByJoint(poseJoints[i], IsMirrored));

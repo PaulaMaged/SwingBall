@@ -1,11 +1,11 @@
-using UnityEngine;
-using System.Collections.Generic;
-using UnityEngine.UI;
 using System;
 using System.Collections;
-using Unity.Netcode;
-using UnityEngine.InputSystem;
+using System.Collections.Generic;
 using TMPro;
+using Unity.Netcode;
+using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.UI;
 
 public class RehabProgram : NetworkBehaviour
 {
@@ -150,7 +150,8 @@ public class RehabProgram : NetworkBehaviour
 
         bool FinishedSet = false;
 
-        if (IsRepCountReached()) {
+        if (IsRepCountReached())
+        {
             exerciseProgress.Value = exerciseProgress.Value.AddSet();
             FinishedSet = true;
         }
@@ -243,7 +244,7 @@ public class RehabProgram : NetworkBehaviour
         Destroy(ProgressCanvasInstance);
     }
 
-    
+
     [Rpc(SendTo.Server)]
     public void SetupStartExerciseButtonRpc()
     {
@@ -289,7 +290,7 @@ public class RehabProgram : NetworkBehaviour
 
         PoseManager.instance.SetupPose(Exercises[exerciseIndex].Name, IsStartNow);
 
-        if(poseState != PoseStates.Start) PoseManager.instance.SetAvatarPose(poseState);
+        if (poseState != PoseStates.Start) PoseManager.instance.SetAvatarPose(poseState);
 
         Debug.Log("Player end Pose");
     }

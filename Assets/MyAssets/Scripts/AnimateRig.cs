@@ -1,6 +1,4 @@
-using System;
 using UnityEngine;
-using UnityEngine.Windows;
 
 public class AnimateRig : MonoBehaviour
 {
@@ -16,7 +14,7 @@ public class AnimateRig : MonoBehaviour
 
     public Vector3 RBatPositionOffset;
     public Vector3 RBatRotationOffset;
-    
+
     public Vector3 LBatPositionOffset;
     public Vector3 LBatRotationOffset;
 
