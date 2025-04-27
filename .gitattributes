@@ -1,0 +1,22 @@
+# Handle text files automatically
+* text=auto
+
+# Explicitly set types for common files
+*.cs   text
+*.csproj text
+*.sln  text
+*.md   text
+*.txt  text
+*.json text
+*.xml  text
+*.yml  text
+*.yaml text
+
+# Binary files (no conversion)
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.pdf  binary
+*.zip  binary
+*.exe  binary
