@@ -20,3 +20,6 @@
 *.pdf  binary
 *.zip  binary
 *.exe  binary
+
+# Treat DLLs as binary—no EOL conversion, no normalization
+*.dll   binary
