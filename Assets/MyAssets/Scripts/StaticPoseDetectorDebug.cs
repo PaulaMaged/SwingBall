@@ -4,11 +4,9 @@ using System.Collections.Generic;
 using System.Text;
 using com.rfilkov.kinect;
 using System.Linq;
-using Windows.Kinect;
-using UnityEngine.InputSystem.Controls;
-using UnityEngine.InputSystem;
-using Unity.VisualScripting;
 using System;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Controls;
 
 namespace com.rfilkov.components
 {
@@ -58,8 +56,6 @@ namespace com.rfilkov.components
         private bool bPoseMatched = false;
         // match percent (between 0 and 1)
         private float fMatchPercent = 0f;
-        // pose-time with best matching
-        private float fMatchPoseTime = 0f;
 
         // initial rotation
         private Quaternion initialAvatarRotation = Quaternion.identity;
@@ -155,7 +151,6 @@ namespace com.rfilkov.components
             {
                 // no user found
                 fMatchPercent = 0f;
-                fMatchPoseTime = 0f;
                 bPoseMatched = false;
 
                 if (infoText != null)
@@ -332,6 +327,27 @@ namespace com.rfilkov.components
 
         }
 
+        /// <summary>
+        /// Strips out the twist component around the given axis from quaternion q.
+        /// </summary>
+        /// <param name="q">Original rotation (in local space of the bone).</param>
+        /// <param name="axis">Normalized axis to remove twist around.</param>
+        /// <returns>Quaternion containing only the swing component.</returns>
+        public static void RemoveTwist(Quaternion q, Vector3 axis, out Quaternion swing, out Quaternion twist)
+        {
+            // Extract vector part
+            Vector3 r = new Vector3(q.x, q.y, q.z);
+            // Project onto twist axis
+            Vector3 proj = Vector3.Dot(r, axis) * axis;
+
+            // Reconstruct the twist quaternion
+            twist = new Quaternion(proj.x, proj.y, proj.z, q.w);
+            twist = Quaternion.Normalize(twist);
+
+            // Swing is the residual
+            swing = q * Quaternion.Inverse(twist);
+        }
+
         // gets the difference between the avatar pose and the list of saved poses
         private void GetPoseDifference(bool IsMirrored)
         {
@@ -351,8 +367,21 @@ namespace com.rfilkov.components
                 //Replace with obtaining from the original reference
                 Quaternion qPoseBone = GetJointOrientation(poseModel, poseJoints[i], IsMirrored, true);
                 Quaternion qAvatarBone = GetJointOrientation(avatarModel, poseJoints[i], IsMirrored, true);
-
+                
                 float fDiff = Quaternion.Angle(qPoseBone, qAvatarBone);
+                //get vector along bone if exists
+                Transform startBoneTransform = avatarModel.GetBoneTransform(PoseModelHelper.GetBoneIndexByJoint(poseJoints[i], IsMirrored));
+                Transform endBoneTransform = avatarModel.GetBoneTransform(PoseModelHelper.GetBoneIndexByJoint(KinectInterop.GetNextJoint(poseJoints[i]), IsMirrored));
+                if (startBoneTransform != endBoneTransform)
+                {
+                    Vector3 boneDirection = (endBoneTransform.position - startBoneTransform.position).normalized;
+                    //decompose avatar's joint quaternion
+                    RemoveTwist(qAvatarBone, boneDirection, out Quaternion AvatarSwing, out Quaternion AvatarTwist);
+                    RemoveTwist(qPoseBone, boneDirection, out Quaternion ReferenceSwing, out Quaternion ReferenceTwist);
+                    float newfDiff = Quaternion.Angle(ReferenceSwing, AvatarSwing);
+                    Debug.Log($"Previous Difference: {fDiff}\n Swing Difference: {newfDiff}\n Is Better? - <b>{fDiff > newfDiff}</b>\n");
+                    fDiff = newfDiff;
+                }
 
                 int maxAngle;
                 float jointWeight;

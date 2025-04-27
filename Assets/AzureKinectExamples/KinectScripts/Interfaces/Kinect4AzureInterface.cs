@@ -1863,11 +1863,11 @@ namespace com.rfilkov.kinect
                     KinectInterop.CopyFolderFile(bodyTrackingPath, "cudnn64_8.dll", ".");
                     KinectInterop.CopyFolderFile(bodyTrackingPath, "cufft64_10.dll", ".");
                     KinectInterop.CopyFolderFile(bodyTrackingPath, "directml.dll", ".");
-                    KinectInterop.CopyFolderFile(bodyTrackingPath, "myelin64_1.dll", ".");
+                    //KinectInterop.CopyFolderFile(bodyTrackingPath, "myelin64_1.dll", ".");
                     KinectInterop.CopyFolderFile(bodyTrackingPath, "nvinfer.dll", ".");
                     KinectInterop.CopyFolderFile(bodyTrackingPath, "nvinfer_plugin.dll", ".");
-                    KinectInterop.CopyFolderFile(bodyTrackingPath, "nvrtc64_111_0.dll", ".");
-                    KinectInterop.CopyFolderFile(bodyTrackingPath, "nvrtc-builtins64_111.dll", ".");
+                    //KinectInterop.CopyFolderFile(bodyTrackingPath, "nvrtc64_111_0.dll", ".");
+                    //KinectInterop.CopyFolderFile(bodyTrackingPath, "nvrtc-builtins64_111.dll", ".");
 
                     KinectInterop.CopyFolderFile(bodyTrackingPath, "onnxruntime.dll", ".");
                     KinectInterop.CopyFolderFile(bodyTrackingPath, "onnxruntime_providers_shared.dll", ".");
