@@ -46,7 +46,7 @@ namespace com.rfilkov.components
         public TextMeshProUGUI infoText;
 
         [Tooltip("Key to be used to skip a joint slerp")]
-        public Key skipJointSlerpKeyEnum;
+        public Key skipJointSlerpKeyEnum = Key.T;
 
         //the list body joint weights
         private Dictionary<KinectInterop.JointType, JointInfo> joint2WeightAndMaxAngles = new();
@@ -380,19 +380,6 @@ namespace com.rfilkov.components
                 Quaternion qAvatarBone = GetJointOrientation(AvatarModel, poseJoints[i], IsMirrored, true);
 
                 float fDiff = Quaternion.Angle(qPoseBone, qAvatarBone);
-                //get vector along bone if exists
-                Transform startBoneTransform = AvatarModel.GetBoneTransform(PoseModelHelper.GetBoneIndexByJoint(poseJoints[i], IsMirrored));
-                Transform endBoneTransform = AvatarModel.GetBoneTransform(PoseModelHelper.GetBoneIndexByJoint(KinectInterop.GetNextJoint(poseJoints[i]), IsMirrored));
-                if (startBoneTransform != endBoneTransform)
-                {
-                    Vector3 boneDirection = (endBoneTransform.position - startBoneTransform.position).normalized;
-                    //decompose avatar's joint quaternion
-                    RemoveTwist(qAvatarBone, boneDirection, out Quaternion AvatarSwing, out Quaternion AvatarTwist);
-                    RemoveTwist(qPoseBone, boneDirection, out Quaternion ReferenceSwing, out Quaternion ReferenceTwist);
-                    float newfDiff = Quaternion.Angle(ReferenceSwing, AvatarSwing);
-                    Debug.Log($"Previous Difference: {fDiff}\n Swing Difference: {newfDiff}\n Is Better? - <b>{fDiff > newfDiff}</b>\n");
-                    fDiff = newfDiff;
-                }
 
                 int maxAngle;
                 float jointWeight;

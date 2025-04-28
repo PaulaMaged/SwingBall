@@ -21,12 +21,6 @@ public class PoseManager : NetworkBehaviour
         instance = this;
     }
 
-    public bool HasSatisfiedPoseAccuracy()
-    {
-
-        return FakeBool();
-    }
-
     private bool FakeBool()
     {
         int randomInt = UnityEngine.Random.Range(0, currentPoseState == PoseStates.Start ? maxRandomValueStart : maxRandomValueEnd);
@@ -38,7 +32,7 @@ public class PoseManager : NetworkBehaviour
 
     public bool HasCompletedMotion()
     {
-        if (IsPoseCycleComplete && HasSatisfiedPoseAccuracy()) return true;
+        if (IsPoseCycleComplete) return true;
         Debug.Log("Motion Isn't Completed");
         return false;
     }
@@ -74,7 +68,9 @@ public class PoseManager : NetworkBehaviour
 
     private IEnumerator ListenToPoseCompletion()
     {
-        while (!HasSatisfiedPoseAccuracy())
+        yield return null;
+
+        while (!RehabProgram.Instance.IsPoseMatched())
         {
             yield return null;
         }
@@ -104,7 +100,7 @@ public class PoseManager : NetworkBehaviour
     {
         currentPoseState = poseState;
         string stateName = GetPoseName(poseState);
-        PlayAnimation(stateName);
+        PlayAnimationRpc(stateName);
     }
 
     public string GetPoseName(PoseStates poseState)
@@ -119,8 +115,10 @@ public class PoseManager : NetworkBehaviour
         }
     }
 
-    public void PlayAnimation(string stateName)
+    [Rpc(SendTo.Everyone)]
+    public void PlayAnimationRpc(string stateName)
     {
+        Debug.Log($"Play State: {stateName}");
         animator.Play(stateName);
     }
 }

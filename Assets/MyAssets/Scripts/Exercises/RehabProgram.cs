@@ -98,6 +98,11 @@ public class RehabProgram : NetworkBehaviour
 
     }
 
+    public bool IsPoseMatched()
+    {
+        return staticPoseDetectorDebug.IsPoseMatched();
+    }
+
     public bool IsProgramCompleted()
     {
         if (currentExerciseIndex == Exercises.Count)
@@ -113,9 +118,7 @@ public class RehabProgram : NetworkBehaviour
         Vector3 canvasPosition = BallManager.instance.poleTransform.position + Vector3.forward * 10 + Vector3.up * 4;
         Quaternion canvasRotation = Quaternion.identity;
         ProgressCanvasInstance = Instantiate(ProgressCanvasPrefab, canvasPosition, canvasRotation);
-
-        SetupDetection();
-
+        ReferenceCharacterInstance = Instantiate(ReferenceCharacterPrefab);
         PoseManager.instance.SetAnimator(ReferenceCharacterInstance.GetComponent<Animator>());
 
         CacheUIFields();
@@ -125,14 +128,16 @@ public class RehabProgram : NetworkBehaviour
 
         if (!IsOwner) return;
 
+        SetupDetection();
+
         currentExerciseIndex = 0;
+
         SetupNextExercise();
 
     }
 
     private void SetupDetection()
     {
-        ReferenceCharacterInstance = Instantiate(ReferenceCharacterPrefab);
         staticPoseDetectorDebug = gameObject.AddComponent<StaticPoseDetectorDebug>();
         if (!NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject().gameObject.TryGetComponent(out PoseModelHelper playerModelHelper)) return;
         staticPoseDetectorDebug.Init(ReferenceCharacterInstance, playerModelHelper);
@@ -148,7 +153,7 @@ public class RehabProgram : NetworkBehaviour
             return;
         }
 
-        if (!PoseManager.instance.HasCompletedMotion()) return;
+        if (!PoseManager.instance.HasCompletedMotion() || !IsPoseMatched()) return;
 
         HandleRep();
         PoseManager.instance.NextPose();
@@ -257,7 +262,6 @@ public class RehabProgram : NetworkBehaviour
         Destroy(ProgressCanvasInstance);
     }
 
-
     [Rpc(SendTo.Server)]
     public void SetupStartExerciseButtonRpc()
     {
@@ -292,7 +296,7 @@ public class RehabProgram : NetworkBehaviour
         Debug.Log($"Message: {message}\nData: {value}");
     }
 
-    [Rpc(SendTo.ClientsAndHost)]
+    [Rpc(SendTo.Owner)]
     public void PlayExerciseAnimationRpc(bool IsStartNow, int exerciseIndex = -1, PoseStates poseState = PoseStates.Start)
     {
         Debug.Log("Setup Pose");
@@ -311,7 +315,7 @@ public class RehabProgram : NetworkBehaviour
     public void SetupAnchorPoint(InputAction.CallbackContext context)
     {
         Debug.Log($"Called Pose Confirmation Function with ClientId: {NetworkManager.Singleton.LocalClientId}");
-        if (IsPatient && !PoseManager.instance.HasSatisfiedPoseAccuracy()) return; //for the local instance to find out the accuracy of its avatar
+        if (IsPatient && !IsPoseMatched()) return; //for the local instance to find out the accuracy of its avatar
 
         PlayerManager.instance.SetBallHomePositionRpc(NetworkManager.Singleton.LocalClientId);
     }

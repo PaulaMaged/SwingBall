@@ -1,7 +1,10 @@
 using com.rfilkov.components;
+using System;
+using System.Collections;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem.XR;
+using UnityEngine.UIElements;
 using UnityEngine.XR.Interaction.Toolkit.Inputs;
 
 public class PlayerNetworkManager : NetworkBehaviour
@@ -14,12 +17,23 @@ public class PlayerNetworkManager : NetworkBehaviour
 
         if (!IsOwner)
         {
-            this.enabled = false;
+            enabled = false;
             return;
         }
 
-        Transform spawnPoint = GameManager.Instance.SpawnPoint;
         //sets this player's transform
+        Transform spawnPoint = GameManager.Instance.SpawnPoint;
+        SetPlayerTransformData(spawnPoint.position, spawnPoint.rotation);
+
+        //Func<Vector3, Quaternion, bool> IsTransformChanged = (oldPosition, oldRotation) =>
+        //{
+        //    if (transform.position != oldPosition || transform.rotation != oldRotation)
+        //        return true;
+        //    else
+        //        return false;
+        //};
+
+        //StartCoroutine(ListenToTransformCoroutine(IsTransformChanged, spawnPoint.position, spawnPoint.rotation));
 
         //by default, all components for player movement are off for reasons beyond this comment
         EnablePlayerMovement();
@@ -27,9 +41,17 @@ public class PlayerNetworkManager : NetworkBehaviour
 
         UpdatePlayerListRpc(netObjId);
 
-        SetPlayerTransformData(spawnPoint.position, spawnPoint.rotation);
         //Ensure player's camera shows on screen
         mainCamera.depth = 5;
+    }
+
+    private IEnumerator ListenToTransformCoroutine(Func<Vector3, Quaternion, bool> Predicate, Vector3 oldPosition, Quaternion oldRotation)
+    {
+        while(!Predicate(oldPosition, oldRotation)) {
+            yield return null;
+        }
+
+        Debug.Log($"New Position: {transform.position} And Rotation: {transform.rotation}");
     }
 
     public void EnablePlayerMovement()
@@ -41,7 +63,10 @@ public class PlayerNetworkManager : NetworkBehaviour
         }
 
         GetComponent<InputActionManager>().enabled = true;
-        GetComponent<AvatarController>().enabled = true;
+
+        if (TryGetComponent(out AvatarController avatarController)) {
+            avatarController.enabled = true;
+        }
     }
 
     [Rpc(SendTo.Server)]
@@ -53,8 +78,23 @@ public class PlayerNetworkManager : NetworkBehaviour
     [Rpc(SendTo.Owner)]
     public void UpdatePlayerPositionAndRotationRpc(Vector3 newPosition, Quaternion newRotation = default)
     {
-        Debug.Log($"Our Lovely Quaternion {newRotation}");
-        SetPlayerTransformData(newPosition, newRotation);
+        bool equalityCheck = IsQuaternionDefault(newRotation);
+        Debug.Log($"New Rotation: {newRotation}, Is Default? {equalityCheck}");
+        SetPlayerTransformData(newPosition, equalityCheck? null : newRotation);
+    }
+
+    public bool IsQuaternionDefault(Quaternion q1)
+    {
+        Quaternion q2 = default;
+        for(int i = 0; i < 4; i++)
+        {
+            if(Mathf.Abs(q1[i] - q2[i]) > 0.0001)
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private void SetPlayerTransformData(Vector3 newPosition, Quaternion? newRotation = null)
@@ -63,12 +103,10 @@ public class PlayerNetworkManager : NetworkBehaviour
 
         if (newRotation == null)
         {
-            Transform playerTransform = NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject().transform;
             Vector3 polePosition = BallManager.instance.poleTransform.position;
-            Vector3 newRotationDirection = polePosition - playerTransform.position;
+            Vector3 newRotationDirection = polePosition - transform.position;
             newRotationDirection.y = 0; //look parallel to surface
             newRotation = Quaternion.LookRotation(newRotationDirection);
-            playerTransform.rotation = newRotation.Value;
         }
 
         transform.rotation = newRotation.Value;
