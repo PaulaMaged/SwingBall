@@ -272,7 +272,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e8f864d895d4d9c4cb2a9b96bb86c08b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  deviceStreamingMode: 0
+  deviceStreamingMode: 2
   deviceIndex: 0
   recordingFile: D:/Paula/Documents/Workspace/Unity/User-Representations/KinectRecordings/Azure
     Kinect-003.mkv
@@ -1256,7 +1256,7 @@ PrefabInstance:
       addedObject: {fileID: 1253256098}
     - targetCorrespondingSourceObject: {fileID: 100176, guid: ae23d50304c93b9418b65cec8f9fe954, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 1253256101}
+      addedObject: {fileID: 1253256102}
   m_SourcePrefab: {fileID: 100100000, guid: ae23d50304c93b9418b65cec8f9fe954, type: 3}
 --- !u!1 &1253256094 stripped
 GameObject:
@@ -1275,7 +1275,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 01b562c99f7410c408567281ef62ff02, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &1253256101
+--- !u!114 &1253256102
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1292,13 +1292,13 @@ MonoBehaviour:
   verticalMovement: 1
   horizontalMovement: 1
   externalRootMotion: 1
-  externalHeadRotation: 0
-  externalHandRotations: 0
+  externalHeadRotation: 1
+  externalHandRotations: 1
   fingerOrientations: 0
   moveRate: 1
   smoothFactor: 10
   lateUpdateAvatar: 0
-  offsetNode: {fileID: 0}
+  offsetNode: {fileID: 2057572984}
   posRelativeToCamera: {fileID: 0}
   posRelOverlayColor: 0
   posRelInvertedZ: 0
@@ -1727,6 +1727,37 @@ PrefabInstance:
       insertIndex: -1
       addedObject: {fileID: 753341783}
   m_SourcePrefab: {fileID: 100100000, guid: ae23d50304c93b9418b65cec8f9fe954, type: 3}
+--- !u!1 &2057572984
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2057572985}
+  m_Layer: 0
+  m_Name: Offset
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2057572985
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2057572984}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.5258473, y: 1.3631608, z: 0.9549409}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -1741,3 +1772,4 @@ SceneRoots:
   - {fileID: 643418548}
   - {fileID: 1409210342}
   - {fileID: 646696286}
+  - {fileID: 2057572985}

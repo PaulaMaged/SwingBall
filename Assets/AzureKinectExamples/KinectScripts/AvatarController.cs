@@ -376,9 +376,9 @@ namespace com.rfilkov.components
             if (playerId != userId)
             {
                 if (/**playerId == 0 &&*/ userId != 0)
-                    SuccessfulCalibration(userId, false);
-                else if (/**playerId != 0 &&*/ userId == 0)
-                    ResetToInitialPosition();
+                    SuccessfulCalibration(userId, true);
+                //else if (/**playerId != 0 &&*/ userId == 0)
+                //    ResetToInitialPosition();
             }
 
             if (!lateUpdateAvatar && playerId != 0)
@@ -569,7 +569,7 @@ namespace com.rfilkov.components
                 return;
 
             // For each bone that was defined, reset to initial position.
-            //transform.rotation = Quaternion.identity;
+            transform.rotation = Quaternion.identity;
 
             for (int pass = 0; pass < 2; pass++)  // 2 passes because clavicles are at the end
             {
@@ -601,8 +601,8 @@ namespace com.rfilkov.components
                 offsetNode.transform.rotation = offsetNodeRot;
             }
 
-            //transform.position = initialPosition;
-            //transform.rotation = initialRotation;
+            transform.position = initialPosition;
+            transform.rotation = initialRotation;
             initialUpVector = transform.up;
         }
 
@@ -630,8 +630,8 @@ namespace com.rfilkov.components
                 initialRotation = transform.rotation;
             }
 
-            //transform.position = initialPosition;
-            //transform.rotation = initialRotation;
+            transform.position = initialPosition;
+            transform.rotation = initialRotation;
             initialUpVector = transform.up;
 
             // re-calibrate the position offset
@@ -1215,7 +1215,7 @@ namespace com.rfilkov.components
             initialRotation = transform.rotation;
             initialUpVector = transform.up;
 
-            //transform.rotation = Quaternion.identity;
+            transform.rotation = Quaternion.identity;
 
             // save the body root initial position
             if (bodyRoot != null)
@@ -1277,7 +1277,7 @@ namespace com.rfilkov.components
             }
 
             // Restore the initial rotation
-            //transform.rotation = initialRotation;
+            transform.rotation = initialRotation;
         }
 
         // Converts kinect joint rotation to avatar joint rotation, depending on joint initial rotation and offset rotation
