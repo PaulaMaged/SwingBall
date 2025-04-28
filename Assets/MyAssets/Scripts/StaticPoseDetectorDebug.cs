@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
@@ -16,16 +17,14 @@ namespace com.rfilkov.components
     public class StaticPoseDetectorDebug : MonoBehaviour
     {
         [Tooltip("User avatar model, who needs to reach the target pose.")]
-        public PoseModelHelper avatarModel;
+        public PoseModelHelper AvatarModel;
 
         [Tooltip("Model in pose that need to be reached by the user.")]
-        public PoseModelHelper poseModel;
+        public PoseModelHelper ReferenceModel;
 
         [Tooltip("List of joints to compare.")]
         private List<KinectInterop.JointType> poseJoints = new();
 
-        [Tooltip("For testing the joint weights applied")]
-        public Exercise exercise;
 
         [Tooltip("Allowed delay in pose match, in seconds. 0 means no delay allowed.")]
         [Range(0f, 10f)]
@@ -44,7 +43,7 @@ namespace com.rfilkov.components
         public float slerpDurationSecondsFallback;
 
         [Tooltip("GUI-Text to display information messages.")]
-        public UnityEngine.UI.Text infoText;
+        public TextMeshProUGUI infoText;
 
         [Tooltip("Key to be used to skip a joint slerp")]
         public Key skipJointSlerpKeyEnum;
@@ -62,7 +61,7 @@ namespace com.rfilkov.components
         private Quaternion initialPoseRotation = Quaternion.identity;
 
         // reference to the avatar controller
-        private AvatarController avatarController = null;
+        private AvatarController _avatarController = null;
 
         // uncomment to get debug info
         private StringBuilder sbDebug = new StringBuilder();
@@ -107,32 +106,44 @@ namespace com.rfilkov.components
             return fMatchPercent;
         }
 
+        public void Init(PoseModelHelper referenceModel, PoseModelHelper avatarModel, TextMeshProUGUI text = null)
+        {
+            if (text != null) infoText = text;
+            
+            ReferenceModel = referenceModel;
+            AvatarModel = avatarModel;
+
+            if(avatarModel.TryGetComponent(out AvatarController avatarController))
+            {
+                _avatarController = avatarController;
+            }
+        }
+
         private void Awake()
         {
-            if (avatarModel)
+            if (AvatarModel)
             {
-                initialAvatarRotation = avatarModel.transform.rotation;
-                avatarController = avatarModel.gameObject.GetComponent<AvatarController>();
+                initialAvatarRotation = AvatarModel.transform.rotation;
+                _avatarController = AvatarModel.gameObject.GetComponent<AvatarController>();
             }
 
-            if (poseModel)
+            if (ReferenceModel)
             {
-                initialPoseRotation = poseModel.transform.rotation;
+                initialPoseRotation = ReferenceModel.transform.rotation;
             }
         }
 
         private void Start()
         {
             SkipJointSlerpKey = Keyboard.current[skipJointSlerpKeyEnum];
-            SetJoints();
         }
 
         void Update()
         {
             // get mirrored state
-            IsMirrored = avatarController ? avatarController.mirroredMovement : false;  // false by default
+            IsMirrored = _avatarController ? _avatarController.mirroredMovement : false;  // false by default
 
-            if (avatarModel != null)
+            if (AvatarModel != null)
             {
                 // get the difference
                 GetPoseDifference(IsMirrored);
@@ -160,11 +171,11 @@ namespace com.rfilkov.components
             }
         }
 
-        [ContextMenu("Set Exercise Joints")]
-        // Fix for the foreach loop causing multiple errors
-        public void SetJoints()
+        public void SetJoints(Dictionary<KinectInterop.JointType, JointInfo> jointInfo)
         {
-            joint2WeightAndMaxAngles = exercise.Joint2WeightAndMaxAngle;
+            if (jointInfo == null) return;
+
+            joint2WeightAndMaxAngles = jointInfo;
 
             poseJoints.Clear();
             foreach (KeyValuePair<KinectInterop.JointType, JointInfo> jointData in joint2WeightAndMaxAngles)
@@ -179,14 +190,14 @@ namespace com.rfilkov.components
         [ContextMenu("Start Slerping")]
         private void StartSlerping()
         {
-            if (avatarController != null) avatarController.enabled = false;
+            if (_avatarController != null) _avatarController.enabled = false;
             GetAvatarPose();
 
             List<(Transform from, Transform to)> avatarJoint2ReferenceJoint = new();
             foreach (var joint in poseJoints)
             {
-                Transform avatarJointTransform = avatarModel.GetBoneTransform(PoseModelHelper.GetBoneIndexByJoint(joint, IsMirrored));
-                Transform referenceJointTransform = poseModel.GetBoneTransform(PoseModelHelper.GetBoneIndexByJoint(joint, IsMirrored));
+                Transform avatarJointTransform = AvatarModel.GetBoneTransform(PoseModelHelper.GetBoneIndexByJoint(joint, IsMirrored));
+                Transform referenceJointTransform = ReferenceModel.GetBoneTransform(PoseModelHelper.GetBoneIndexByJoint(joint, IsMirrored));
                 avatarJoint2ReferenceJoint.Add((avatarJointTransform, referenceJointTransform));
             }
 
@@ -199,7 +210,7 @@ namespace com.rfilkov.components
         [ContextMenu("Reset pose from slerped")]
         private void ResetFromSlerping()
         {
-            if (avatarController != null) avatarController.enabled = true;
+            if (_avatarController != null) _avatarController.enabled = true;
 
             if (SlerpJointsSequentiallyCoroutine != null)
             {
@@ -209,7 +220,7 @@ namespace com.rfilkov.components
 
             for (int i = 0; i < poseJoints.Count; i++)
             {
-                Transform avatarJointTransform = avatarModel.GetBoneTransform(PoseModelHelper.GetBoneIndexByJoint(poseJoints[i], IsMirrored));
+                Transform avatarJointTransform = AvatarModel.GetBoneTransform(PoseModelHelper.GetBoneIndexByJoint(poseJoints[i], IsMirrored));
                 avatarJointTransform.localRotation = poseAvatar.avBoneOrientations[i];
             }
         }
@@ -289,7 +300,7 @@ namespace com.rfilkov.components
         private void GetAvatarPose()
         {
             KinectManager kinectManager = KinectManager.Instance;
-            if (kinectManager == null || avatarModel == null || poseJoints == null)
+            if (kinectManager == null || AvatarModel == null || poseJoints == null)
                 return;
 
             if (poseAvatar.avBoneOrientations == null)
@@ -300,7 +311,7 @@ namespace com.rfilkov.components
             for (int i = 0; i < poseJoints.Count; i++)
             {
                 KinectInterop.JointType joint = poseJoints[i];
-                Transform jointTransform = avatarModel.GetBoneTransform(PoseModelHelper.GetBoneIndexByJoint(joint, IsMirrored));
+                Transform jointTransform = AvatarModel.GetBoneTransform(PoseModelHelper.GetBoneIndexByJoint(joint, IsMirrored));
                 Quaternion jointOrientation = jointTransform.localRotation;
                 poseAvatar.avBoneOrientations[i] = jointOrientation;
                 Debug.DrawRay(jointTransform.position, jointOrientation.eulerAngles.normalized, Color.green);
@@ -365,13 +376,13 @@ namespace com.rfilkov.components
             for (int i = 0; i < poseJoints.Count; i++)
             {
                 //Replace with obtaining from the original reference
-                Quaternion qPoseBone = GetJointOrientation(poseModel, poseJoints[i], IsMirrored, true);
-                Quaternion qAvatarBone = GetJointOrientation(avatarModel, poseJoints[i], IsMirrored, true);
+                Quaternion qPoseBone = GetJointOrientation(ReferenceModel, poseJoints[i], IsMirrored, true);
+                Quaternion qAvatarBone = GetJointOrientation(AvatarModel, poseJoints[i], IsMirrored, true);
 
                 float fDiff = Quaternion.Angle(qPoseBone, qAvatarBone);
                 //get vector along bone if exists
-                Transform startBoneTransform = avatarModel.GetBoneTransform(PoseModelHelper.GetBoneIndexByJoint(poseJoints[i], IsMirrored));
-                Transform endBoneTransform = avatarModel.GetBoneTransform(PoseModelHelper.GetBoneIndexByJoint(KinectInterop.GetNextJoint(poseJoints[i]), IsMirrored));
+                Transform startBoneTransform = AvatarModel.GetBoneTransform(PoseModelHelper.GetBoneIndexByJoint(poseJoints[i], IsMirrored));
+                Transform endBoneTransform = AvatarModel.GetBoneTransform(PoseModelHelper.GetBoneIndexByJoint(KinectInterop.GetNextJoint(poseJoints[i]), IsMirrored));
                 if (startBoneTransform != endBoneTransform)
                 {
                     Vector3 boneDirection = (endBoneTransform.position - startBoneTransform.position).normalized;

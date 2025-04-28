@@ -294,7 +294,7 @@ MonoBehaviour:
   ExerciseEntryPrefab: {fileID: 6215254867247254893, guid: 19d9d75b102b63840b16cfae73d5e445, type: 3}
   contentParent: {fileID: 2721378925003141371}
   ProgressCanvasPrefab: {fileID: 3952971095504236025, guid: 64d0002c9da23a34cbb0dea63e548d4a, type: 3}
-  ReferenceCharacterPrefab: {fileID: 7022074329171976870, guid: fa86741f92d1e9248a8dfe2a673b3592, type: 3}
+  ReferenceCharacterPrefab: {fileID: -9103276958770634964, guid: fa86741f92d1e9248a8dfe2a673b3592, type: 3}
   StartExerciseButton: {fileID: 158830849398031606, guid: c348712bda248c246b8c49b3db54643f, type: 3}
   PoseConfirmationButton: {fileID: -1354848580025590729, guid: c348712bda248c246b8c49b3db54643f, type: 3}
 --- !u!1 &5886659353355312004

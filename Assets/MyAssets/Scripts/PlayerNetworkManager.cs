@@ -22,7 +22,7 @@ public class PlayerNetworkManager : NetworkBehaviour
         //sets this player's transform
 
         //by default, all components for player movement are off for reasons beyond this comment
-        //EnablePlayerMovement();
+        EnablePlayerMovement();
         var netObjId = GetComponent<NetworkObject>().NetworkObjectId;
 
         UpdatePlayerListRpc(netObjId);

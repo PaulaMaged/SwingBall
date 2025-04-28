@@ -6,6 +6,7 @@ using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
+using com.rfilkov.components;
 
 public class RehabProgram : NetworkBehaviour
 {
@@ -18,8 +19,8 @@ public class RehabProgram : NetworkBehaviour
     public GameObject ProgressCanvasPrefab;
     private GameObject ProgressCanvasInstance;
 
-    [SerializeField] private GameObject ReferenceCharacterPrefab;
-    private GameObject ReferenceCharacterInstance;
+    [SerializeField] private PoseModelHelper ReferenceCharacterPrefab;
+    private PoseModelHelper ReferenceCharacterInstance;
 
     private Dictionary<string, TMP_Text> FieldNameReferencePair = new();
     public NetworkVariable<ExerciseProgress> exerciseProgress { get; private set; } = new(writePerm: NetworkVariableWritePermission.Owner);
@@ -28,6 +29,7 @@ public class RehabProgram : NetworkBehaviour
     public bool IsBreakTime { get; private set; } = false;
 
     private int currentExerciseIndex = -1;
+    private StaticPoseDetectorDebug staticPoseDetectorDebug;
 
     [SerializeField] private InputActionReference StartExerciseButton;
     [SerializeField] private InputActionReference PoseConfirmationButton;
@@ -112,7 +114,8 @@ public class RehabProgram : NetworkBehaviour
         Quaternion canvasRotation = Quaternion.identity;
         ProgressCanvasInstance = Instantiate(ProgressCanvasPrefab, canvasPosition, canvasRotation);
 
-        ReferenceCharacterInstance = Instantiate(ReferenceCharacterPrefab);
+        SetupDetection();
+
         PoseManager.instance.SetAnimator(ReferenceCharacterInstance.GetComponent<Animator>());
 
         CacheUIFields();
@@ -125,6 +128,14 @@ public class RehabProgram : NetworkBehaviour
         currentExerciseIndex = 0;
         SetupNextExercise();
 
+    }
+
+    private void SetupDetection()
+    {
+        ReferenceCharacterInstance = Instantiate(ReferenceCharacterPrefab);
+        staticPoseDetectorDebug = gameObject.AddComponent<StaticPoseDetectorDebug>();
+        if (!NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject().gameObject.TryGetComponent(out PoseModelHelper playerModelHelper)) return;
+        staticPoseDetectorDebug.Init(ReferenceCharacterInstance, playerModelHelper);
     }
 
     //conditional statements for context checking
@@ -225,6 +236,8 @@ public class RehabProgram : NetworkBehaviour
         //link with canvas
         exerciseProgress.Value = new ExerciseProgress(currentExerciseIndex);
         Debug.Log($"The Exercise's Details: {Exercises[currentExerciseIndex]}");
+
+        staticPoseDetectorDebug.SetJoints(Exercises[currentExerciseIndex].Joint2WeightAndMaxAngle);
 
         //set pose to match anchor point with
         Debug.Log($"Current Exercise Index: {currentExerciseIndex}");
