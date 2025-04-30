@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 using com.rfilkov.kinect;
+using System;
+using System.Linq;
 
 
 namespace com.rfilkov.components
@@ -94,7 +96,7 @@ namespace com.rfilkov.components
 
         // lighting
         private FragmentLighting lighting = new FragmentLighting();
-
+        public Vector3 pointCloudOffset;
 
         void Start()
         {
@@ -144,6 +146,8 @@ namespace com.rfilkov.components
                 // update the mesh
                 UpdateMesh();
             }
+
+            MapToAvatar();
         }
 
 
@@ -404,7 +408,7 @@ namespace com.rfilkov.components
                 sensorInt.pointCloudColorTexture = null;
             }
 
-            if(depthImageBuffer != null /**&& depthBufferCreated*/)
+            if (depthImageBuffer != null /**&& depthBufferCreated*/)
             {
                 depthImageCopy = null;
 
@@ -478,7 +482,7 @@ namespace com.rfilkov.components
                 UpdateTexturesAndBuffers();
 
                 int paramsCache = coarseFactor + (showAsPointCloud ? 10 : 0);
-                if(meshParamsCache != paramsCache)
+                if (meshParamsCache != paramsCache)
                 {
                     //Debug.Log("Mesh params changed. Recreating...");
                     CreateMeshVertInd(imageWidth, imageHeight);
@@ -569,5 +573,16 @@ namespace com.rfilkov.components
             }
         }
 
+        private void MapToAvatar()
+        {
+            KinectManager.Instance.GetDistanceFromKinect(0, out float distanceToPlayer, out float distanceToGround, out float distanceLateral);
+
+            Vector3 offset = transform.parent.position; //starting value;
+            offset -= transform.forward * (distanceToPlayer + pointCloudOffset.z);
+            offset += transform.up * (distanceToGround + pointCloudOffset.y);
+            //offset -= transform.right * (distanceLateral + pointCloudOffset.x);
+
+            transform.position = offset;
+        }
     }
 }

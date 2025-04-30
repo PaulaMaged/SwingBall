@@ -181,6 +181,8 @@ namespace com.rfilkov.kinect
         protected bool isPlayModeEnabled = false;
         protected string playModeData = string.Empty;
 
+        private string DebugMessage;
+
 
         /// <summary>
         /// Gets the single KinectManager instance.
@@ -2940,6 +2942,7 @@ namespace com.rfilkov.kinect
 
             // locate and start the available depth-sensors
             StartDepthSensors();
+            StartCoroutine(printEveryNSeconds(1));
         }
 
 
@@ -3705,6 +3708,27 @@ namespace com.rfilkov.kinect
             }
 
             return false;
+        }
+
+        public void GetDistanceFromKinect(int playerIndex, out float distanceToPlayer, out float distanceToGround, out float distanceLateral)
+        {
+            ulong userId = GetUserIdByIndex(playerIndex);
+            KinectInterop.BodyData bodyData = GetUserBodyData(userId);
+            DebugMessage = $"User Position relative to kinect: {bodyData.position}";
+            distanceToPlayer = bodyData.position.z;
+            distanceToGround = bodyData.position.y;
+            distanceLateral = bodyData.position.x;
+        }
+
+        private IEnumerator printEveryNSeconds(float seconds)
+        {
+            while(true)
+            {
+                if (DebugMessage != null && DebugMessage != "") 
+                    Debug.Log(DebugMessage);
+
+                yield return new WaitForSeconds(seconds);
+            }
         }
 
 

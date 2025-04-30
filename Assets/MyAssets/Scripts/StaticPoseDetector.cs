@@ -14,7 +14,7 @@ namespace com.rfilkov.components
     /// <summary>
     /// Static pose detector check whether the user's pose matches a predefined, static model's pose.
     /// </summary>
-    public class StaticPoseDetectorDebug : MonoBehaviour
+    public class StaticPoseDetector : MonoBehaviour
     {
         [Tooltip("User avatar model, who needs to reach the target pose.")]
         public PoseModelHelper AvatarModel;
@@ -28,9 +28,6 @@ namespace com.rfilkov.components
         [Tooltip("Threshold, above which we consider the pose is matched.")]
         [Range(0.5f, 1f)]
         public float matchThreshold = 0.7f;
-
-        [Tooltip("Exercise used for debugging")]
-        public Exercise exercise;
 
         [Tooltip("Duration for slerping in seconds")]
         [Range(0f, 10f)]
@@ -103,11 +100,11 @@ namespace com.rfilkov.components
         public void Init(PoseModelHelper referenceModel, PoseModelHelper avatarModel, TextMeshProUGUI text = null)
         {
             if (text != null) infoText = text;
-            
+
             ReferenceModel = referenceModel;
             AvatarModel = avatarModel;
 
-            if(avatarModel.TryGetComponent(out AvatarController avatarController))
+            if (avatarModel.TryGetComponent(out AvatarController avatarController))
             {
                 _avatarController = avatarController;
             }
@@ -130,7 +127,6 @@ namespace com.rfilkov.components
         private void Start()
         {
             SkipJointSlerpKey = Keyboard.current[skipJointSlerpKeyEnum];
-            SetJoints(exercise.Joint2WeightAndMaxAngle);
         }
 
         void Update()
@@ -164,7 +160,6 @@ namespace com.rfilkov.components
             }
         }
 
-        [ContextMenu("Setup Exercise")]
         public void SetJoints(Dictionary<KinectInterop.JointType, JointInfo> jointInfo)
         {
             if (jointInfo == null) return;
