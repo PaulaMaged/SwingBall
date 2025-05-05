@@ -21,7 +21,7 @@ public class PlayerManager : NetworkBehaviour
     private int maximumPlayerCount = 2;
     private Vector3[] homePositions;
 
-    private NetworkList<NetworkObjectReference> playerNetworkObjectRefs;
+    public NetworkList<NetworkObjectReference> PlayerNetworkObjectRefs { get; private set; }
     private NetworkVariable<int> currentPlayerTurnIndex = new(0);
 
     private void Awake()
@@ -31,7 +31,7 @@ public class PlayerManager : NetworkBehaviour
             instance = this;
         }
 
-        playerNetworkObjectRefs = new();
+        PlayerNetworkObjectRefs = new();
 
         PlayerPositions = new Vector3[maximumPlayerCount];
         SetPlayerPositions();
@@ -79,7 +79,7 @@ public class PlayerManager : NetworkBehaviour
     [Rpc(SendTo.NotServer)]
     public void SetupPlayerFieldsOnClientRpc()
     {
-        foreach (NetworkObjectReference playerNetworkObjectRef in playerNetworkObjectRefs)
+        foreach (NetworkObjectReference playerNetworkObjectRef in PlayerNetworkObjectRefs)
         {
             if (playerNetworkObjectRef.TryGet(out NetworkObject playerNetworkObject))
             {
@@ -113,7 +113,7 @@ public class PlayerManager : NetworkBehaviour
             yield break;
         }
 
-        if (IsServer) playerNetworkObjectRefs.Add(new NetworkObjectReference(playerNetworkObject));
+        if (IsServer) PlayerNetworkObjectRefs.Add(new NetworkObjectReference(playerNetworkObject));
 
         PlayerClientIds[playerCount] = playerNetworkObject.OwnerClientId;
         Players[playerCount] = player;

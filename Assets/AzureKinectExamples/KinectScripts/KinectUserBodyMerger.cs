@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.InteropServices.WindowsRuntime;
 using UnityEngine;
 
 namespace com.rfilkov.kinect
@@ -24,7 +26,7 @@ namespace com.rfilkov.kinect
 
 
         // maximum distance between close bodies
-        private const float MAX_DISTANCE_TO_CLOSE_BODY = 0.35f;
+        private const float MAX_DISTANCE_TO_CLOSE_BODY = -1f;
 
         // if only one sensor needs to be considered, set its index here
         private const int SINGLE_SENSOR_INDEX = -1;
@@ -160,6 +162,24 @@ namespace com.rfilkov.kinect
             return alAllBodies;
         }
 
+        public int GetSensorIndex(ulong userId)
+        {
+            // Find the first matching KeyValuePair where the value equals the given userId
+            KeyValuePair<string, ulong> sensorUserId = dictSensorUserIdToUserId.FirstOrDefault(kv => kv.Value == userId);
+
+            // If a match is found, parse the sensor index from the key (assuming the key format is "sensorIndex_userId")
+            if (!string.IsNullOrEmpty(sensorUserId.Key))
+            {
+                string[] parts = sensorUserId.Key.Split('_');
+                if (parts.Length > 0 && int.TryParse(parts[0], out int sensorIndex))
+                {
+                    return sensorIndex;
+                }
+            }
+
+            // Return -1 if no match is found or parsing fails
+            return -1;
+        }
 
         /// <summary>
         /// Returns the sensor-specific userId, given the merged userId.
@@ -178,6 +198,13 @@ namespace com.rfilkov.kinect
             }
 
             return 0;
+        }
+
+        public ulong GetmergedUserId(int sensorIndex, ulong userId)
+        {
+            string sensorUserId = $"{sensorIndex}_{userId}";
+            dictSensorUserIdToUserId.TryGetValue(sensorUserId, out ulong mergedUserId);
+            return mergedUserId;
         }
 
 

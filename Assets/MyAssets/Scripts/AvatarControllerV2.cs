@@ -11,12 +11,13 @@ namespace com.rfilkov.components
 {
     /// <summary>
     /// Avatar controller is the component that transfers the captured user motion to a humanoid model (avatar).
+    /// This version uses the first tracked body of a particular sensor. 
+    /// Used for tieing the avatarcontroller to a specific player (assuming one player per sensor)
     /// </summary>
     [RequireComponent(typeof(Animator))]
-    public class AvatarController : MonoBehaviour
+    public class AvatarControllerV2 : MonoBehaviour
     {
-        [Tooltip("Index of the player, tracked by this component. 0 means the 1st player, 1 - the 2nd one, 2 - the 3rd one, etc.")]
-        public int playerIndex = 0;
+        public int SensorIndex;
 
         [Tooltip("Whether the avatar is facing the player or not.")]
         public bool mirroredMovement = false;
@@ -284,6 +285,7 @@ namespace com.rfilkov.components
 
         // transform caching gives performance boost since Unity calls GetComponent<Transform>() each time you call transform 
         private Transform _transformCache;
+
         public new Transform transform
         {
             get
@@ -364,15 +366,26 @@ namespace com.rfilkov.components
             //CreateBoneColliders();
         }
 
+        /// <summary>
+        /// Gets user Id from the sensorData by getting the liTrackingID property of the first tracked body of the sensor
+        /// </summary>
+        /// <returns></returns>
+
+        [ContextMenu("Print UserId")]
+        private void PrintUserID()
+        {
+            Debug.Log($"Tracked User ID: {kinectManager.GetFirstTrackedUserIdBySensorIndex(SensorIndex)}");
+        }
 
         public void Update()
         {
-            if(kinectManager == null)
+            if (kinectManager == null)
             {
                 kinectManager = KinectManager.Instance;
             }
 
-            ulong userId = kinectManager ? kinectManager.GetUserIdByIndex(playerIndex) : 0;
+            ulong userId = kinectManager.GetFirstTrackedUserIdBySensorIndex(SensorIndex);
+
             if (playerId != userId)
             {
                 if (/**playerId == 0 &&*/ userId != 0)
@@ -469,6 +482,12 @@ namespace com.rfilkov.components
             if (kinectManager == null)
             {
                 kinectManager = KinectManager.Instance;
+            }
+
+            if (UserID == 0)
+            {
+                Debug.Log("User isn't present");
+                return;
             }
 
             //// get the background plane rectangle if needed 
@@ -853,7 +872,7 @@ namespace com.rfilkov.components
                 if (posRelOverlayColor)
                 {
                     // disable grounded feet
-                    if(groundedFeet)
+                    if (groundedFeet)
                     {
                         groundedFeet = false;
                     }
@@ -908,7 +927,7 @@ namespace com.rfilkov.components
                 if (flipLeftRight)
                     trans.x = -trans.x;
 
-                if(posRelOverlayColor || !offsetCalibrated)
+                if (posRelOverlayColor || !offsetCalibrated)
                 {
                     if (bodyRoot != null)
                     {
@@ -1286,11 +1305,11 @@ namespace com.rfilkov.components
             Quaternion newRotation = jointRotation * initialRotations[boneIndex];
             //newRotation = initialRotation * newRotation;
 
-    //		if(offsetNode != null)
-    //		{
-    //			newRotation = offsetNode.transform.rotation * newRotation;
-    //		}
-    //		else
+            //		if(offsetNode != null)
+            //		{
+            //			newRotation = offsetNode.transform.rotation * newRotation;
+            //		}
+            //		else
             if (!externalRootMotion)  // fix by Mathias Parger
             {
                 newRotation = initialRotation * newRotation;
@@ -1367,8 +1386,8 @@ namespace com.rfilkov.components
                 fDistMin = 0f; // fFootDistanceInitial;
             }
 
-//		    Debug.Log (string.Format ("LFootY: {0:F2}, Dist: {1:F2}, RFootY: {2:F2}, Dist: {3:F2}, Min: {4:F2}", leftFoot ? leftFoot.position.y : 0f, fDistLeft,
-//						rightFoot ? rightFoot.position.y : 0f, fDistRight, fDistMin));
+            //		    Debug.Log (string.Format ("LFootY: {0:F2}, Dist: {1:F2}, RFootY: {2:F2}, Dist: {3:F2}, Min: {4:F2}", leftFoot ? leftFoot.position.y : 0f, fDistLeft,
+            //						rightFoot ? rightFoot.position.y : 0f, fDistRight, fDistMin));
 
             return fDistMin;
         }
@@ -1391,8 +1410,8 @@ namespace com.rfilkov.components
             {0, HumanBodyBones.Hips},
             {1, HumanBodyBones.Spine},
             {2, HumanBodyBones.Chest},
-		    {3, HumanBodyBones.Neck},
-    		{4, HumanBodyBones.Head},
+            {3, HumanBodyBones.Neck},
+            {4, HumanBodyBones.Head},
 
             {5, HumanBodyBones.LeftShoulder},
             {6, HumanBodyBones.LeftUpperArm},
@@ -1403,18 +1422,18 @@ namespace com.rfilkov.components
             {10, HumanBodyBones.RightUpperArm},
             {11, HumanBodyBones.RightLowerArm},
             {12, HumanBodyBones.RightHand},
-		
-		    {13, HumanBodyBones.LeftUpperLeg},
+
+            {13, HumanBodyBones.LeftUpperLeg},
             {14, HumanBodyBones.LeftLowerLeg},
             {15, HumanBodyBones.LeftFoot},
-    		{16, HumanBodyBones.LeftToes},
-		
-		    {17, HumanBodyBones.RightUpperLeg},
+            {16, HumanBodyBones.LeftToes},
+
+            {17, HumanBodyBones.RightUpperLeg},
             {18, HumanBodyBones.RightLowerLeg},
             {19, HumanBodyBones.RightFoot},
-    		{20, HumanBodyBones.RightToes},
+            {20, HumanBodyBones.RightToes},
 
-		    {21, HumanBodyBones.LeftIndexProximal},
+            {21, HumanBodyBones.LeftIndexProximal},
             {22, HumanBodyBones.LeftThumbProximal},
             {23, HumanBodyBones.RightIndexProximal},
             {24, HumanBodyBones.RightThumbProximal},

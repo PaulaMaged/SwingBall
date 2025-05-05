@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using UnityEngine;
+using static com.rfilkov.kinect.KinectInterop;
 
 namespace com.rfilkov.kinect
 {
@@ -202,7 +204,7 @@ namespace com.rfilkov.kinect
         /// <returns><c>true</c> if KinectManager is initialized; otherwise, <c>false</c>.</returns>
         public bool IsInitialized()
         {
-            if(kinectInitialized)
+            if (kinectInitialized)
             {
                 // moved to GetSensorData()
                 //for (int i = 0; i < sensorDatas.Count; i++)
@@ -244,9 +246,9 @@ namespace com.rfilkov.kinect
         /// </summary>
         /// <param name="sensorIndex">The sensor index.</param>
         /// <returns>The sensor data.</returns>
-        internal KinectInterop.SensorData GetSensorData(int sensorIndex)
+        public KinectInterop.SensorData GetSensorData(int sensorIndex)
         {
-            if(sensorIndex >= 0  && sensorIndex < sensorDatas.Count)
+            if (sensorIndex >= 0 && sensorIndex < sensorDatas.Count)
             {
                 //return sensorDatas[sensorIndex];
 
@@ -322,7 +324,7 @@ namespace com.rfilkov.kinect
         public float GetSensorMinDistance(int sensorIndex)
         {
             KinectInterop.SensorData sensorData = GetSensorData(sensorIndex);
-            if(sensorData != null && sensorData.sensorInterface != null)
+            if (sensorData != null && sensorData.sensorInterface != null)
             {
                 return ((DepthSensorBase)sensorData.sensorInterface).minDistance;
             }
@@ -920,7 +922,7 @@ namespace com.rfilkov.kinect
         public Texture GetUsersImageTex(int sensorIndex)
         {
             KinectInterop.SensorData sensorData = GetSensorData(sensorIndex);
-            if(sensorData != null)
+            if (sensorData != null)
             {
                 return sensorData.bodyImageTexture != null ? sensorData.bodyImageTexture : sensorData.depthImageTexture;
             }
@@ -965,7 +967,7 @@ namespace com.rfilkov.kinect
         public ulong GetSensorBodyId(int sensorIndex, int bodyIndex)
         {
             KinectInterop.SensorData sensorData = GetSensorData(sensorIndex);
-            if(sensorData != null && sensorData.alTrackedBodies != null && bodyIndex >= 0 && bodyIndex < sensorData.trackedBodiesCount)
+            if (sensorData != null && sensorData.alTrackedBodies != null && bodyIndex >= 0 && bodyIndex < sensorData.trackedBodiesCount)
             {
                 return sensorData.alTrackedBodies[bodyIndex].liTrackingID;
             }
@@ -1507,7 +1509,7 @@ namespace com.rfilkov.kinect
         /// <returns>Sensor orientation angle</returns>
         public float GetPrimaryBodySensorOrientationAngle()
         {
-            if(btSensorIndex >= 0 && btSensorIndex < sensorDatas.Count)
+            if (btSensorIndex >= 0 && btSensorIndex < sensorDatas.Count)
             {
                 KinectInterop.SensorData sensorData = sensorDatas[btSensorIndex];
 
@@ -1949,10 +1951,10 @@ namespace com.rfilkov.kinect
         /// <param name="posMin">Returned min point</param>
         /// <param name="posMax">Returned max point</param>
         /// <returns>true on success, false otherwise</returns>
-        public bool GetUserBoundingBox(ulong userId, Camera foregroundCamera, int sensorIndex, Rect backgroundRect, 
+        public bool GetUserBoundingBox(ulong userId, Camera foregroundCamera, int sensorIndex, Rect backgroundRect,
             out Vector3 posMin, out Vector3 posMax)
         {
-            if(userId == 0 || !IsUserTracked(userId))
+            if (userId == 0 || !IsUserTracked(userId))
             {
                 posMin = Vector3.zero;
                 posMax = Vector3.zero;
@@ -1973,12 +1975,12 @@ namespace com.rfilkov.kinect
 
                 if (IsJointTracked(userId, j))
                 {
-                    Vector3 jPos = foregroundCamera != null ? 
+                    Vector3 jPos = foregroundCamera != null ?
                         GetJointPosColorOverlay(userId, j, sensorIndex, foregroundCamera, backgroundRect) :
                         GetJointPosition(userId, j);
                     //Debug.Log("User " + userId + " " + (KinectInterop.JointType)j + ", pos: " + jPos);
 
-                    if(jPos != Vector3.zero)
+                    if (jPos != Vector3.zero)
                     {
                         if (jPos.x < xMin) xMin = jPos.x;
                         if (jPos.y < yMin) yMin = jPos.y;
@@ -2337,7 +2339,7 @@ namespace com.rfilkov.kinect
             float xScreen = imageRect.x + (sensorData.depthImageScale.x > 0f ? xScaled : imageRect.width - xScaled);
             float yScreen = imageRect.y + (sensorData.depthImageScale.y > 0f ? yScaled : imageRect.height - yScaled);
 
-            if(depth == 0)
+            if (depth == 0)
             {
                 depth = sensorData.depthImage[dx + dy * sensorData.depthImageWidth];
             }
@@ -2504,7 +2506,7 @@ namespace com.rfilkov.kinect
                 {
                     // workaround - try to use the color camera space, if depth is not available
                     KinectInterop.SensorData sensorData = sensorDatas[sensorIndex];
-                    if(sensorData != null && sensorData.depthCamIntr == null && sensorData.colorCamIntr != null)
+                    if (sensorData != null && sensorData.depthCamIntr == null && sensorData.colorCamIntr != null)
                     {
                         posColor = MapSpacePointToColorCoords(sensorIndex, posSensorSpace);
                     }
@@ -2641,12 +2643,12 @@ namespace com.rfilkov.kinect
                                 // depth pos to color pos
                                 Vector2 posColor = MapDepthPointToColorCoords(sensorIndex, posDepth, depthValue);
 
-                                if(posColor != Vector2.zero)
+                                if (posColor != Vector2.zero)
                                 {
                                     // back to depth pos
                                     Vector2 posDepth2 = MapColorPointToDepthCoords(sensorIndex, posColor, depthValue - 100, depthValue + 100);
 
-                                    if(posDepth2 != Vector2.zero)
+                                    if (posDepth2 != Vector2.zero)
                                     {
                                         Vector3 vPosJoint = MapDepthPointToSpaceCoords(sensorIndex, posDepth2, depthValue, true);
                                         return vPosJoint;
@@ -2915,7 +2917,7 @@ namespace com.rfilkov.kinect
             {
                 userManager = gameObject.GetComponent<KinectUserManager>();
 
-                if(userManager == null)
+                if (userManager == null)
                 {
                     userManager = gameObject.AddComponent<KinectUserManager>();
                 }
@@ -2926,7 +2928,7 @@ namespace com.rfilkov.kinect
             {
                 gestureManager = gameObject.GetComponent<KinectGestureManager>();
 
-                if(gestureManager == null)
+                if (gestureManager == null)
                 {
                     gestureManager = gameObject.AddComponent<KinectGestureManager>();
                 }
@@ -2942,7 +2944,6 @@ namespace com.rfilkov.kinect
 
             // locate and start the available depth-sensors
             StartDepthSensors();
-            StartCoroutine(printEveryNSeconds(1));
         }
 
 
@@ -3023,7 +3024,7 @@ namespace com.rfilkov.kinect
                     throw new Exception("Unknown S" + deviceIndex + " sensor interface: " + sensorType);
             }
 
-            if(!string.IsNullOrEmpty(intTypeName))
+            if (!string.IsNullOrEmpty(intTypeName))
             {
                 if (consoleLogMessages)
                     Debug.Log("Creating S" + deviceIndex + ": '" + sensorType + "' sensor interface...");
@@ -3041,35 +3042,35 @@ namespace com.rfilkov.kinect
         {
             DepthSensorBase.BaseSensorSettings settings = null;
 
-//            if(!string.IsNullOrEmpty(sJsonSettings))
-//            {
-//                switch (sensorType)
-//                {
-//                    case KinectInterop.DepthSensorPlatform.Kinect4Azure:
-//                        settings = JsonUtility.FromJson<Kinect4AzureInterface.K4ASensorSettings>(sJsonSettings);
-//                        break;
+            //            if(!string.IsNullOrEmpty(sJsonSettings))
+            //            {
+            //                switch (sensorType)
+            //                {
+            //                    case KinectInterop.DepthSensorPlatform.Kinect4Azure:
+            //                        settings = JsonUtility.FromJson<Kinect4AzureInterface.K4ASensorSettings>(sJsonSettings);
+            //                        break;
 
-//#if (UNITY_STANDALONE_WIN)
-//                    case KinectInterop.DepthSensorPlatform.KinectV2:
-//                        settings = JsonUtility.FromJson<Kinect2Interface.K2SensorSettings>(sJsonSettings);
-//                        break;
-//#endif
-//                    case KinectInterop.DepthSensorPlatform.RealSense:
-//                        settings = JsonUtility.FromJson<RealSenseInterface.RSSensorSettings>(sJsonSettings);
-//                        break;
+            //#if (UNITY_STANDALONE_WIN)
+            //                    case KinectInterop.DepthSensorPlatform.KinectV2:
+            //                        settings = JsonUtility.FromJson<Kinect2Interface.K2SensorSettings>(sJsonSettings);
+            //                        break;
+            //#endif
+            //                    case KinectInterop.DepthSensorPlatform.RealSense:
+            //                        settings = JsonUtility.FromJson<RealSenseInterface.RSSensorSettings>(sJsonSettings);
+            //                        break;
 
-//                    case KinectInterop.DepthSensorPlatform.DummyK4A:
-//                        settings = JsonUtility.FromJson<DepthSensorBase.BaseSensorSettings>(sJsonSettings);
-//                        break;
+            //                    case KinectInterop.DepthSensorPlatform.DummyK4A:
+            //                        settings = JsonUtility.FromJson<DepthSensorBase.BaseSensorSettings>(sJsonSettings);
+            //                        break;
 
-//                    case KinectInterop.DepthSensorPlatform.NetSensor:
-//                        settings = JsonUtility.FromJson<NetClientInterface.NetSensorSettings>(sJsonSettings);
-//                        break;
+            //                    case KinectInterop.DepthSensorPlatform.NetSensor:
+            //                        settings = JsonUtility.FromJson<NetClientInterface.NetSensorSettings>(sJsonSettings);
+            //                        break;
 
-//                    default:
-//                        throw new Exception("Cannot create settings for sensor type: " + sensorType);
-//                }
-//            }
+            //                    default:
+            //                        throw new Exception("Cannot create settings for sensor type: " + sensorType);
+            //                }
+            //            }
 
             Type settingsType = sensorInt.GetSensorSettingsType();
             settings = (DepthSensorBase.BaseSensorSettings)JsonUtility.FromJson(sJsonSettings, settingsType);
@@ -3091,10 +3092,17 @@ namespace com.rfilkov.kinect
                 sensorInts.AddRange(gameObject.GetComponents<DepthSensorBase>());  // FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None);
                 sensorInts.AddRange(gameObject.GetComponentsInChildren<DepthSensorBase>());
 
+                //order sensorInts according to their deviceIndex, assume that the index range within the set of indicies matches their count 0-based
+                sensorInts.Sort((x, y) => x.deviceIndex.CompareTo(y.deviceIndex));
+                if (sensorInts.Select((sensor, index) => new { sensor, index }).Any(x => x.index != x.sensor.deviceIndex))
+                {
+                    Debug.LogWarning("mismatch exists between device index and sensor index");
+                }
+
                 // check for multi-camera config
                 if (useMultiCamConfig)
                 {
-                    if(!KinectInterop.IsFileExist(KinectInterop.LoadTextFile(KinectInterop.MULTI_CAM_CONFIG_FILE_NAME)))
+                    if (!KinectInterop.IsFileExist(KinectInterop.LoadTextFile(KinectInterop.MULTI_CAM_CONFIG_FILE_NAME)))
                     {
                         // copy the file from Resources-folder, if not found in the root folder
                         KinectInterop.CopyResourceFile(KinectInterop.MULTI_CAM_CONFIG_FILE_NAME, KinectInterop.MULTI_CAM_CONFIG_FILE_NAME);
@@ -3175,7 +3183,7 @@ namespace com.rfilkov.kinect
                         sensorIntObj.transform.rotation = Quaternion.Euler(sensorIntDescr.transformRot);
 
                         DepthSensorBase sensorInt = (DepthSensorBase)sensorIntObj.AddComponent(sensorIntType);
-                        if(sensorInt != null)
+                        if (sensorInt != null)
                         {
                             sensorInts.Add(sensorInt);
 
@@ -3200,13 +3208,13 @@ namespace com.rfilkov.kinect
                 {
                     kinectInitialized = true;
 
-                    if(sensorInterfaces.Count > 1)
+                    if (sensorInterfaces.Count > 1)
                     {
                         // create body merger for multiple sensors
                         userBodyMerger = new KinectUserBodyMerger(sensorDatas);
 
                         // enable frame sync between sensors, if needed
-                        if(syncMultiCamFrames)
+                        if (syncMultiCamFrames)
                         {
                             for (int i = 0; i < sensorInterfaces.Count; i++)
                             {
@@ -3333,6 +3341,28 @@ namespace com.rfilkov.kinect
             }
         }
 
+        public void ResetSensors()
+        {
+            KinectManager.Instance.StopDepthSensors();
+            KinectManager.Instance.StartDepthSensors();
+        }
+
+        public ulong GetFirstTrackedUserIdBySensorIndex(int sensorIndex)
+        {
+            ulong mergedUserId;
+
+            KinectInterop.SensorData sensorData = GetSensorData(sensorIndex);
+            if (sensorData != null && sensorData.alTrackedBodies.Length > 0)
+            {
+                ulong userId = sensorData.alTrackedBodies[0].liTrackingID; // copies struct every access - expensive
+                mergedUserId = userBodyMerger.GetmergedUserId(sensorIndex, userId);
+            } else
+            {
+                mergedUserId = 0;
+            }
+
+            return mergedUserId;
+        }
 
         // stops the polling threads and closes the depth sensors
         public void StopDepthSensors()
@@ -3436,7 +3466,7 @@ namespace com.rfilkov.kinect
             for (int i = 0; i < sensorDatas.Count; i++)
             {
                 KinectInterop.SensorData sensorData = sensorDatas[i];
-                if(KinectInterop.UpdateSensorData(sensorData, this, isPlayModeEnabled))
+                if (KinectInterop.UpdateSensorData(sensorData, this, isPlayModeEnabled))
                 {
                     UpdateTrackedBodies(i, sensorData, prevBodyFrameTime);
                 }
@@ -3527,7 +3557,7 @@ namespace com.rfilkov.kinect
                 }
 
                 // display the image on screen
-                if(imageTex != null)
+                if (imageTex != null)
                 {
                     KinectInterop.DisplayGuiTexture(i, displayImageWidthPercent, imageScale, imageTex);
                 }
@@ -3538,9 +3568,9 @@ namespace com.rfilkov.kinect
         // updates the global list of tracked bodies
         protected void UpdateTrackedBodies(int sensorIndex, KinectInterop.SensorData sensorData, ulong prevBodyFrameTime)
         {
-            if(isPlayModeEnabled)
+            if (isPlayModeEnabled)
             {
-                if(!string.IsNullOrEmpty(playModeData))
+                if (!string.IsNullOrEmpty(playModeData))
                 {
                     // processed by the 1st sensor only
                     Matrix4x4 sensorToWorld = GetSensorToWorldMatrix(sensorIndex);
@@ -3553,7 +3583,7 @@ namespace com.rfilkov.kinect
                     playModeData = string.Empty;
                 }
             }
-            else if(sensorDatas.Count == 1 && sensorIndex == 0 && lastBodyFrameTime != sensorData.lastBodyFrameTime)
+            else if (sensorDatas.Count == 1 && sensorIndex == 0 && lastBodyFrameTime != sensorData.lastBodyFrameTime)
             {
                 // first sensor
                 btSensorIndex = sensorIndex;
@@ -3672,7 +3702,7 @@ namespace com.rfilkov.kinect
         {
             float fMinDistance = float.MaxValue;
 
-            for(int i = 0; i < sensorData.trackedBodiesCount; i++)
+            for (int i = 0; i < sensorData.trackedBodiesCount; i++)
             {
                 Vector3 sensorBodyPos = sensorData.alTrackedBodies[i].position;
                 float fDistance = Vector3.Distance(bodyPos, sensorBodyPos);
@@ -3694,13 +3724,13 @@ namespace com.rfilkov.kinect
             KinectInterop.TrackingState jointState = bodyData.joint[jointIndex].trackingState;
             KinectInterop.TrackingState sensorJointState = sensorBodyData.joint[jointIndex].trackingState;
 
-            if((int)jointState < (int)sensorJointState)
+            if ((int)jointState < (int)sensorJointState)
             {
                 sensorBodyData.joint[jointIndex].CopyTo(ref bodyData.joint[jointIndex]);
                 //Debug.Log("updated " + (KinectInterop.JointType)jointIndex);
                 return true;
             }
-            else if(jointState == sensorJointState && (int)jointState >= (int)KinectInterop.TrackingState.Tracked)
+            else if (jointState == sensorJointState && (int)jointState >= (int)KinectInterop.TrackingState.Tracked)
             {
                 sensorBodyData.joint[jointIndex].AverageTo(ref bodyData.joint[jointIndex]);
                 //Debug.Log("averaged " + (KinectInterop.JointType)jointIndex);
@@ -3720,18 +3750,6 @@ namespace com.rfilkov.kinect
             distanceLateral = bodyData.position.x;
         }
 
-        private IEnumerator printEveryNSeconds(float seconds)
-        {
-            while(true)
-            {
-                if (DebugMessage != null && DebugMessage != "") 
-                    Debug.Log(DebugMessage);
-
-                yield return new WaitForSeconds(seconds);
-            }
-        }
-
-
         // processes the tracked bodies
         private void ProcessTrackedBodies()
         {
@@ -3741,7 +3759,7 @@ namespace com.rfilkov.kinect
             List<ulong> lostUsers = new List<ulong>();
             lostUsers.AddRange(userManager.alUserIds);
 
-            bLimitedUsers = showAllowedUsersOnly && 
+            bLimitedUsers = showAllowedUsersOnly &&
                 (maxTrackedUsers > 0 || minUserDistance >= 0.01f || maxUserDistance >= 0.01f || maxLeftRightDistance >= 0.01f);
 
             for (int i = 0; i < trackedBodiesCount; i++)
@@ -3840,8 +3858,10 @@ namespace com.rfilkov.kinect
             if (uidIndex >= 0)
             {
                 if (consoleLogMessages)
-                    Debug.Log("Adding user " + uidIndex + ", ID: " + userId + ", Body: " + bodyIndex + ", Pos: " + userPos + ", Time: " + userManager.dictUserIdToTime[userId]);
-
+                {
+                    int sensorIndex = userBodyMerger.GetSensorIndex(userId);
+                    Debug.Log($"Sensor <size=18><color=#ff0000><b>{sensorIndex}</b></color></size> added user at index" + uidIndex + ", ID: " + userId + ", Body: " + bodyIndex + ", Pos: " + userPos + ", Time: " + userManager.dictUserIdToTime[userId]);
+                }
                 // update userIds of the avatar controllers
                 //RefreshAvatarUserIds();
 
@@ -3863,7 +3883,7 @@ namespace com.rfilkov.kinect
             int bodyIndex = userManager.dictUserIdToIndex[userId];
             int uidIndex = userManager.RemoveUser(userId, userDetectionOrder);
 
-            if(uidIndex >= 0)
+            if (uidIndex >= 0)
             {
                 if (consoleLogMessages)
                     Debug.Log("Removing user " + uidIndex + ", ID: " + userId + ", Body: " + bodyIndex + ", Time: " + Time.time);

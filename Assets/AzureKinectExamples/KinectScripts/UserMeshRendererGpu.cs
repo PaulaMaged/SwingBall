@@ -13,9 +13,6 @@ namespace com.rfilkov.components
     /// </summary>
     public class UserMeshRendererGpu : MonoBehaviour
     {
-        [Tooltip("Index of the player, tracked by this component. 0 - the 1st player only, 1 - the 2nd player only, etc.")]
-        public int playerIndex = 0;
-
         [Tooltip("Depth sensor index - 0 is the 1st one, 1 - the 2nd one, etc.")]
         public int sensorIndex = 0;
 
@@ -83,6 +80,7 @@ namespace com.rfilkov.components
 
         // user parameters
         private ulong userId = 0;
+        private int playerIndex = 0;
         private int userBodyIndex = 255;
         private Vector3 userBodyPos = Vector3.zero;
 
@@ -139,7 +137,8 @@ namespace com.rfilkov.components
             if (bMeshInited)
             {
                 // user params
-                userId = kinectManager.GetUserIdByIndex(playerIndex);
+                userId = kinectManager.GetFirstTrackedUserIdBySensorIndex(sensorIndex);
+                playerIndex = kinectManager.GetUserIndexById(userId);
                 userBodyIndex = userId != 0 ? kinectManager.GetBodyIndexByUserId(userId) : 255;
                 userBodyPos = userId != 0 ? kinectManager.GetUserKinectPosition(userId, true) : Vector3.zero;
 
@@ -150,14 +149,13 @@ namespace com.rfilkov.components
             MapToAvatar();
         }
 
-
         // inits the mesh and related data
         private void InitMesh()
         {
             // create mesh
             mesh = new Mesh
             {
-                name = "User" + playerIndex + "Mesh-S" + sensorIndex,
+                name = "Mesh-S" + sensorIndex,
                 indexFormat = UnityEngine.Rendering.IndexFormat.UInt32
             };
 
@@ -542,7 +540,7 @@ namespace com.rfilkov.components
                 meshShaderMat.SetInt("_IsPointCloud", showAsPointCloud ? 1 : 0);
                 meshShaderMat.SetFloat("_CutoffFactor", Mathf.Pow(edgeCutoffFactor, 6));
 
-                meshShaderMat.SetInt("_BodyIndexAll", playerIndex < 0 ? 1 : 0);
+                meshShaderMat.SetInt("_BodyIndexAll", kinectManager.GetUserIndexById(userId) < 0 ? 1 : 0);
                 meshShaderMat.SetInt("_UserBodyIndex", userBodyIndex);
                 meshShaderMat.SetVector("_UserBodyPos", userBodyPos);
                 meshShaderMat.SetMatrix("_Transform", sensorInt.GetSensorToWorldMatrix());

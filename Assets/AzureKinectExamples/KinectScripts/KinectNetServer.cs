@@ -106,7 +106,7 @@ namespace com.rfilkov.kinect
         private System.Text.StringBuilder sbConsole = new System.Text.StringBuilder();
 
 
-        void Start()
+        public void StartServer(int serverBasePort)
         {
             kinectManager = KinectManager.Instance;
             sensorData = kinectManager ? kinectManager.GetSensorData(sensorIndex) : null;
@@ -121,6 +121,7 @@ namespace com.rfilkov.kinect
                 // init servers
                 Debug.Log("Initing network servers of sensor " + sensorIndex + "...");
                 KinectInterop.FrameSource dwFlags = ((DepthSensorBase)sensorData.sensorInterface).frameSourceFlags;
+                baseListenPort = serverBasePort;
                 InitNetServers(dwFlags);
             }
             else
@@ -133,7 +134,6 @@ namespace com.rfilkov.kinect
                 }
             }
         }
-
 
         void OnDestroy()
         {
