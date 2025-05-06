@@ -275,7 +275,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   deviceStreamingMode: 2
   deviceIndex: 0
-  recordingFile: D:/Paula/Documents/Workspace/Unity/User-Representations/KinectRecordings/test.mkv
+  recordingFile: ./Recordings/Azure Kinect-003.mkv
   minDistance: 0.5
   maxDistance: 10
   pointCloudResolution: 0
@@ -467,7 +467,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e27aa16e02fb25e4abcd05bb2e505de7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  sensorIndex: 0
+  sensorIndex: 1
   showAsPointCloud: 0
   coarseFactor: 1
   edgeCutoffFactor: 0.5
@@ -539,7 +539,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9174d08555d56884e9d5406599439a9b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  SensorIndex: 1
+  SensorIndex: 0
   mirroredMovement: 0
   verticalMovement: 1
   horizontalMovement: 1
@@ -2388,7 +2388,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e27aa16e02fb25e4abcd05bb2e505de7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  sensorIndex: 1
+  sensorIndex: 0
   showAsPointCloud: 0
   coarseFactor: 1
   edgeCutoffFactor: 0.5
@@ -2446,8 +2446,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   deviceStreamingMode: 2
   deviceIndex: 1
-  recordingFile: D:/Paula/Documents/Workspace/Unity/User-Representations/KinectRecordings/Azure
-    Kinect-003.mkv
+  recordingFile: ./Recordings/test.mkv
   minDistance: 0.5
   maxDistance: 10
   pointCloudResolution: 0
@@ -2714,7 +2713,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9174d08555d56884e9d5406599439a9b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  SensorIndex: 0
+  SensorIndex: 1
   mirroredMovement: 0
   verticalMovement: 1
   horizontalMovement: 1
