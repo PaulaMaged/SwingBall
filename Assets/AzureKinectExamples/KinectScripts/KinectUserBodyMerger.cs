@@ -170,6 +170,7 @@ namespace com.rfilkov.kinect
             // If a match is found, parse the sensor index from the key (assuming the key format is "sensorIndex_userId")
             if (!string.IsNullOrEmpty(sensorUserId.Key))
             {
+
                 string[] parts = sensorUserId.Key.Split('_');
                 if (parts.Length > 0 && int.TryParse(parts[0], out int sensorIndex))
                 {

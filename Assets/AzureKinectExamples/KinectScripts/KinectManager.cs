@@ -3161,43 +3161,6 @@ namespace com.rfilkov.kinect
                 if (sensorDatas.Count == 0)
                 {
                     sensorInts.Clear();
-
-                    //// by-default add K4A interface
-                    //transform.position = new Vector3(0f, 1f, 0f);
-                    //transform.rotation = Quaternion.identity;
-
-                    //DepthSensorBase sensorInt = gameObject.AddComponent<Kinect4AzureInterface>();
-                    //sensorInts.Add(sensorInt);
-
-                    string sensorIntJson = KinectInterop.GetResourceText("DefSensorInterface.json");
-                    if (!string.IsNullOrEmpty(sensorIntJson))
-                    {
-                        DepthSensorDescriptor sensorIntDescr = JsonUtility.FromJson<DepthSensorDescriptor>(sensorIntJson);
-                        if (consoleLogMessages)
-                            Debug.Log("Creating '" + sensorIntDescr.sensorType + "' sensor interface, v" + sensorIntDescr.sensorIntVersion + "...");  // + " - " + sensorIntDescr.sensorInterface);
-                        Type sensorIntType = Type.GetType(sensorIntDescr.sensorInterface);
-
-                        GameObject sensorIntObj = new GameObject(sensorIntDescr.sensorType);
-                        sensorIntObj.transform.SetParent(transform, true);
-                        sensorIntObj.transform.position = sensorIntDescr.transformPos;
-                        sensorIntObj.transform.rotation = Quaternion.Euler(sensorIntDescr.transformRot);
-
-                        DepthSensorBase sensorInt = (DepthSensorBase)sensorIntObj.AddComponent(sensorIntType);
-                        if (sensorInt != null)
-                        {
-                            sensorInts.Add(sensorInt);
-
-                            // set settings
-                            DepthSensorBase.BaseSensorSettings settings = GetSensorSettings(sensorInt, /**sensorInt.GetSensorPlatform(),*/ sensorIntDescr.sensorIntSettings);
-                            if (settings != null)
-                            {
-                                sensorInt.SetSensorSettings(settings);
-                            }
-
-                            // try to open the by-default sensor interface
-                            TryOpenSensors(sensorInts, dwFlags);
-                        }
-                    }
                 }
 
                 if (consoleLogMessages)
@@ -3343,6 +3306,7 @@ namespace com.rfilkov.kinect
 
         public void ResetSensors()
         {
+            Debug.Log("<size=24>Restarting Sensors</size>");
             KinectManager.Instance.StopDepthSensors();
             KinectManager.Instance.StartDepthSensors();
         }
@@ -3355,7 +3319,7 @@ namespace com.rfilkov.kinect
             if (sensorData != null && sensorData.alTrackedBodies.Length > 0)
             {
                 ulong userId = sensorData.alTrackedBodies[0].liTrackingID; // copies struct every access - expensive
-                mergedUserId = userBodyMerger.GetmergedUserId(sensorIndex, userId);
+                mergedUserId = userBodyMerger?.GetmergedUserId(sensorIndex, userId) ?? userId;
             } else
             {
                 mergedUserId = 0;
@@ -3859,7 +3823,8 @@ namespace com.rfilkov.kinect
             {
                 if (consoleLogMessages)
                 {
-                    int sensorIndex = userBodyMerger.GetSensorIndex(userId);
+                    int sensorIndex = userBodyMerger?.GetSensorIndex(userId) ?? 0;
+
                     Debug.Log($"Sensor <size=18><color=#ff0000><b>{sensorIndex}</b></color></size> added user at index" + uidIndex + ", ID: " + userId + ", Body: " + bodyIndex + ", Pos: " + userPos + ", Time: " + userManager.dictUserIdToTime[userId]);
                 }
                 // update userIds of the avatar controllers

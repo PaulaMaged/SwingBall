@@ -740,12 +740,12 @@ MonoBehaviour:
   useMultiCamConfig: 0
   syncMultiCamFrames: 0
   getDepthFrames: 1
-  getColorFrames: 0
+  getColorFrames: 2
   getInfraredFrames: 0
   getPoseFrames: 0
-  getBodyFrames: 1
-  syncDepthAndColor: 0
-  syncBodyAndDepth: 0
+  getBodyFrames: 3
+  syncDepthAndColor: 1
+  syncBodyAndDepth: 1
   minUserDistance: 0
   maxUserDistance: 0
   maxLeftRightDistance: 0
@@ -1232,7 +1232,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5e6760ad6c6e18448be8d33e6d0203b9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  connectionTimeout: 1
+  connectionTimeout: 10
 --- !u!4 &1389334781734439045
 Transform:
   m_ObjectHideFlags: 0

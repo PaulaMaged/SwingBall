@@ -374,7 +374,8 @@ namespace com.rfilkov.components
         [ContextMenu("Print UserId")]
         private void PrintUserID()
         {
-            Debug.Log($"Tracked User ID: {kinectManager.GetFirstTrackedUserIdBySensorIndex(SensorIndex)}");
+            ulong userId = kinectManager.GetFirstTrackedUserIdBySensorIndex(SensorIndex);
+            Debug.Log($"Tracked User ID: {(userId == 0 ? "None" : userId)}");
         }
 
         public void Update()
@@ -391,7 +392,7 @@ namespace com.rfilkov.components
                 if (/**playerId == 0 &&*/ userId != 0)
                     SuccessfulCalibration(userId, true);
                 else
-                    playerId = 0;
+                    ResetToInitialPosition();
             }
 
             if (!lateUpdateAvatar && playerId != 0)
@@ -662,11 +663,11 @@ namespace com.rfilkov.components
         /// </summary>
         /// <param name="position"> world position </param>
         /// <param name="rotation"> rotation offset </param>
-        public void ResetInitialTransform(Vector3 position, Vector3 rotation)
+        public void ResetInitialTransform(Vector3 position, Quaternion rotation)
         {
             bodyRootPosition = position;
             initialPosition = position;
-            initialRotation = Quaternion.Euler(rotation);
+            initialRotation = rotation;
 
             transform.position = initialPosition;
             transform.rotation = initialRotation;
