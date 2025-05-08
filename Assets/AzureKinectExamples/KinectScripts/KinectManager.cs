@@ -3316,13 +3316,13 @@ namespace com.rfilkov.kinect
             ulong mergedUserId;
 
             KinectInterop.SensorData sensorData = GetSensorData(sensorIndex);
-            if (sensorData != null && sensorData.alTrackedBodies.Length > 0)
+            if (sensorData?.alTrackedBodies?.Length > 0)
             {
                 ulong userId = sensorData.alTrackedBodies[0].liTrackingID; // copies struct every access - expensive
                 mergedUserId = userBodyMerger?.GetmergedUserId(sensorIndex, userId) ?? userId;
             } else
             {
-                mergedUserId = 0;
+                mergedUserId = 0;   
             }
 
             return mergedUserId;

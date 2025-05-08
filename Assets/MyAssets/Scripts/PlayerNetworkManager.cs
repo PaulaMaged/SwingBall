@@ -108,7 +108,7 @@ public class PlayerNetworkManager : NetworkBehaviour
 
         KinectManager.Instance.ResetSensors();
 
-        kinectNetServer.StartServer(serverBasePort);
+        //kinectNetServer.StartServer(serverBasePort);
 
         AvatarControllerV2 avatarControllerV2 = GetComponentInChildren<AvatarControllerV2>(true);
         avatarControllerV2.SensorIndex = index;

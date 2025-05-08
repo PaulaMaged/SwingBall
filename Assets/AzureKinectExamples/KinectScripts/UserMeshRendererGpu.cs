@@ -473,6 +473,7 @@ namespace com.rfilkov.components
             if (bMeshInited && colorTexture != null && sensorData.depthImage != null && sensorData.depthCamIntr != null && meshShaderMat != null &&
                 lastDepthFrameTime != sensorData.lastDepthFrameTime && (Time.time - lastMeshUpdateTime) >= updateMeshInterval)
             {
+                Debug.Log($"Updating <b>Mesh</b> for sensor Index: {sensorIndex}");
                 lastDepthFrameTime = sensorData.lastDepthFrameTime;
                 lastMeshUpdateTime = Time.time;
 
@@ -568,12 +569,17 @@ namespace com.rfilkov.components
                     }
                 }
 
+            } else
+            {
+                Debug.Log($"<color=#ff0000>Not</color> Updating <b>Mesh</b> for sensor Index: {sensorIndex}");
             }
         }
 
         private void MapToAvatar()
         {
             KinectManager.Instance.GetDistanceFromKinect(0, out float distanceToPlayer, out float distanceToGround, out float distanceLateral);
+
+            if (transform.parent == null) return;
 
             Vector3 offset = transform.parent.position; //starting value;
             offset -= transform.forward * (distanceToPlayer + pointCloudOffset.z);
