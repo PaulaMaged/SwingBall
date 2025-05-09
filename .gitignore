@@ -77,7 +77,8 @@ crashlytics-build.properties
 /[Aa]ssets/[Ss]treamingAssets/aa.meta
 /[Aa]ssets/[Ss]treamingAssets/aa/*
 
-# Hide dlls
-*.dll
+# Hide dlls and models
+/*.dll
+/*.onnx
 
 *.bin
