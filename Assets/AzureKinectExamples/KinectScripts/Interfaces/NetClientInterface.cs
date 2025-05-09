@@ -67,7 +67,7 @@ namespace com.rfilkov.kinect
 
         // disconnect-reconnect
         private ulong latestDataReceivedAt = 0;
-        private const int disconnectAfter = 300000000;  // 10 seconds
+        private const int disconnectAfter = 100000000;  // 10 seconds
 
         private ulong disconnectedAt = 0;
         private const int reconnectAfter = 50000000;  // 5 seconds

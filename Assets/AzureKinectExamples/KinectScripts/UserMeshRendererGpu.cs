@@ -128,7 +128,7 @@ namespace com.rfilkov.components
 
         void Update()
         {
-            if (mesh == null && sensorData != null && sensorData.depthCamIntr != null)
+            if (mesh == null || sensorData?.sensorIndex != sensorIndex)
             {
                 // init mesh and its related data
                 InitMesh();
@@ -183,6 +183,11 @@ namespace com.rfilkov.components
 
             // get reference to the transform
             trans = GetComponent<Transform>();
+
+            if(sensorData?.sensorIndex != sensorIndex)
+            {
+                sensorData = (kinectManager != null && kinectManager.IsInitialized()) ? kinectManager.GetSensorData(sensorIndex) : null;
+            }
 
             // get sensor interface
             sensorInt = sensorData != null ? (DepthSensorBase)sensorData.sensorInterface : null;

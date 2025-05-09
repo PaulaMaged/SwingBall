@@ -655,7 +655,7 @@ MonoBehaviour:
   subDeviceDelayUsec: 0
   bodyTemporalSmoothing: 0
   playbackPosSeconds: -1
-  loopPlayback: 0
+  loopPlayback: 1
   bodyTrackingSensorOrientation: 0
   bodyTrackingProcessingMode: 4
   detectFloorForPoseEstimation: 1

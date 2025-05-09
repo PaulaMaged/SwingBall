@@ -3156,8 +3156,11 @@ namespace com.rfilkov.kinect
                 pointCloudColorTexture = KinectInterop.CreateRenderTexture(pointCloudColorTexture, 
                     sensorData.depthImageWidth, sensorData.depthImageHeight, RenderTextureFormat.ARGB32);
                 sensorData.depthCamColorImageTexture = new Texture2D(sensorData.depthImageWidth, sensorData.depthImageHeight, sensorData.colorImageFormat, false);
+            } else if (isEnable)
+            {
+                sensorData.depthCamColorImageTexture = new Texture2D(sensorData.depthImageWidth, sensorData.depthImageHeight, sensorData.colorImageFormat, false);
             }
-            else if(!isEnable && pointCloudColorTexture != null)
+            else if (!isEnable && pointCloudColorTexture != null)
             {
                 pointCloudColorTexture.Release();
                 pointCloudColorTexture = null;
