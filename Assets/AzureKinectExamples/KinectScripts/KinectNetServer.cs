@@ -106,11 +106,11 @@ namespace com.rfilkov.kinect
         private System.Text.StringBuilder sbConsole = new System.Text.StringBuilder();
 
 
-        public void Start()
+        public void StartServer()
         {
             kinectManager = KinectManager.Instance;
             sensorData = kinectManager ? kinectManager.GetSensorData(sensorIndex) : null;
-
+            Debug.Log($"Starting server for sensor w index: {sensorIndex} and found sensor is <bold>{(sensorData == null ? "NULL" : "Available")}");
             if(sensorData != null && sensorData.sensorInterface != null)
             {
                 // cache space tables
