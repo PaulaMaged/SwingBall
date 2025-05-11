@@ -1,10 +1,15 @@
 using System.Collections;
 using Unity.Netcode;
+using Unity.Netcode.Transports.UTP;
 using UnityEngine;
 
 public class SetupPeerType : MonoBehaviour
 {
     // Timeout in seconds to wait for a successful client connection.
+    [Tooltip("Server Address")]
+    [SerializeField] private string _serverIPAddress = "192.168.1.1";
+    [SerializeField] private ushort _portNumber = 7777;
+
     [SerializeField] private float connectionTimeout = 5.0f;
 
     private void Start()
@@ -15,6 +20,12 @@ public class SetupPeerType : MonoBehaviour
     private IEnumerator AttemptToStartClientOrHost()
     {
         // Attempt to start as a client first.
+        NetworkManager.Singleton.GetComponent<UnityTransport>().SetConnectionData(
+            _serverIPAddress,
+            _portNumber,
+            "0.0.0.0"
+            );
+
         NetworkManager.Singleton.StartClient();
         Debug.Log("Attempting to connect as Client...");
 
