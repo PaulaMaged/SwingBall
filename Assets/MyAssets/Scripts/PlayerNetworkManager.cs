@@ -22,12 +22,10 @@ public class PlayerNetworkManager : NetworkBehaviour
 
         if (!IsOwner)
         {
-            StartCoroutine(InitNetClient());
             enabled = false;
             return;
         }
 
-        InitNetServer();
         //sets this player's transform
         Transform spawnPoint = GameManager.Instance.SpawnPoint;
         SetPlayerTransformData(spawnPoint.position, spawnPoint.rotation);
@@ -54,16 +52,10 @@ public class PlayerNetworkManager : NetworkBehaviour
 
     /// <summary>
     /// Instantiates a netclient with server base port reflecting the index that this player takes inside of the networked playernetworkobj refs
-    /// The netclient is to be spawned on the kinectmanager's gameobject. The sensorindex passed in should be the count 
+    /// The netclient is to be spawned on the kinectmanager's gameobject.
     /// </summary>
-    private IEnumerator InitNetClient()
+    public void InitNetClient(int index)
     {
-        while (!PlayerManager.instance.PlayerNetworkObjectRefs.Contains(new NetworkObjectReference(NetworkObject)))
-        {
-            yield return null;
-        }
-
-        int index = PlayerManager.instance.PlayerNetworkObjectRefs.IndexOf(new NetworkObjectReference(NetworkObject));
         Debug.Log($"Creating a netclient for player with network object refs index: {index}");
         if (index == -1) throw new Exception("Player network Object must exist inside of list");
 
@@ -76,46 +68,44 @@ public class PlayerNetworkManager : NetworkBehaviour
         netClient.deviceIndex = index;
         netClient.serverBasePort = serverBasePort;
 
-        KinectManager.Instance.ResetSensors(); //this is enough to initiate the client listening
-
-        AvatarControllerV2 avatarControllerV2 = GetComponentInChildren<AvatarControllerV2>(true);
-        avatarControllerV2.SensorIndex = index;
-        avatarControllerV2.enabled = true;
-
-        UserMeshRendererGpu userMeshRendererGpu = GetComponentInChildren<UserMeshRendererGpu>(true);
-        userMeshRendererGpu.sensorIndex = index;
-        userMeshRendererGpu.enabled = true;
+        SetupKinectTracking(index);
     }
 
-    private void InitNetServer()
+    public void InitLocalSenosr(int index)
     {
-        int index = PlayerManager.instance.PlayerNetworkObjectRefs.Count;
-
         //create the netServer and k4a instance
-        GameObject go = new("Kinect4AzureInterfaceWServer");
+        GameObject go = new("Kinect4AzureInterface");
         go.transform.SetParent(KinectManager.Instance.transform);
         Kinect4AzureInterface k4aInt = go.AddComponent<Kinect4AzureInterface>();
-        KinectNetServer kinectNetServer = go.AddComponent<KinectNetServer>();
+
+        if (DEBUGGING)
+        {
+            k4aInt.deviceStreamingMode = KinectInterop.DeviceStreamingMode.PlayRecording;
+            k4aInt.recordingFile = IsHost ? "./Recordings/Azure Kinect-003.mkv" : "./Recordings/test.mkv";
+            k4aInt.bodyTrackingProcessingMode = Microsoft.Azure.Kinect.Sensor.k4abt_tracker_processing_mode_t.K4ABT_TRACKER_PROCESSING_MODE_GPU_DIRECTML;
+            k4aInt.loopPlayback = true;
+        }
 
         k4aInt.deviceIndex = index;
+
+        SetupKinectTracking(index);
+    }
+
+    public void InitKinectServer(int index)
+    {
+        GameObject go = new("KinectNetServer");
+        KinectNetServer kinectNetServer = go.AddComponent<KinectNetServer>();
 
         int serverBasePort = 10000 + 1000 * index;
         kinectNetServer.sensorIndex = index;
         kinectNetServer.baseListenPort = serverBasePort;
         kinectNetServer.listenForServerDiscovery = true;
 
-        if (DEBUGGING)
-        {
-            k4aInt.deviceStreamingMode = KinectInterop.DeviceStreamingMode.PlayRecording;
-            k4aInt.recordingFile = IsHost ? "./Recordings/Azure Kinect-003.mkv" : "./Recordings/test.mkv";
-            k4aInt.bodyTrackingProcessingMode = Microsoft.Azure.Kinect.Sensor.k4abt_tracker_processing_mode_t.K4ABT_TRACKER_PROCESSING_MODE_GPU_CUDA;
-            k4aInt.loopPlayback = true;
-        }
-
-        KinectManager.Instance.ResetSensors();
-
         kinectNetServer.StartServer();
+    }
 
+    private void SetupKinectTracking(int index)
+    {
         AvatarControllerV2 avatarControllerV2 = GetComponentInChildren<AvatarControllerV2>(true);
         avatarControllerV2.SensorIndex = index;
         avatarControllerV2.enabled = true;

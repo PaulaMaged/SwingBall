@@ -108,9 +108,10 @@ namespace com.rfilkov.kinect
 
         public void StartServer()
         {
+
             kinectManager = KinectManager.Instance;
             sensorData = kinectManager ? kinectManager.GetSensorData(sensorIndex) : null;
-            Debug.Log($"Starting server for sensor w index: {sensorIndex} and found sensor is <bold>{(sensorData == null ? "NULL" : "Available")}");
+            Debug.Log($"Starting server for sensor w index: {sensorIndex} and found sensor is <b>{(sensorData == null ? "NULL" : "Available")}</b>");
             if(sensorData != null && sensorData.sensorInterface != null)
             {
                 // cache space tables

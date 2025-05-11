@@ -1,4 +1,8 @@
+using com.rfilkov.kinect;
+using NUnit.Framework;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -27,6 +31,8 @@ public class GameManager : NetworkBehaviour
         ProgramUI.SetActive(false);
         _RehabProgram = ExerciseProgram.GetComponentInChildren<RehabProgram>();
 
+        SetupSensorsRpc();
+
         //handoff ownership of rehabProgram to client
         ulong clientId = Array.Find<ulong>(PlayerManager.instance.PlayerClientIds, id => id != 0);
         ExerciseProgram.GetComponent<NetworkObject>().ChangeOwnership(clientId);
@@ -50,5 +56,36 @@ public class GameManager : NetworkBehaviour
         ProgramUI.SetActive(true);
         Camera camera = NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject().transform.GetComponent<XRRigReferences>().Camera.GetComponent<Camera>();
         ExerciseProgram.GetComponentInChildren<Canvas>().worldCamera = camera;
+    }
+
+    [Rpc(SendTo.Everyone)]
+    private void SetupSensorsRpc()
+    {
+        int localPlayerIndex = -1;
+
+        PlayerNetworkManager[] playerNetworkManagers = null;
+
+        IReadOnlyList<NetworkObject> playerNetworkObjects = NetworkManager.SpawnManager.PlayerObjects;
+
+        playerNetworkManagers = playerNetworkObjects.Select((playerNetObj, index) => {
+            if (playerNetObj.IsLocalPlayer) localPlayerIndex = index; //sets localPlayerIndex
+                
+            return playerNetObj.GetComponentInChildren<PlayerNetworkManager>(true);
+            }).ToArray();
+
+        for(int i = 0; i < playerNetworkManagers?.Length; i++)
+        {
+            if(i == localPlayerIndex)
+            {
+                playerNetworkManagers[i].InitLocalSenosr(localPlayerIndex);
+            } else
+            {
+                playerNetworkManagers[i].InitNetClient(i);
+            }
+        }
+
+        KinectManager.Instance.ResetSensors();
+
+        playerNetworkManagers[localPlayerIndex].InitKinectServer(localPlayerIndex);
     }
 }

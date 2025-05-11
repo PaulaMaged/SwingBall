@@ -1232,7 +1232,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5e6760ad6c6e18448be8d33e6d0203b9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  connectionTimeout: 10
+  connectionTimeout: 5
 --- !u!4 &1389334781734439045
 Transform:
   m_ObjectHideFlags: 0

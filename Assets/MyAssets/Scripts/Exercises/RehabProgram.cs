@@ -29,7 +29,7 @@ public class RehabProgram : NetworkBehaviour
     public bool IsBreakTime { get; private set; } = false;
 
     private int currentExerciseIndex = -1;
-    private StaticPoseDetectorDebug staticPoseDetectorDebug;
+    private StaticPoseDetector staticPoseDetector;
 
     [SerializeField] private InputActionReference StartExerciseButton;
     [SerializeField] private InputActionReference PoseConfirmationButton;
@@ -100,7 +100,7 @@ public class RehabProgram : NetworkBehaviour
 
     public bool IsPoseMatched()
     {
-        return staticPoseDetectorDebug.IsPoseMatched();
+        return staticPoseDetector.IsPoseMatched();
     }
 
     public bool IsProgramCompleted()
@@ -138,9 +138,9 @@ public class RehabProgram : NetworkBehaviour
 
     private void SetupDetection()
     {
-        staticPoseDetectorDebug = gameObject.AddComponent<StaticPoseDetectorDebug>();
+        staticPoseDetector = gameObject.AddComponent<StaticPoseDetector>();
         if (!NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject().gameObject.TryGetComponent(out PoseModelHelper playerModelHelper)) return;
-        staticPoseDetectorDebug.Init(ReferenceCharacterInstance, playerModelHelper);
+        staticPoseDetector.Init(ReferenceCharacterInstance, playerModelHelper);
     }
 
     //conditional statements for context checking
@@ -242,7 +242,7 @@ public class RehabProgram : NetworkBehaviour
         exerciseProgress.Value = new ExerciseProgress(currentExerciseIndex);
         Debug.Log($"The Exercise's Details: {Exercises[currentExerciseIndex]}");
 
-        staticPoseDetectorDebug.SetJoints(Exercises[currentExerciseIndex].Joint2WeightAndMaxAngle);
+        staticPoseDetector.SetJoints(Exercises[currentExerciseIndex].Joint2WeightAndMaxAngle);
 
         //set pose to match anchor point with
         Debug.Log($"Current Exercise Index: {currentExerciseIndex}");

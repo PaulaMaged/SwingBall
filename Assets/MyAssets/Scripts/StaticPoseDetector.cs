@@ -124,11 +124,6 @@ namespace com.rfilkov.components
             }
         }
 
-        private void Start()
-        {
-            SkipJointSlerpKey = Keyboard.current[skipJointSlerpKeyEnum];
-        }
-
         void Update()
         {
             // get mirrored state
@@ -160,6 +155,7 @@ namespace com.rfilkov.components
             }
         }
 
+        [ContextMenu("Setup Exercise")]
         public void SetJoints(Dictionary<KinectInterop.JointType, JointInfo> jointInfo)
         {
             if (jointInfo == null) return;
