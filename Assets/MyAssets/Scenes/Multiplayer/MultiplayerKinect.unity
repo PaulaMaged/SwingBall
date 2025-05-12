@@ -1215,7 +1215,7 @@ MonoBehaviour:
     e33: 1
   sensorRotValueY: 0
   autoServerDiscovery: 0
-  serverHost: localhost
+  serverHost: 192.168.175.245
   serverBasePort: 10000
   getBodyIndexFrames: 1
   clientStatusText: {fileID: 0}

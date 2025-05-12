@@ -2099,6 +2099,9 @@ namespace com.rfilkov.kinect
                 conn.stream = conn.client.GetStream();
 
                 conn.remoteIP = conn.client.Client.RemoteEndPoint.ToString();
+
+                Debug.Log($"Handling Net Server {conn.remoteIP}");
+
                 int iP = conn.remoteIP.IndexOf(':');
                 if (iP >= 0)
                     conn.remoteIP = conn.remoteIP.Substring(0, iP);
