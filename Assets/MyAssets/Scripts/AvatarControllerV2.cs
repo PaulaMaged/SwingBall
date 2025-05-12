@@ -17,6 +17,7 @@ namespace com.rfilkov.components
     [RequireComponent(typeof(Animator))]
     public class AvatarControllerV2 : MonoBehaviour
     {
+        [Tooltip("Sensor index inside of sensor interfaces list within kinectmanager")]
         public int SensorIndex;
 
         [Tooltip("Whether the avatar is facing the player or not.")]
@@ -386,13 +387,19 @@ namespace com.rfilkov.components
             }
 
             ulong userId = kinectManager.GetFirstTrackedUserIdBySensorIndex(SensorIndex);
+            Debug.Log($"Sensor Index tracked: {SensorIndex} is tracking the user with ID: {kinectManager.GetFirstTrackedUserIdBySensorIndex(SensorIndex)}");
 
             if (playerId != userId)
             {
-                if (/**playerId == 0 &&*/ userId != 0)
+                if (userId != 0)
+                {
+                    Debug.Log("Calibrating User");
                     SuccessfulCalibration(userId, true);
+                }
                 else
+                {
                     ResetToInitialPosition();
+                }
             }
 
             if (!lateUpdateAvatar && playerId != 0)

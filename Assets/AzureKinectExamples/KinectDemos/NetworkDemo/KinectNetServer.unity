@@ -3022,7 +3022,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 661921856}
   m_HandleRect: {fileID: 661921855}
   m_Direction: 0
-  m_Value: 1
+  m_Value: 0
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -3207,6 +3207,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2037867660}
   - component: {fileID: 2037867659}
+  - component: {fileID: 2037867661}
   m_Layer: 0
   m_Name: KinectController
   m_TagString: Untagged
@@ -3233,6 +3234,7 @@ MonoBehaviour:
   getInfraredFrames: 0
   getPoseFrames: 0
   getBodyFrames: 3
+  pollFramesInThread: 0
   syncDepthAndColor: 1
   syncBodyAndDepth: 1
   minUserDistance: 0
@@ -3273,6 +3275,19 @@ Transform:
   - {fileID: 2073166313}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2037867661
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2037867658}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 53ba2649b148a804dbd334e1165efd41, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  KinectNetServer: {fileID: 397668014}
 --- !u!1 &2073166312
 GameObject:
   m_ObjectHideFlags: 0

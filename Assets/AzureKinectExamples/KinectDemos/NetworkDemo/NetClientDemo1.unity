@@ -191,7 +191,7 @@ MonoBehaviour:
     e32: 0
     e33: 1
   sensorRotValueY: 0
-  autoServerDiscovery: 1
+  autoServerDiscovery: 0
   serverHost: 127.0.0.1
   serverBasePort: 11000
   getBodyIndexFrames: 1
@@ -206,6 +206,7 @@ GameObject:
   m_Component:
   - component: {fileID: 17942846}
   - component: {fileID: 17942847}
+  - component: {fileID: 17942848}
   m_Layer: 0
   m_Name: KinectController
   m_TagString: Untagged
@@ -248,6 +249,7 @@ MonoBehaviour:
   getInfraredFrames: 0
   getPoseFrames: 0
   getBodyFrames: 3
+  pollFramesInThread: 0
   syncDepthAndColor: 1
   syncBodyAndDepth: 1
   minUserDistance: 0
@@ -272,6 +274,19 @@ MonoBehaviour:
   OnDepthSensorsStopped:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &17942848
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 17942844}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 53ba2649b148a804dbd334e1165efd41, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  KinectNetServer: {fileID: 0}
 --- !u!1 &378683794
 GameObject:
   m_ObjectHideFlags: 0

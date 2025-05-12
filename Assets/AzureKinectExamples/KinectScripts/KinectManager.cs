@@ -44,7 +44,7 @@ namespace com.rfilkov.kinect
         public enum BodyTextureType : int { None = 0, BodyAndBodyIndexData = 1, BodyTexture = 2, UserTexture = 3, BodyDataOnly = 4, BodyIndexDataOnly = 5 }
 
         [Tooltip("Whether to poll the sensor frames in separate threads or in the Update-method.")]
-        private bool pollFramesInThread = true;
+        public bool pollFramesInThread = true;
 
         [Tooltip("Whether to synchronize depth and color frames.")]
         public bool syncDepthAndColor = false;
@@ -2941,11 +2941,7 @@ namespace com.rfilkov.kinect
                 boneConstraints.AddDefaultConstraints();
                 boneConstraints.SetDebugText(statusInfoText);
             }
-
-            // locate and start the available depth-sensors
-            StartDepthSensors();
         }
-
 
         // gets the frame-source flags
         private KinectInterop.FrameSource GetFrameSourceFlags()

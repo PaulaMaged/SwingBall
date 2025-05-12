@@ -84,8 +84,8 @@ public class GameManager : NetworkBehaviour
             }
         }
 
-        KinectManager.Instance.ResetSensors();
+        KinectManager.Instance.StartDepthSensors();
 
-        playerNetworkManagers[localPlayerIndex].InitKinectServer(localPlayerIndex);
+        //playerNetworkManagers[localPlayerIndex].InitKinectServer(localPlayerIndex);
     }
 }

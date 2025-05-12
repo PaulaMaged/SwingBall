@@ -34,12 +34,16 @@ public class SetupPeerType : MonoBehaviour
         bool connected = false;
         while (timer < connectionTimeout)
         {
-            if (NetworkManager.Singleton.IsConnectedClient)
-            {
+
+            bool? hasFoundConnection = NetworkManager.Singleton == null ? null : NetworkManager.Singleton.IsConnectedClient;
+            if (hasFoundConnection == null) continue;
+
+            if(hasFoundConnection.Value) {
                 connected = true;
                 Debug.Log("Successfully connected as Client.");
                 break;
             }
+
             timer += Time.deltaTime;
             yield return null;
         }

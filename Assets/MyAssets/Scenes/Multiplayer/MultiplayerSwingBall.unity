@@ -744,6 +744,7 @@ MonoBehaviour:
   getInfraredFrames: 0
   getPoseFrames: 0
   getBodyFrames: 3
+  pollFramesInThread: 0
   syncDepthAndColor: 1
   syncBodyAndDepth: 1
   minUserDistance: 0
@@ -1156,7 +1157,7 @@ MonoBehaviour:
   m_DisconnectTimeoutMS: 30000
   ConnectionData:
     Address: 0.0.0.0
-    Port: 7777
+    Port: 7776
     ServerListenAddress: 127.0.0.1
   DebugSimulator:
     PacketDelayMS: 0
@@ -1232,7 +1233,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5e6760ad6c6e18448be8d33e6d0203b9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _serverIPAddress: 192.168.249.245
+  _serverIPAddress: 192.168.175.10
   _portNumber: 7777
   connectionTimeout: 5
 --- !u!4 &1389334781734439045

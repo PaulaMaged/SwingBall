@@ -1,11 +1,14 @@
 ﻿using LZ4Sharp;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using System.Threading.Tasks;
 using UnityEngine;
+using static Unity.IO.LowLevel.Unsafe.AsyncReadManagerMetrics;
 
 
 namespace com.rfilkov.kinect
@@ -16,7 +19,8 @@ namespace com.rfilkov.kinect
     public class NetClientInterface : DepthSensorBase
     {
         [Tooltip("Whether to broadcast, in order to find automatically the first available server (local network only).")]
-        public bool autoServerDiscovery = true;
+        public bool autoServerDiscovery = false;
+        private bool IsSearching = false;
 
         [Tooltip("Host name or IP address of the network server.")]
         public string serverHost = "localhost";
@@ -241,23 +245,16 @@ namespace com.rfilkov.kinect
             sensorData.colorImageFormat = TextureFormat.RGB24;
             sensorData.colorImageStride = 3;  // 3 bytes per pixel
 
-            if(autoServerDiscovery)
-            {
-                // discover the 1st available net-server
-                BroadcastServerDiscovery();
-            }
-
-            // init network clients
-            InitNetClients(dwFlags);
-
             // check for frame sync
             isFrameSyncNeeded = bSyncDepthAndColor || bSyncBodyAndDepth;
-            if(isFrameSyncNeeded)
+            if (isFrameSyncNeeded)
             {
                 dictNetMessageData = new Dictionary<ulong, Dictionary<NetMessageType, NetMessageData>>();
                 alNetMessageTime = new List<ulong>();
             }
 
+            InitNetClientsAsync(dwFlags);
+            
             if (consoleLogMessages)
                 Debug.Log("D" + deviceIndex + " NetSensor opened: " + serverHost + ":" + serverBasePort + ", discovery: " + autoServerDiscovery);
 
@@ -356,13 +353,14 @@ namespace com.rfilkov.kinect
             }
 
             // try to reconnect
-            if(disconnectedAt != 0 && (ulTimeNow - disconnectedAt) >= reconnectAfter)
+            if(disconnectedAt != 0 && (ulTimeNow - disconnectedAt) >= reconnectAfter && !IsSearching)
             {
                 if (consoleLogMessages)
                     Debug.Log("Start reconnecting...");
 
                 CloseNetClients();
-                InitNetClients(frameSourceFlags);
+
+                InitNetClientsAsync(frameSourceFlags);
                 return true;
             }
 
@@ -957,6 +955,7 @@ namespace com.rfilkov.kinect
         // broadcasts to discover the 1st available net-server
         private void BroadcastServerDiscovery()
         {
+            Debug.Log("Inside Thread!");
             UdpClient udpClient = null;
             if (bBroadcastResponseReceived)
                 return;
@@ -988,6 +987,7 @@ namespace com.rfilkov.kinect
                 while (!bBroadcastResponseReceived && (timeNow - timeStart) < 50000000)  // timeout - 5 seconds
                 {
                     Thread.Sleep(THREAD_WAIT_TIME_MS);
+                    Debug.Log("Waiting some more");
                     timeNow = System.DateTime.Now.Ticks;
                 }
 
@@ -1003,7 +1003,7 @@ namespace com.rfilkov.kinect
             }
             catch (System.Exception ex)
             {
-                Debug.LogException(ex);
+                Debug.LogError($"Error occured while finding server ip: {ex}");
             }
             finally
             {
@@ -1041,8 +1041,25 @@ namespace com.rfilkov.kinect
 
 
         // initializes the network clients
-        private void InitNetClients(KinectInterop.FrameSource dwFlags)
+        private async void InitNetClientsAsync(KinectInterop.FrameSource dwFlags)
         {
+            if (autoServerDiscovery)
+            {
+                // discover the 1st available net-server
+                Debug.Log("Finding Servers to connect with...");
+                IsSearching = true;
+                await Task.Run(() => {
+                    try
+                    {
+                        BroadcastServerDiscovery();
+                    } catch (Exception e)
+                    {
+                        Debug.LogError($"Error on server discovery background task: {e}");
+                    }
+                    });
+                IsSearching = false;
+            }
+
             try
             {
                 // clear params

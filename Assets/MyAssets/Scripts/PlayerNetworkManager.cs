@@ -99,7 +99,7 @@ public class PlayerNetworkManager : NetworkBehaviour
         int serverBasePort = 10000 + 1000 * index;
         kinectNetServer.sensorIndex = index;
         kinectNetServer.baseListenPort = serverBasePort;
-        kinectNetServer.listenForServerDiscovery = true;
+        kinectNetServer.listenForServerDiscovery = true; //This might not be guaranteed to work correct as it might start listening to itself, and I don't know how to assert this hypothesis
 
         kinectNetServer.StartServer();
     }
