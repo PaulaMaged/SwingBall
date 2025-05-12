@@ -2249,11 +2249,11 @@ namespace com.rfilkov.kinect
         {
             Debug.Log(sMessage);
 
-            lock (sbConsole)
-            {
-                sbConsole.Clear();
-                sbConsole.Append(sMessage); //.AppendLine();
-            }
+            //lock (sbConsole)
+            //{
+            //    sbConsole.Clear();
+            //    sbConsole.Append(sMessage); //.AppendLine();
+            //}
         }
 
         // logs error message to the console
@@ -2261,11 +2261,11 @@ namespace com.rfilkov.kinect
         {
             Debug.LogError(sMessage);
 
-            lock (sbConsole)
-            {
-                sbConsole.Clear();
-                sbConsole.Append(sMessage); //.AppendLine();
-            }
+            //lock (sbConsole)
+            //{
+            //    sbConsole.Clear();
+            //    sbConsole.Append(sMessage); //.AppendLine();
+            //}
         }
 
 

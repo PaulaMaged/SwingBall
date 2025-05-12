@@ -478,7 +478,6 @@ namespace com.rfilkov.components
             if (bMeshInited && colorTexture != null && sensorData.depthImage != null && sensorData.depthCamIntr != null && meshShaderMat != null &&
                 lastDepthFrameTime != sensorData.lastDepthFrameTime && (Time.time - lastMeshUpdateTime) >= updateMeshInterval)
             {
-                Debug.Log($"Updating <b>Mesh</b> for sensor Index: {sensorIndex}");
                 lastDepthFrameTime = sensorData.lastDepthFrameTime;
                 lastMeshUpdateTime = Time.time;
 
@@ -574,9 +573,6 @@ namespace com.rfilkov.components
                     }
                 }
 
-            } else
-            {
-                Debug.Log($"<color=#ff0000>Not</color> Updating <b>Mesh</b> for sensor Index: {sensorIndex}");
             }
         }
 

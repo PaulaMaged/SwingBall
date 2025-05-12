@@ -387,13 +387,11 @@ namespace com.rfilkov.components
             }
 
             ulong userId = kinectManager.GetFirstTrackedUserIdBySensorIndex(SensorIndex);
-            Debug.Log($"Sensor Index tracked: {SensorIndex} is tracking the user with ID: {kinectManager.GetFirstTrackedUserIdBySensorIndex(SensorIndex)}");
 
             if (playerId != userId)
             {
                 if (userId != 0)
                 {
-                    Debug.Log("Calibrating User");
                     SuccessfulCalibration(userId, true);
                 }
                 else

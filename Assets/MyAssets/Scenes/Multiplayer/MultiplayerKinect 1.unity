@@ -589,7 +589,7 @@ MonoBehaviour:
     e33: 1
   sensorRotValueY: 0
   autoServerDiscovery: 0
-  serverHost: localhost
+  serverHost: 192.168.175.10
   serverBasePort: 11000
   getBodyIndexFrames: 1
   clientStatusText: {fileID: 0}
@@ -3321,7 +3321,7 @@ MonoBehaviour:
   playbackPosSeconds: -1
   loopPlayback: 1
   bodyTrackingSensorOrientation: 0
-  bodyTrackingProcessingMode: 4
+  bodyTrackingProcessingMode: 2
   detectFloorForPoseEstimation: 1
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
