@@ -65,6 +65,10 @@ namespace com.rfilkov.kinect
         // thread sleep time in milliseconds, to wait for server response
         private const int THREAD_WAIT_TIME_MS = 100;
 
+        //const int MAX_MESSAGE_SIZE = 1024 * 1024 * 10; // 10 MB (To be used as an upper limit for message processing size)
+
+        const ulong TICKSINASECOND = 10_000_000;
+
         // keep-alive
         private ulong lastKeepAliveFrameTime = 0;
         private const int keepAliveInterval = 20000000;  // 2 seconds
@@ -75,6 +79,7 @@ namespace com.rfilkov.kinect
 
         private ulong disconnectedAt = 0;
         private const int reconnectAfter = 50000000;  // 5 seconds
+        private ulong startedConnectingAt = 0;
 
         // color image
         private byte[] colorImageData = null;
@@ -135,7 +140,6 @@ namespace com.rfilkov.kinect
         private Dictionary<ulong, Dictionary<NetMessageType, NetMessageData>> dictNetMessageData = null;
         private List<ulong> alNetMessageTime = null;
         private object syncMessageLock = new object();
-
 
         // depth sensor settings
         [System.Serializable]
@@ -293,17 +297,6 @@ namespace com.rfilkov.kinect
 
         public override bool UpdateSensorData(KinectInterop.SensorData sensorData, KinectManager kinectManager, bool isPlayMode)
         {
-            // client status text
-            //if (sbConsole.Length > 0)
-            //{
-            //    lock (sbConsole)
-            //    {
-            //        if (clientStatusText)
-            //            clientStatusText.text = sbConsole.ToString();
-            //        sbConsole.Clear();
-            //    }
-            //}
-
             // check for server timeout
             ulong ulTimeNow = (ulong)System.DateTime.Now.Ticks;
             bool isControlClientActive = controlFrameClient != null ? controlFrameClient.IsActive() : false;
@@ -319,7 +312,7 @@ namespace com.rfilkov.kinect
             }
 
             // check for server disconnection
-            if (disconnectedAt == 0 && controlFrameClient != null && !isControlClientActive)
+            if (disconnectedAt == 0 && (ulTimeNow - startedConnectingAt) >= disconnectAfter && controlFrameClient != null && !isControlClientActive)
             {
                 Debug.LogError("Server disconnection detected.");
                 CloseNetClients();
@@ -331,8 +324,6 @@ namespace com.rfilkov.kinect
             {
                 if (consoleLogMessages)
                     Debug.Log("Start reconnecting...");
-
-                CloseNetClients();
 
                 InitNetClientsAsync(frameSourceFlags);
                 return true;
@@ -1095,6 +1086,7 @@ namespace com.rfilkov.kinect
                 }
 
                 Debug.Log("Started Connecting To All Servers");
+                startedConnectingAt = (ulong)System.DateTime.Now.Ticks;
 
             }
             catch (System.Exception ex)
@@ -2166,40 +2158,47 @@ namespace com.rfilkov.kinect
 
         private void ProcessReceivedData(byte[] buffer, int bytesReceived, NetConnData conn)
         {
-            if (conn.bytesReceived == 0 && bytesReceived > 3)  //new message
+            try
             {
-                int newMessageSize = System.BitConverter.ToInt32(buffer, 0) + sizeof(int);  //prefix is one int
-
-                if (newMessageSize != conn.messageSize)
+                if (conn.bytesReceived == 0 && bytesReceived > 3)  //new message
                 {
-                    conn.messageSize = newMessageSize;
-                    conn.messageBuffer = new byte[newMessageSize];
+                    int newMessageSize = System.BitConverter.ToInt32(buffer, 0) + sizeof(int);  //prefix is one int
+
+                    if (newMessageSize != conn.messageSize)
+                    {
+                        conn.messageSize = newMessageSize;
+                        conn.messageBuffer = new byte[newMessageSize];
+                    }
                 }
-            }
 
-            int availableLength = conn.messageSize - conn.bytesReceived;
-            int copyLen = Mathf.Min(availableLength, bytesReceived);
-            conn.packetCounter++;
+                int availableLength = conn.messageSize - conn.bytesReceived;
+                int copyLen = Mathf.Min(availableLength, bytesReceived);
+                conn.packetCounter++;
 
-            System.Array.Copy(buffer, 0, conn.messageBuffer, conn.bytesReceived, copyLen);
-            conn.bytesReceived += copyLen;
+                System.Array.Copy(buffer, 0, conn.messageBuffer, conn.bytesReceived, copyLen);
+                conn.bytesReceived += copyLen;
 
-            if (conn.bytesReceived == conn.messageSize)
+                if (conn.bytesReceived == conn.messageSize)
+                {
+                    conn.ResetCounters();
+
+                    NetMessageData message = new NetMessageData();
+                    message.SetDecompressor(decompressor);
+                    message.UnwrapMessage(conn.messageBuffer);
+
+                    ReceivedMessage?.Invoke(conn, new ReceivedMessageEventArgs(message));
+                }
+
+                if (copyLen != bytesReceived) // process the remainder of the message
+                {
+                    byte[] newBuffer = new byte[bytesReceived - copyLen];
+                    System.Array.Copy(buffer, copyLen, newBuffer, 0, bytesReceived - copyLen);
+                    ProcessReceivedData(newBuffer, bytesReceived - copyLen, conn);
+                }
+            } catch (Exception ex)
             {
-                conn.ResetCounters();
-
-                NetMessageData message = new NetMessageData();
-                message.SetDecompressor(decompressor);
-                message.UnwrapMessage(conn.messageBuffer);
-
-                ReceivedMessage?.Invoke(conn, new ReceivedMessageEventArgs(message));
-            }
-
-            if (copyLen != bytesReceived) // process the remainder of the message
-            {
-                byte[] newBuffer = new byte[bytesReceived - copyLen];
-                System.Array.Copy(buffer, copyLen, newBuffer, 0, bytesReceived - copyLen);
-                ProcessReceivedData(newBuffer, bytesReceived - copyLen, conn);
+                Debug.LogError("An Error occured while processing received data");
+                Debug.LogException(ex);
             }
         }
 
