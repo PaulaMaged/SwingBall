@@ -288,47 +288,21 @@ namespace com.rfilkov.kinect
 
         public override bool IsSensorDataValid()
         {
-            if(bInvalidSensorData)
-            {
-                // got invalid sensor-data once
-                return false;
-            }
-
-            // wait for net-cst
-            long timeStart = System.DateTime.Now.Ticks;
-            long timeNow = timeStart;
-
-            while (!bGotNetSensorData && (timeNow - timeStart) < 50000000)  // timeout - 5 seconds
-            {
-                Thread.Sleep(THREAD_WAIT_TIME_MS);
-                timeNow = System.DateTime.Now.Ticks;
-            }
-
-            if (bGotNetSensorData && !bSetNetSensorData && netSensorData != null)
-            {
-                SetNetSensorData(netSensorData, sensorData, KinectManager.Instance);
-                bSetNetSensorData = true;
-                netSensorData = null;
-            }
-
-            bInvalidSensorData = !bGotNetSensorData;
-
             return bGotNetSensorData;
         }
-
 
         public override bool UpdateSensorData(KinectInterop.SensorData sensorData, KinectManager kinectManager, bool isPlayMode)
         {
             // client status text
-            if (sbConsole.Length > 0)
-            {
-                lock (sbConsole)
-                {
-                    if (clientStatusText)
-                        clientStatusText.text = sbConsole.ToString();
-                    sbConsole.Clear();
-                }
-            }
+            //if (sbConsole.Length > 0)
+            //{
+            //    lock (sbConsole)
+            //    {
+            //        if (clientStatusText)
+            //            clientStatusText.text = sbConsole.ToString();
+            //        sbConsole.Clear();
+            //    }
+            //}
 
             // check for server timeout
             ulong ulTimeNow = (ulong)System.DateTime.Now.Ticks;
@@ -1041,25 +1015,8 @@ namespace com.rfilkov.kinect
 
 
         // initializes the network clients
-        private async void InitNetClientsAsync(KinectInterop.FrameSource dwFlags)
+        private void InitNetClientsAsync(KinectInterop.FrameSource dwFlags)
         {
-            if (autoServerDiscovery)
-            {
-                // discover the 1st available net-server
-                Debug.Log("Finding Servers to connect with...");
-                IsSearching = true;
-                await Task.Run(() => {
-                    try
-                    {
-                        BroadcastServerDiscovery();
-                    } catch (Exception e)
-                    {
-                        Debug.LogError($"Error on server discovery background task: {e}");
-                    }
-                    });
-                IsSearching = false;
-            }
-
             try
             {
                 // clear params
@@ -1083,7 +1040,7 @@ namespace com.rfilkov.kinect
                 lastColor2depthFrameTime = 0;
                 lastColor2bodyIndexFrameTime = 0;
 
-                // init clients
+                //init clients
                 controlFrameDecompressor = LZ4DecompressorFactory.CreateNew();
                 controlFrameClient = new TcpNetClient(sbConsole, controlFrameDecompressor);
 
@@ -1091,51 +1048,51 @@ namespace com.rfilkov.kinect
                 controlFrameClient.ConnectToServer(serverHost, serverBasePort + (int)NetMessageType.Control, "control", msgGetData);
                 controlFrameClient.ReceivedMessage += new ReceivedMessageEventHandler(ControlFrameReceived);
 
-                if ((dwFlags & KinectInterop.FrameSource.TypeColor) != 0)
-                {
-                    colorFrameClient = new TcpNetClient(sbConsole, null);
-                    colorFrameClient.ConnectToServer(serverHost, serverBasePort + (int)NetMessageType.Color, "color", null);
-                    colorFrameClient.ReceivedMessage += new ReceivedMessageEventHandler(ColorFrameReceived);
-                }
+                //if ((dwFlags & KinectInterop.FrameSource.TypeColor) != 0)
+                //{
+                //    colorFrameClient = new TcpNetClient(sbConsole, null);
+                //    colorFrameClient.ConnectToServer(serverHost, serverBasePort + (int)NetMessageType.Color, "color", null);
+                //    colorFrameClient.ReceivedMessage += new ReceivedMessageEventHandler(ColorFrameReceived);
+                //}
 
-                if ((dwFlags & KinectInterop.FrameSource.TypeDepth) != 0)
-                {
-                    depthFrameDecompressor = LZ4DecompressorFactory.CreateNew();
+                //if ((dwFlags & KinectInterop.FrameSource.TypeDepth) != 0)
+                //{
+                //    depthFrameDecompressor = LZ4DecompressorFactory.CreateNew();
 
-                    depthFrameClient = new TcpNetClient(sbConsole, depthFrameDecompressor);
-                    depthFrameClient.ConnectToServer(serverHost, serverBasePort + (int)NetMessageType.Depth, "depth", null);
-                    depthFrameClient.ReceivedMessage += new ReceivedMessageEventHandler(DepthFrameReceived);
-                }
+                //    depthFrameClient = new TcpNetClient(sbConsole, depthFrameDecompressor);
+                //    depthFrameClient.ConnectToServer(serverHost, serverBasePort + (int)NetMessageType.Depth, "depth", null);
+                //    depthFrameClient.ReceivedMessage += new ReceivedMessageEventHandler(DepthFrameReceived);
+                //}
 
-                if ((dwFlags & KinectInterop.FrameSource.TypeInfrared) != 0)
-                {
-                    infraredFrameClient = new TcpNetClient(sbConsole, null);
-                    infraredFrameClient.ConnectToServer(serverHost, serverBasePort + (int)NetMessageType.Infrared, "infrared", null);
-                    infraredFrameClient.ReceivedMessage += new ReceivedMessageEventHandler(InfraredFrameReceived);
-                }
+                //if ((dwFlags & KinectInterop.FrameSource.TypeInfrared) != 0)
+                //{
+                //    infraredFrameClient = new TcpNetClient(sbConsole, null);
+                //    infraredFrameClient.ConnectToServer(serverHost, serverBasePort + (int)NetMessageType.Infrared, "infrared", null);
+                //    infraredFrameClient.ReceivedMessage += new ReceivedMessageEventHandler(InfraredFrameReceived);
+                //}
 
-                if ((dwFlags & KinectInterop.FrameSource.TypeBody) != 0)
-                {
-                    bodyDataFrameClient = new TcpNetClient(sbConsole, null);
-                    bodyDataFrameClient.ConnectToServer(serverHost, serverBasePort + (int)NetMessageType.BodyData, "body-data", null);
-                    bodyDataFrameClient.ReceivedMessage += new ReceivedMessageEventHandler(BodyDataFrameReceived);
-                }
+                //if ((dwFlags & KinectInterop.FrameSource.TypeBody) != 0)
+                //{
+                //    bodyDataFrameClient = new TcpNetClient(sbConsole, null);
+                //    bodyDataFrameClient.ConnectToServer(serverHost, serverBasePort + (int)NetMessageType.BodyData, "body-data", null);
+                //    bodyDataFrameClient.ReceivedMessage += new ReceivedMessageEventHandler(BodyDataFrameReceived);
+                //}
 
-                if ((dwFlags & KinectInterop.FrameSource.TypeBodyIndex) != 0 && getBodyIndexFrames)
-                {
-                    bodyIndexFrameDecompressor = LZ4DecompressorFactory.CreateNew();
+                //if ((dwFlags & KinectInterop.FrameSource.TypeBodyIndex) != 0 && getBodyIndexFrames)
+                //{
+                //    bodyIndexFrameDecompressor = LZ4DecompressorFactory.CreateNew();
 
-                    bodyIndexFrameClient = new TcpNetClient(sbConsole, bodyIndexFrameDecompressor);
-                    bodyIndexFrameClient.ConnectToServer(serverHost, serverBasePort + (int)NetMessageType.BodyIndex, "body-index", null);
-                    bodyIndexFrameClient.ReceivedMessage += new ReceivedMessageEventHandler(BodyIndexFrameReceived);
-                }
+                //    bodyIndexFrameClient = new TcpNetClient(sbConsole, bodyIndexFrameDecompressor);
+                //    bodyIndexFrameClient.ConnectToServer(serverHost, serverBasePort + (int)NetMessageType.BodyIndex, "body-index", null);
+                //    bodyIndexFrameClient.ReceivedMessage += new ReceivedMessageEventHandler(BodyIndexFrameReceived);
+                //}
 
-                if ((dwFlags & KinectInterop.FrameSource.TypePose) != 0)
-                {
-                    poseFrameClient = new TcpNetClient(sbConsole, null);
-                    poseFrameClient.ConnectToServer(serverHost, serverBasePort + (int)NetMessageType.Pose, "pose", null);
-                    poseFrameClient.ReceivedMessage += new ReceivedMessageEventHandler(PoseFrameReceived);
-                }
+                //if ((dwFlags & KinectInterop.FrameSource.TypePose) != 0)
+                //{
+                //    poseFrameClient = new TcpNetClient(sbConsole, null);
+                //    poseFrameClient.ConnectToServer(serverHost, serverBasePort + (int)NetMessageType.Pose, "pose", null);
+                //    poseFrameClient.ReceivedMessage += new ReceivedMessageEventHandler(PoseFrameReceived);
+                //}
 
             }
             catch (System.Exception ex)
@@ -2054,31 +2011,33 @@ namespace com.rfilkov.kinect
             }
         }
 
-        public void ConnectToServer(string host, int port, string streamDesc, NetMessageData msgOnConnect)
+        public async void ConnectToServer(string host, int port, string streamDesc, NetMessageData msgOnConnect)
         {
             this.streamDesc = streamDesc;
             this.sendMsgOnConnect = msgOnConnect;
 
             try
             {
-                TcpClient client = new TcpClient(AddressFamily.InterNetwork);
+                //TcpClient client = new TcpClient(AddressFamily.InterNetwork);
 
-                IPAddress ipAddress = null;
-                bool isIpAddr = host.Length > 0 && host[0] >= '0' && host[0] <= '9';
+                //IPAddress ipAddress = null;
+                //bool isIpAddr = host.Length > 0 && host[0] >= '0' && host[0] <= '9';
 
-                if (isIpAddr)
-                {
-                    ipAddress = IPAddress.Parse(host);
-                }
-                else
-                {
-                    IPHostEntry ipHostInfo = Dns.GetHostEntry(host);
-                    ipAddress = ipHostInfo.AddressList.Where(a => a.AddressFamily == AddressFamily.InterNetwork).First();
-                }
+                //if (isIpAddr)
+                //{
+                //    ipAddress = IPAddress.Parse(host);
+                //}
+                //else
+                //{
+                //    IPHostEntry ipHostInfo = await Dns.GetHostEntryAsync(host); //non-blocking DNS host-name resolution
+                //    ipAddress = ipHostInfo.AddressList.Where(a => a.AddressFamily == AddressFamily.InterNetwork).First();
+                //}
 
-                //Debug.Log("Connecting to " + host + " - " + ipAddress + ":" + port);
-                LogToConsole("Connecting to " + streamDesc + " server at " + ipAddress + ":" + port);
-                client.BeginConnect(ipAddress, port, new System.AsyncCallback(HandleNetServerConnected), client);
+                ////Debug.Log("Connecting to " + host + " - " + ipAddress + ":" + port);
+                //LogToConsole("Connecting to " + streamDesc + " server at " + ipAddress + ":" + port);
+                //client.BeginConnect(ipAddress, port, new System.AsyncCallback(HandleNetServerConnected), client);
+
+                Debug.Log("I Am Hopeless `0^0`");
             }
             catch (System.Exception ex)
             {
