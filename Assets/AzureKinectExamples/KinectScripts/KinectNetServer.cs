@@ -153,13 +153,13 @@ namespace com.rfilkov.kinect
 
             if(sbConsole.Length > 0)
             {
-                // update console
-                lock(sbConsole)
-                {
-                    if(consoleText)
-                        consoleText.text += sbConsole.ToString();
-                    sbConsole.Clear();
-                }
+                //// update console
+                //lock(sbConsole)
+                //{
+                //    if(consoleText)
+                //        consoleText.text += sbConsole.ToString();
+                //    sbConsole.Clear();
+                //}
 
                 // scroll to end
                 ScrollRect scrollRect = consoleText ? consoleText.gameObject.GetComponentInParent<ScrollRect>() : null;
@@ -1258,10 +1258,10 @@ namespace com.rfilkov.kinect
         {
             Debug.Log(sMessage);
 
-            lock(sbConsole)
-            {
-                sbConsole.Append(sMessage).AppendLine();
-            }
+            //lock(sbConsole)
+            //{
+            //    sbConsole.Append(sMessage).AppendLine();
+            //}
         }
 
         // logs error message to the console
@@ -1269,10 +1269,10 @@ namespace com.rfilkov.kinect
         {
             Debug.LogError(sMessage);
 
-            lock (sbConsole)
-            {
-                sbConsole.Append(sMessage).AppendLine();
-            }
+            //lock (sbConsole)
+            //{
+            //    sbConsole.Append(sMessage).AppendLine();
+            //}
         }
 
 
@@ -1422,10 +1422,10 @@ namespace com.rfilkov.kinect
         {
             Debug.Log(sMessage);
 
-            lock (sbConsole)
-            {
-                sbConsole.Append(sMessage).AppendLine();
-            }
+            //lock (sbConsole)
+            //{
+            //    sbConsole.Append(sMessage).AppendLine();
+            //}
         }
 
         // logs error message to the console
@@ -1433,10 +1433,10 @@ namespace com.rfilkov.kinect
         {
             Debug.LogError(sMessage);
 
-            lock (sbConsole)
-            {
-                sbConsole.Append(sMessage).AppendLine();
-            }
+            //lock (sbConsole)
+            //{
+            //    sbConsole.Append(sMessage).AppendLine();
+            //}
         }
 
 

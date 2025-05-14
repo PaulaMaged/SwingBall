@@ -446,7 +446,7 @@ Transform:
   m_GameObject: {fileID: 612356471}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.19261897, y: 0.8437178, z: 0.21854639}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -464,7 +464,6 @@ GameObject:
   - component: {fileID: 822572541}
   - component: {fileID: 822572540}
   - component: {fileID: 822572539}
-  - component: {fileID: 822572538}
   - component: {fileID: 822572537}
   m_Layer: 0
   m_Name: User0MeshS0
@@ -491,22 +490,8 @@ MonoBehaviour:
   edgeCutoffFactor: 0.5
   meshTexture: 0
   applyLighting: 0
-  pointCloudOffset: {x: 0, y: 0, z: 0}
---- !u!114 &822572538
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 822572536}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9a17e9eb7ba629243bfc955c820d04a1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  sensorIndex: 0
-  smoothFactor: 0
-  referencePose: 0
+  OverlapOnAvatar: 0
+  PointCloudOffset: {x: 0, y: 0, z: 0}
 --- !u!23 &822572539
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -568,8 +553,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 822572536}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.19261897, y: -0.8437178, z: -0.21854639}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -620,9 +605,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   deviceStreamingMode: 2
+  sensorPriority: 0
   deviceIndex: 0
-  recordingFile: D:/Paula/Documents/Workspace/Unity/User-Representations/KinectRecordings/Azure
-    Kinect-003.mkv
+  recordingFile: ./Recordings/me.mkv
   minDistance: 0.5
   maxDistance: 10
   pointCloudResolution: 0
@@ -669,6 +654,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1236170164}
   - component: {fileID: 1236170163}
+  - component: {fileID: 1236170165}
   m_Layer: 0
   m_Name: KinectController
   m_TagString: Untagged
@@ -694,7 +680,8 @@ MonoBehaviour:
   getColorFrames: 2
   getInfraredFrames: 0
   getPoseFrames: 0
-  getBodyFrames: 5
+  getBodyFrames: 3
+  pollFramesInThread: 1
   syncDepthAndColor: 1
   syncBodyAndDepth: 1
   minUserDistance: 0
@@ -728,13 +715,26 @@ Transform:
   m_GameObject: {fileID: 1236170162}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 9.72, y: 0, z: -3.4}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 836258134}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1236170165
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1236170162}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 53ba2649b148a804dbd334e1165efd41, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  KinectNetServer: {fileID: 0}
 --- !u!1 &1456166595
 GameObject:
   m_ObjectHideFlags: 0
@@ -843,6 +843,7 @@ GameObject:
   - component: {fileID: 1551283661}
   - component: {fileID: 1551283659}
   - component: {fileID: 1551283658}
+  - component: {fileID: 1551283663}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -932,6 +933,50 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: -20, z: 0}
+--- !u!114 &1551283663
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1551283657}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a79441f348de89743a2939f4d699eac1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_RenderShadows: 1
+  m_RequiresDepthTextureOption: 2
+  m_RequiresOpaqueTextureOption: 2
+  m_CameraType: 0
+  m_Cameras: []
+  m_RendererIndex: -1
+  m_VolumeLayerMask:
+    serializedVersion: 2
+    m_Bits: 1
+  m_VolumeTrigger: {fileID: 0}
+  m_VolumeFrameworkUpdateModeOption: 2
+  m_RenderPostProcessing: 0
+  m_Antialiasing: 0
+  m_AntialiasingQuality: 2
+  m_StopNaN: 0
+  m_Dithering: 0
+  m_ClearDepth: 1
+  m_AllowXRRendering: 1
+  m_AllowHDROutput: 1
+  m_UseScreenCoordOverride: 0
+  m_ScreenSizeOverride: {x: 0, y: 0, z: 0, w: 0}
+  m_ScreenCoordScaleBias: {x: 0, y: 0, z: 0, w: 0}
+  m_RequiresDepthTexture: 0
+  m_RequiresColorTexture: 0
+  m_Version: 2
+  m_TaaSettings:
+    m_Quality: 3
+    m_FrameInfluence: 0.1
+    m_JitterScale: 1
+    m_MipBias: 0
+    m_VarianceClampScale: 0.9
+    m_ContrastAdaptiveSharpening: 0
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

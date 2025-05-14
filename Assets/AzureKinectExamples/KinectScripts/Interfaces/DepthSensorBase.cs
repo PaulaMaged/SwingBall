@@ -19,6 +19,13 @@ namespace com.rfilkov.kinect
         [Tooltip("Device streaming mode, in means of connected sensor, recording or disabled.")]
         public KinectInterop.DeviceStreamingMode deviceStreamingMode = KinectInterop.DeviceStreamingMode.ConnectedSensor;
 
+        /// <summary>
+        /// the desired sensor index in the sensor interface list. Only possible if the sensor count is equal to the largest sensorIndex specified 1-based
+        /// and no two sensors share the same index
+        /// </summary>
+        [Tooltip("used to order the sensorInterface list in a predictable manner.")]
+        public int sensorPriority = 0;
+
         [Tooltip("Index of the depth sensor in the list of currently connected sensors.")]
         public int deviceIndex = 0;
 

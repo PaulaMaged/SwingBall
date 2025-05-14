@@ -3085,14 +3085,19 @@ namespace com.rfilkov.kinect
 
                 // locate the available depth-sensor interfaces in the scene
                 List<DepthSensorBase> sensorInts = new List<DepthSensorBase>();
-                sensorInts.AddRange(gameObject.GetComponents<DepthSensorBase>());  // FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None);
+                sensorInts.AddRange(gameObject.GetComponents<DepthSensorBase>());
                 sensorInts.AddRange(gameObject.GetComponentsInChildren<DepthSensorBase>());
 
-                //order sensorInts according to their deviceIndex, assume that the index range within the set of indicies matches their count 0-based
-                sensorInts.Sort((x, y) => x.deviceIndex.CompareTo(y.deviceIndex));
-                if (sensorInts.Select((sensor, index) => new { sensor, index }).Any(x => x.index != x.sensor.deviceIndex))
+                //order sensorInts according to their sensor priorities, assume that the index range within the set of indicies matches their count 0-based
+                sensorInts.Sort((x, y) => x.sensorPriority.CompareTo(y.sensorPriority));
+
+                string sensorListString = "List of sensors";
+                sensorInts.ForEach(sensor => sensorListString += $"\nSensor:{sensor.name}: {sensor.sensorPriority}");
+                Debug.Log(sensorListString + "\n-----------------------");
+
+                if (sensorInts.Select((sensor, index) => new { sensor, index }).Any(x => x.index != x.sensor.sensorPriority))
                 {
-                    Debug.LogWarning("mismatch exists between device index and sensor index");
+                    Debug.LogWarning("Note: Priorities aren't equivalent to sensor indicies");
                 }
 
                 // check for multi-camera config
@@ -3704,10 +3709,11 @@ namespace com.rfilkov.kinect
         {
             ulong userId = GetUserIdByIndex(playerIndex);
             KinectInterop.BodyData bodyData = GetUserBodyData(userId);
-            DebugMessage = $"User Position relative to kinect: {bodyData.position}";
-            distanceToPlayer = bodyData.position.z;
-            distanceToGround = bodyData.position.y;
-            distanceLateral = bodyData.position.x;
+
+            Debug.Log($"Kinect Position: {bodyData.kinectPos}");
+            distanceToPlayer = bodyData.kinectPos.z;
+            distanceToGround = bodyData.kinectPos.y;
+            distanceLateral = bodyData.kinectPos.x;
         }
 
         // processes the tracked bodies

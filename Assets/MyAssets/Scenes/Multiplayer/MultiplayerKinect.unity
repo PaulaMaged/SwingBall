@@ -224,7 +224,8 @@ MonoBehaviour:
   edgeCutoffFactor: 0.5
   meshTexture: 0
   applyLighting: 0
-  pointCloudOffset: {x: 0, y: 0, z: 0}
+  OverlapOnAvatar: 0
+  PointCloudOffset: {x: 0, y: 0, z: 0}
 --- !u!1 &85769724
 GameObject:
   m_ObjectHideFlags: 0
@@ -330,7 +331,8 @@ MonoBehaviour:
   edgeCutoffFactor: 0.5
   meshTexture: 0
   applyLighting: 0
-  pointCloudOffset: {x: 0, y: 0, z: 0}
+  OverlapOnAvatar: 0
+  PointCloudOffset: {x: 0, y: 0, z: 0}
 --- !u!1 &245670650
 GameObject:
   m_ObjectHideFlags: 0
@@ -1187,7 +1189,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   deviceStreamingMode: 1
-  deviceIndex: 0
+  sensorPriority: 1
+  deviceIndex: 1
   recordingFile: 
   minDistance: 0.5
   maxDistance: 10
@@ -1215,7 +1218,7 @@ MonoBehaviour:
     e33: 1
   sensorRotValueY: 0
   autoServerDiscovery: 0
-  serverHost: 192.168.178.245
+  serverHost: 192.168.1.107
   serverBasePort: 10000
   getBodyIndexFrames: 1
   clientStatusText: {fileID: 0}
@@ -1247,9 +1250,9 @@ MonoBehaviour:
   mirroredMovement: 0
   verticalMovement: 1
   horizontalMovement: 1
-  externalRootMotion: 0
-  externalHeadRotation: 0
-  externalHandRotations: 0
+  externalRootMotion: 1
+  externalHeadRotation: 1
+  externalHandRotations: 1
   fingerOrientations: 0
   moveRate: 1
   smoothFactor: 10
@@ -1503,7 +1506,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6bc9e8fa68b47d149b43526cb8d11a19, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  sensorIndex: 1
+  sensorIndex: 0
   baseListenPort: 11000
   listenForServerDiscovery: 0
   compressRawFrames: 1
@@ -1519,7 +1522,7 @@ Transform:
   m_GameObject: {fileID: 584486319}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.2409227, y: -0.5588639, z: 6.621615}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1558,13 +1561,13 @@ MonoBehaviour:
   useMultiCamConfig: 0
   syncMultiCamFrames: 0
   getDepthFrames: 1
-  getColorFrames: 0
+  getColorFrames: 2
   getInfraredFrames: 0
   getPoseFrames: 0
-  getBodyFrames: 1
+  getBodyFrames: 3
   pollFramesInThread: 1
-  syncDepthAndColor: 0
-  syncBodyAndDepth: 0
+  syncDepthAndColor: 1
+  syncBodyAndDepth: 1
   minUserDistance: 0
   maxUserDistance: 0
   maxLeftRightDistance: 0
@@ -1595,8 +1598,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 705998313}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 1.2409227, y: -0.5588639, z: 6.621615}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -2061,7 +2064,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   deviceStreamingMode: 2
-  deviceIndex: 1
+  sensorPriority: 0
+  deviceIndex: 0
   recordingFile: ./Recordings/me.mkv
   minDistance: 0.5
   maxDistance: 10
@@ -2572,9 +2576,9 @@ MonoBehaviour:
   mirroredMovement: 0
   verticalMovement: 1
   horizontalMovement: 1
-  externalRootMotion: 0
-  externalHeadRotation: 0
-  externalHandRotations: 0
+  externalRootMotion: 1
+  externalHeadRotation: 1
+  externalHandRotations: 1
   fingerOrientations: 0
   moveRate: 1
   smoothFactor: 10

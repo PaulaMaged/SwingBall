@@ -1658,8 +1658,8 @@ namespace com.rfilkov.kinect
                         }
 
                         alNetMessageTime.RemoveAt(0);
-                        if (consoleLogMessages)
-                            Debug.Log("Removed cache-entry: " + msgTime + ", frame-count: " + msgDataCount + ", cache-size: " + alNetMessageTime.Count);
+                        //if (consoleLogMessages)
+                        //    Debug.Log("Removed cache-entry: " + msgTime + ", frame-count: " + msgDataCount + ", cache-size: " + alNetMessageTime.Count);
                     }
                 }
             }

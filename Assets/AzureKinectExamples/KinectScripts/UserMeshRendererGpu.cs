@@ -94,7 +94,9 @@ namespace com.rfilkov.components
 
         // lighting
         private FragmentLighting lighting = new FragmentLighting();
-        public Vector3 pointCloudOffset;
+        
+        public bool OverlapOnAvatar;
+        public Vector3 PointCloudOffset;
 
         void Start()
         {
@@ -145,8 +147,10 @@ namespace com.rfilkov.components
                 // update the mesh
                 UpdateMesh();
             }
-
-            MapToAvatar();
+            if (OverlapOnAvatar)
+            {
+                MapToAvatar();
+            }
         }
 
         // inits the mesh and related data
@@ -579,13 +583,14 @@ namespace com.rfilkov.components
         private void MapToAvatar()
         {
             KinectManager.Instance.GetDistanceFromKinect(0, out float distanceToPlayer, out float distanceToGround, out float distanceLateral);
-
+            //Debug.Log($"Distance from kinect: X: {distanceLateral}\tY: {distanceToGround}\tZ: {distanceToPlayer}");
+            
             if (transform.parent == null) return;
 
             Vector3 offset = transform.parent.position; //starting value;
-            offset -= transform.forward * (distanceToPlayer + pointCloudOffset.z);
-            offset += transform.up * (distanceToGround + pointCloudOffset.y);
-            //offset -= transform.right * (distanceLateral + pointCloudOffset.x);
+            offset -= transform.forward * (distanceToPlayer + PointCloudOffset.z);
+            offset += transform.up * (distanceToGround + PointCloudOffset.y);
+            offset += transform.right * (distanceLateral + PointCloudOffset.x);
 
             transform.position = offset;
         }
