@@ -561,8 +561,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   deviceStreamingMode: 1
-  sensorPriority: 1
-  deviceIndex: 0
+  sensorPriority: 0
+  deviceIndex: 1
   recordingFile: 
   minDistance: 0.5
   maxDistance: 10
@@ -590,7 +590,7 @@ MonoBehaviour:
     e33: 1
   sensorRotValueY: 0
   autoServerDiscovery: 0
-  serverHost: 192.168.175.10
+  serverHost: 192.168.1.107
   serverBasePort: 11000
   getBodyIndexFrames: 1
   clientStatusText: {fileID: 0}
@@ -1745,13 +1745,13 @@ MonoBehaviour:
   useMultiCamConfig: 0
   syncMultiCamFrames: 0
   getDepthFrames: 1
-  getColorFrames: 0
+  getColorFrames: 2
   getInfraredFrames: 0
   getPoseFrames: 0
-  getBodyFrames: 1
+  getBodyFrames: 3
   pollFramesInThread: 1
-  syncDepthAndColor: 0
-  syncBodyAndDepth: 0
+  syncDepthAndColor: 1
+  syncBodyAndDepth: 1
   minUserDistance: 0
   maxUserDistance: 0
   maxLeftRightDistance: 0
@@ -1909,7 +1909,8 @@ MonoBehaviour:
   edgeCutoffFactor: 0.5
   meshTexture: 0
   applyLighting: 0
-  pointCloudOffset: {x: 0, y: 0, z: 0}
+  OverlapOnAvatar: 1
+  PointCloudOffset: {x: 0, y: 1, z: 0}
 --- !u!114 &854332468
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2198,7 +2199,8 @@ MonoBehaviour:
   edgeCutoffFactor: 0.5
   meshTexture: 0
   applyLighting: 0
-  pointCloudOffset: {x: 0, y: 0, z: 0}
+  OverlapOnAvatar: 1
+  PointCloudOffset: {x: 0, y: 1, z: 0}
 --- !u!1001 &1155286116
 PrefabInstance:
   m_ObjectHideFlags: 0

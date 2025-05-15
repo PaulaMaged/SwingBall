@@ -819,7 +819,7 @@ namespace com.rfilkov.kinect
 
             if(texRes == Vector2Int.zero)
             {
-                throw new Exception("Unsupported point cloud resolution: " + pointCloudResolution + " or the respective image is not available.");
+                Debug.LogWarning("Texture Resolution is 0x0");
             }
 
             return texRes;
@@ -1740,7 +1740,9 @@ namespace com.rfilkov.kinect
             // depth cam color frame
             if (pointCloudColorTexture != null || sensorData.depthCamColorImageTexture != null)
             {
-                if (pointCloudColorShader != null || pointCloudAlignedColorTex != null || CreatePointCloudColorShader(sensorData))
+                CreatePointCloudColorShader(sensorData); //makes sure to re-open client connection if it has failed
+
+                if (pointCloudColorShader != null || pointCloudAlignedColorTex != null)
                 {
                     UpdatePointCloudColorShader(sensorData);
                 }

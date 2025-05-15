@@ -3710,7 +3710,6 @@ namespace com.rfilkov.kinect
             ulong userId = GetUserIdByIndex(playerIndex);
             KinectInterop.BodyData bodyData = GetUserBodyData(userId);
 
-            Debug.Log($"Kinect Position: {bodyData.kinectPos}");
             distanceToPlayer = bodyData.kinectPos.z;
             distanceToGround = bodyData.kinectPos.y;
             distanceLateral = bodyData.kinectPos.x;

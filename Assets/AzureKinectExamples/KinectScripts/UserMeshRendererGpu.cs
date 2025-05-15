@@ -112,6 +112,8 @@ namespace com.rfilkov.components
             // find scene lights
             Light[] sceneLights = GameObject.FindObjectsByType<Light>(FindObjectsSortMode.None);
             lighting.SetLightsAndBounds(sceneLights, transform.position, new Vector3(20f, 20f, 20f));
+
+            InitMesh();
         }
 
 
@@ -130,18 +132,18 @@ namespace com.rfilkov.components
 
         void Update()
         {
-            if (mesh == null || sensorData?.sensorIndex != sensorIndex)
+            if (mesh == null && sensorData == null)
             {
                 // init mesh and its related data
+                sensorData = (kinectManager != null && kinectManager.IsInitialized()) ? kinectManager.GetSensorData(sensorIndex) : null;
                 InitMesh();
             }
 
             if (bMeshInited)
             {
-                // user params
                 userId = kinectManager.GetFirstTrackedUserIdBySensorIndex(sensorIndex);
                 playerIndex = kinectManager.GetUserIndexById(userId);
-                userBodyIndex = userId != 0 ? kinectManager.GetBodyIndexByUserId(userId) : 255;
+                userBodyIndex = (byte)(userId != 0 ? kinectManager.GetBodyIndexByUserId(userId) : 255);
                 userBodyPos = userId != 0 ? kinectManager.GetUserKinectPosition(userId, true) : Vector3.zero;
 
                 // update the mesh
@@ -156,6 +158,8 @@ namespace com.rfilkov.components
         // inits the mesh and related data
         private void InitMesh()
         {
+            if (sensorData == null) return;
+
             // create mesh
             mesh = new Mesh
             {
@@ -187,11 +191,6 @@ namespace com.rfilkov.components
 
             // get reference to the transform
             trans = GetComponent<Transform>();
-
-            if(sensorData?.sensorIndex != sensorIndex)
-            {
-                sensorData = (kinectManager != null && kinectManager.IsInitialized()) ? kinectManager.GetSensorData(sensorIndex) : null;
-            }
 
             // get sensor interface
             sensorInt = sensorData != null ? (DepthSensorBase)sensorData.sensorInterface : null;
@@ -410,7 +409,7 @@ namespace com.rfilkov.components
         // releases mesh-related resources
         private void FinishMesh()
         {
-            if (sensorInt)
+            if (sensorInt != null)
             {
                 sensorInt.pointCloudColorTexture = null;
             }
@@ -424,18 +423,28 @@ namespace com.rfilkov.components
                 depthImageBuffer = null;
             }
 
-            if (sensorData.colorDepthBuffer != null /**&& depthBufferCreated*/)
+            if (sensorData != null)
             {
-                sensorData.colorDepthBuffer.Release();
-                sensorData.colorDepthBuffer.Dispose();
-                sensorData.colorDepthBuffer = null;
-            }
+                if (sensorData.colorDepthBuffer != null /**&& depthBufferCreated*/)
+                {
+                    sensorData.colorDepthBuffer.Release();
+                    sensorData.colorDepthBuffer.Dispose();
+                    sensorData.colorDepthBuffer = null;
+                }
 
-            if (sensorData.colorInfraredBuffer != null)
-            {
-                sensorData.colorInfraredBuffer.Release();
-                sensorData.colorInfraredBuffer.Dispose();
-                sensorData.colorInfraredBuffer = null;
+                if (sensorData.colorInfraredBuffer != null)
+                {
+                    sensorData.colorInfraredBuffer.Release();
+                    sensorData.colorInfraredBuffer.Dispose();
+                    sensorData.colorInfraredBuffer = null;
+                }
+
+                if (sensorData.colorBodyIndexBuffer != null /**&& bodyIndexBufferCreated*/)
+                {
+                    sensorData.colorBodyIndexBuffer.Release();
+                    sensorData.colorBodyIndexBuffer.Dispose();
+                    sensorData.colorBodyIndexBuffer = null;
+                }
             }
 
             if (bodyIndexBuffer != null /**&& bodyIndexBufferCreated*/)
@@ -445,13 +454,6 @@ namespace com.rfilkov.components
                 bodyIndexBuffer.Release();
                 bodyIndexBuffer.Dispose();
                 bodyIndexBuffer = null;
-            }
-
-            if (sensorData.colorBodyIndexBuffer != null /**&& bodyIndexBufferCreated*/)
-            {
-                sensorData.colorBodyIndexBuffer.Release();
-                sensorData.colorBodyIndexBuffer.Dispose();
-                sensorData.colorBodyIndexBuffer = null;
             }
 
             if (colorTexture && colorTextureCreated)
@@ -549,8 +551,8 @@ namespace com.rfilkov.components
                 meshShaderMat.SetInt("_IsPointCloud", showAsPointCloud ? 1 : 0);
                 meshShaderMat.SetFloat("_CutoffFactor", Mathf.Pow(edgeCutoffFactor, 6));
 
-                meshShaderMat.SetInt("_BodyIndexAll", kinectManager.GetUserIndexById(userId) < 0 ? 1 : 0);
-                meshShaderMat.SetInt("_UserBodyIndex", userBodyIndex);
+                meshShaderMat.SetInt("_BodyIndexAll", 1);
+                meshShaderMat.SetInt("_UserBodyIndex", 255);
                 meshShaderMat.SetVector("_UserBodyPos", userBodyPos);
                 meshShaderMat.SetMatrix("_Transform", sensorInt.GetSensorToWorldMatrix());
 
@@ -582,7 +584,7 @@ namespace com.rfilkov.components
 
         private void MapToAvatar()
         {
-            KinectManager.Instance.GetDistanceFromKinect(0, out float distanceToPlayer, out float distanceToGround, out float distanceLateral);
+            KinectManager.Instance.GetDistanceFromKinect(playerIndex, out float distanceToPlayer, out float distanceToGround, out float distanceLateral);
             //Debug.Log($"Distance from kinect: X: {distanceLateral}\tY: {distanceToGround}\tZ: {distanceToPlayer}");
             
             if (transform.parent == null) return;

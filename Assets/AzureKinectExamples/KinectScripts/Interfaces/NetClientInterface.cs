@@ -596,42 +596,42 @@ namespace com.rfilkov.kinect
 
 
         // returns the point cloud texture resolution
-        public override Vector2Int GetPointCloudTexResolution(KinectInterop.SensorData sensorData)
-        {
-            Vector2Int texRes = Vector2Int.zero;
+        //public override Vector2Int GetPointCloudTexResolution(KinectInterop.SensorData sensorData)
+        //{
+        //    Vector2Int texRes = Vector2Int.zero;
 
-            // wait for net-cst
-            long timeStart = System.DateTime.Now.Ticks;
-            long timeNow = timeStart;
+        //    // wait for net-cst
+        //    long timeStart = System.DateTime.Now.Ticks;
+        //    long timeNow = timeStart;
 
-            while (texRes == Vector2Int.zero && (timeNow - timeStart) < 50000000)  // timeout - 5 seconds
-            {
-                switch (pointCloudResolution)
-                {
-                    case PointCloudResolution.DepthCameraResolution:
-                        texRes = new Vector2Int(sensorData.depthImageWidth, sensorData.depthImageHeight);
-                        break;
+        //    while (texRes == Vector2Int.zero && (timeNow - timeStart) < TICKSINASECOND * 0.2)
+        //    {
+        //        switch (pointCloudResolution)
+        //        {
+        //            case PointCloudResolution.DepthCameraResolution:
+        //                texRes = new Vector2Int(sensorData.depthImageWidth, sensorData.depthImageHeight);
+        //                break;
 
-                    case PointCloudResolution.ColorCameraResolution:
-                        texRes = new Vector2Int(sensorData.colorImageWidth, sensorData.colorImageHeight);
-                        break;
-                }
+        //            case PointCloudResolution.ColorCameraResolution:
+        //                texRes = new Vector2Int(sensorData.colorImageWidth, sensorData.colorImageHeight);
+        //                break;
+        //        }
 
-                if(texRes == Vector2Int.zero)
-                {
-                    Thread.Sleep(THREAD_WAIT_TIME_MS);
-                }
+        //        if(texRes == Vector2Int.zero)
+        //        {
+        //            Thread.Sleep(THREAD_WAIT_TIME_MS);
+        //        }
 
-                timeNow = System.DateTime.Now.Ticks;
-            }
+        //        timeNow = System.DateTime.Now.Ticks;
+        //    }
 
-            if (texRes == Vector2Int.zero)
-            {
-                throw new System.Exception("Unsupported point cloud resolution: " + pointCloudResolution + " or the respective image is not available.");
-            }
+        //    if (texRes == Vector2Int.zero)
+        //    {
+        //        Debug.LogWarning("Texture Resolution is 0x0");
+        //    }
 
-            return texRes;
-        }
+        //    return texRes;
+        //}
 
 
         // creates the point-cloud vertex shader and its respective buffers, as needed
