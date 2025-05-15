@@ -132,7 +132,7 @@ namespace com.rfilkov.components
 
         void Update()
         {
-            if (mesh == null && sensorData == null)
+            if (mesh == null || sensorData == null)
             {
                 // init mesh and its related data
                 sensorData = (kinectManager != null && kinectManager.IsInitialized()) ? kinectManager.GetSensorData(sensorIndex) : null;
@@ -247,16 +247,7 @@ namespace com.rfilkov.components
             // create depth image buffer
             if (sourceImageResolution == DepthSensorBase.PointCloudResolution.DepthCameraResolution)
             {
-                int depthBufferLength = sensorData.depthImageWidth * sensorData.depthImageHeight >> 1;
-
-                if (depthImageBuffer == null || depthImageBuffer.count != depthBufferLength)
-                {
-                    depthImageCopy = new ushort[depthBufferLength << 1];
-                    depthImageBuffer = KinectInterop.CreateComputeBuffer(depthImageBuffer, depthBufferLength, sizeof(uint));
-                    //Debug.Log("Created depthImageBuffer with length " + depthBufferLength);
-                }
-
-                //meshShaderMat.SetBuffer("_DepthMap", depthImageBuffer);
+                CreateDepthImageBuffer();
             }
             else
             {
@@ -337,6 +328,20 @@ namespace com.rfilkov.components
             // image width & height
             imageWidth = imageRes.x;
             imageHeight = imageRes.y;
+        }
+
+        private void CreateDepthImageBuffer()
+        {
+
+            int depthBufferLength = sensorData.depthImageWidth * sensorData.depthImageHeight >> 1;
+
+            if (depthBufferLength == 0) return;
+
+            if (depthImageBuffer == null || depthImageBuffer.count != depthBufferLength)
+            {
+                depthImageCopy = new ushort[depthBufferLength << 1];
+                depthImageBuffer = KinectInterop.CreateComputeBuffer(depthImageBuffer, depthBufferLength, sizeof(uint));
+            }
         }
 
 
