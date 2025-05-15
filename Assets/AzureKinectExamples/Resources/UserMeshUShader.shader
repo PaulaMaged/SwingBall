@@ -176,7 +176,7 @@
 
 				if (!i.mask)
 				{
-					discard;
+					// discard;
 				}
 
 				localPos.xy = localPos.xy / localPos.z;
@@ -214,7 +214,7 @@
 					color = c;
 				}
 		
-				return color;
+				return i.mask ? float4(0, 1, 0, 1) : float4(1, 0, 0, 1);
 			}
 
 
