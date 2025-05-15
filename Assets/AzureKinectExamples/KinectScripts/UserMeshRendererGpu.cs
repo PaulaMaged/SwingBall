@@ -56,7 +56,6 @@ namespace com.rfilkov.components
         private Material meshShaderMat = null;
 
         // space table & buffers
-        private Vector3[] spaceTable = null;
         private ComputeBuffer spaceTableBuffer = null;
         private Vector3 sensorSpaceScale = Vector3.zero;
 
@@ -314,13 +313,15 @@ namespace com.rfilkov.components
             if (spaceTableBuffer == null || imageWidth != imageRes.x || imageHeight != imageRes.y)
             {
                 // create space table
-                spaceTable = sensorInt.pointCloudResolution == DepthSensorBase.PointCloudResolution.DepthCameraResolution ?
+                Vector3[] spaceTable= sensorInt.pointCloudResolution == DepthSensorBase.PointCloudResolution.DepthCameraResolution ?
                     sensorInt.GetDepthCameraSpaceTable(sensorData) : sensorInt.GetColorCameraSpaceTable(sensorData);
 
-                int spaceBufferLength = imageRes.x * imageRes.y * 3;
-                spaceTableBuffer = KinectInterop.CreateComputeBuffer(spaceTableBuffer, spaceBufferLength, sizeof(float));
-                spaceTableBuffer?.SetData(spaceTable);
-                spaceTable = null;
+                if (spaceTable != null)
+                {
+                    int spaceBufferLength = imageRes.x * imageRes.y * 3;
+                    spaceTableBuffer = KinectInterop.CreateComputeBuffer(spaceTableBuffer, spaceBufferLength, sizeof(float));
+                    spaceTableBuffer?.SetData(spaceTable);
+                }
 
                 //Debug.Log("Created spaceTable for resolution " + imageRes);
             }

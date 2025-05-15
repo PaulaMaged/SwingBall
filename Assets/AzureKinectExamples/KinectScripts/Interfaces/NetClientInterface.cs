@@ -526,6 +526,9 @@ namespace com.rfilkov.kinect
             if (sensorData == null)
                 return null;
 
+            if(bGotDST && depth2SpaceTable != null)
+                return depth2SpaceTable;
+
             if (depth2SpaceTable == null || depth2SpaceWidth != sensorData.depthImageWidth || depth2SpaceHeight != sensorData.depthImageHeight)
             {
                 depth2SpaceWidth = sensorData.depthImageWidth;
@@ -533,28 +536,11 @@ namespace com.rfilkov.kinect
 
                 int depthImageLength = sensorData.depthImageWidth * sensorData.depthImageHeight;
                 depth2SpaceTable = new Vector3[depthImageLength];
-                //bNeedDST = true;
 
                 SendControlMessage(ControlMessageType.GetDST);
-                //bDSTsent = true;
             }
 
-            // wait for net-dst
-            long timeStart = System.DateTime.Now.Ticks;
-            long timeNow = timeStart;
-
-            while (!bGotDST && (timeNow - timeStart) < 50000000)  // timeout - 5 seconds
-            {
-                Thread.Sleep(THREAD_WAIT_TIME_MS);
-                timeNow = System.DateTime.Now.Ticks;
-            }
-
-            if(!bGotDST)
-            {
-                Debug.LogWarning("Timed out waiting for net-dst.");
-            }
-
-            return depth2SpaceTable;
+            return null;
         }
 
 
@@ -593,46 +579,6 @@ namespace com.rfilkov.kinect
 
             return color2SpaceTable;
         }
-
-
-        // returns the point cloud texture resolution
-        //public override Vector2Int GetPointCloudTexResolution(KinectInterop.SensorData sensorData)
-        //{
-        //    Vector2Int texRes = Vector2Int.zero;
-
-        //    // wait for net-cst
-        //    long timeStart = System.DateTime.Now.Ticks;
-        //    long timeNow = timeStart;
-
-        //    while (texRes == Vector2Int.zero && (timeNow - timeStart) < TICKSINASECOND * 0.2)
-        //    {
-        //        switch (pointCloudResolution)
-        //        {
-        //            case PointCloudResolution.DepthCameraResolution:
-        //                texRes = new Vector2Int(sensorData.depthImageWidth, sensorData.depthImageHeight);
-        //                break;
-
-        //            case PointCloudResolution.ColorCameraResolution:
-        //                texRes = new Vector2Int(sensorData.colorImageWidth, sensorData.colorImageHeight);
-        //                break;
-        //        }
-
-        //        if(texRes == Vector2Int.zero)
-        //        {
-        //            Thread.Sleep(THREAD_WAIT_TIME_MS);
-        //        }
-
-        //        timeNow = System.DateTime.Now.Ticks;
-        //    }
-
-        //    if (texRes == Vector2Int.zero)
-        //    {
-        //        Debug.LogWarning("Texture Resolution is 0x0");
-        //    }
-
-        //    return texRes;
-        //}
-
 
         // creates the point-cloud vertex shader and its respective buffers, as needed
         protected override bool CreatePointCloudVertexShader(KinectInterop.SensorData sensorData)
