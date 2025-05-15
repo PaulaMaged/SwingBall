@@ -235,12 +235,19 @@ namespace com.rfilkov.components
             // get image resolution
             Vector2Int imageRes = sensorInt.GetPointCloudTexResolution(sensorData);
 
+            // ensure the colorTexture is up to par with the pointCloudColorTexture
             if (colorTextureCreated && (colorTexture == null ||
                 colorTexture.width != imageRes.x || colorTexture.height != imageRes.y))
             {
                 colorTexture = KinectInterop.CreateRenderTexture(colorTexture, imageRes.x, imageRes.y, RenderTextureFormat.ARGB32);
                 sensorInt.pointCloudColorTexture = colorTexture;
                 //Debug.Log("Created pointCloudColorTexture with resolution " + imageRes);
+            } else if(sensorInt.pointCloudColorTexture != null) //keeps colorTexture up-to-date with the latest changes in colorTexture
+            {
+                colorTexture = sensorInt.pointCloudColorTexture;
+            } else
+            {
+                sensorInt.pointCloudColorTexture = colorTexture;
             }
 
             // create depth image buffer
