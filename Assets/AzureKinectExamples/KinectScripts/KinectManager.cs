@@ -250,15 +250,12 @@ namespace com.rfilkov.kinect
         {
             if (sensorIndex >= 0 && sensorIndex < sensorDatas.Count)
             {
-                //return sensorDatas[sensorIndex];
-
                 KinectInterop.SensorData sensorData = sensorDatas[sensorIndex];
                 if (sensorData == null || sensorData.sensorInterface == null)
                     return null;
 
                 if (!sensorData.sensorInterface.IsSensorDataValid())
                 {
-                    //Debug.LogWarning("Sensor data is invalid.");
                     return null;
                 }
 

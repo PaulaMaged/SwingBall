@@ -779,6 +779,8 @@ namespace com.rfilkov.kinect
                 currentBuf.Dispose();
             }
 
+            if (bufLen == 0) return null;
+
             ComputeBuffer computeBuf = new ComputeBuffer(bufLen, bufStride);
             return computeBuf;
         }

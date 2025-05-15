@@ -132,7 +132,7 @@ namespace com.rfilkov.components
 
         void Update()
         {
-            if (mesh == null || sensorData == null)
+            if (sensorData == null)
             {
                 // init mesh and its related data
                 sensorData = (kinectManager != null && kinectManager.IsInitialized()) ? kinectManager.GetSensorData(sensorIndex) : null;
@@ -247,7 +247,13 @@ namespace com.rfilkov.components
             // create depth image buffer
             if (sourceImageResolution == DepthSensorBase.PointCloudResolution.DepthCameraResolution)
             {
-                CreateDepthImageBuffer();
+                int depthBufferLength = sensorData.depthImageWidth * sensorData.depthImageHeight >> 1;
+
+                if (depthImageBuffer == null || depthImageBuffer.count != depthBufferLength)
+                {
+                    depthImageCopy = new ushort[depthBufferLength << 1];
+                    depthImageBuffer = KinectInterop.CreateComputeBuffer(depthImageBuffer, depthBufferLength, sizeof(uint));
+                }
             }
             else
             {
@@ -313,7 +319,7 @@ namespace com.rfilkov.components
 
                 int spaceBufferLength = imageRes.x * imageRes.y * 3;
                 spaceTableBuffer = KinectInterop.CreateComputeBuffer(spaceTableBuffer, spaceBufferLength, sizeof(float));
-                spaceTableBuffer.SetData(spaceTable);
+                spaceTableBuffer?.SetData(spaceTable);
                 spaceTable = null;
 
                 //Debug.Log("Created spaceTable for resolution " + imageRes);
@@ -329,21 +335,6 @@ namespace com.rfilkov.components
             imageWidth = imageRes.x;
             imageHeight = imageRes.y;
         }
-
-        private void CreateDepthImageBuffer()
-        {
-
-            int depthBufferLength = sensorData.depthImageWidth * sensorData.depthImageHeight >> 1;
-
-            if (depthBufferLength == 0) return;
-
-            if (depthImageBuffer == null || depthImageBuffer.count != depthBufferLength)
-            {
-                depthImageCopy = new ushort[depthBufferLength << 1];
-                depthImageBuffer = KinectInterop.CreateComputeBuffer(depthImageBuffer, depthBufferLength, sizeof(uint));
-            }
-        }
-
 
         // creates the mesh vertices and indices
         private void CreateMeshVertInd(int imageWidth, int imageHeight)
