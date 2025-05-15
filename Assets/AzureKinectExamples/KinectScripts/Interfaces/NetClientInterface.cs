@@ -744,7 +744,7 @@ namespace com.rfilkov.kinect
                                 Graphics.CopyTexture(pointCloudAlignedColorTex, sensorData.depthCamColorImageTexture);
                             }
 
-                            if(pointCloudColorTexture != null)
+                            if(pointCloudColorTexture != null && pointCloudColorTexture.width != 0 && pointCloudColorTexture.height != 0) //avoids issues when the pointcloudcolorTexture isn't 0x0
                             {
                                 Graphics.Blit(pointCloudAlignedColorTex, pointCloudColorTexture);
                             }
