@@ -87,7 +87,7 @@ public class GameManager : NetworkBehaviour
         }
 
         Stopwatch sw = Stopwatch.StartNew();
-        //KinectManager.Instance.StartDepthSensors();
+        KinectManager.Instance.StartDepthSensors();
         sw.Stop();
 
         UnityEngine.Debug.Log($"Time taken to start depth sensors: {sw.Elapsed.TotalSeconds}");
