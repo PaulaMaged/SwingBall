@@ -1,3 +1,4 @@
+using com.rfilkov.components;
 using System;
 using System.Collections;
 using System.Linq;
@@ -23,6 +24,10 @@ public class PlayerManager : NetworkBehaviour
 
     public NetworkList<NetworkObjectReference> PlayerNetworkObjectRefs { get; private set; }
     private NetworkVariable<int> currentPlayerTurnIndex = new(0);
+
+    [SerializeField] private Vector3 pointCloudGroundOffset = new(0, 1, 0);
+    [SerializeField] private Vector3 pointCloudsideOffset = new(1.5f, 1, 0);
+    [SerializeField] private bool changeLocalPlayerRepresentation = false;
 
     private void Awake()
     {
@@ -153,6 +158,48 @@ public class PlayerManager : NetworkBehaviour
             PlayerNetworkManager playerNetworkManager = player.GetComponent<PlayerNetworkManager>();
 
             playerNetworkManager.UpdatePlayerPositionAndRotationRpc(PlayerPositions[i++]);
+        }
+    }
+
+    private void EnableSkinnedMeshRenderers(GameObject player, bool enable)
+    {
+
+        SkinnedMeshRenderer[] skinnedMeshRenderers = player.GetComponentsInChildren<SkinnedMeshRenderer>(true);
+        foreach (SkinnedMeshRenderer skinnedMeshRenderer in skinnedMeshRenderers)
+        {
+            skinnedMeshRenderer.enabled = enable;
+        }
+    }
+
+    private void EnablePointCloud(GameObject player, bool enable, Vector3 pointCloudOffset)
+    {
+        MeshRenderer[] meshRenderers = player.GetComponentsInChildren<MeshRenderer>(true);
+        foreach (MeshRenderer meshRenderer in meshRenderers)
+        {
+            meshRenderer.enabled = enable;
+
+            //stop processing when false, the userMeshRendererGpu to limit processing
+            if (meshRenderer.TryGetComponent(out UserMeshRendererGpu userMeshRendererGpu))
+            {
+                userMeshRendererGpu.enabled = enable;
+                userMeshRendererGpu.PointCloudOffset = pointCloudOffset;
+            }
+        }
+    }
+
+    [Rpc(SendTo.Everyone)]
+    public void SwitchRepresnetationRpc(bool enableHumanoid, bool enablePointCloud)
+    {
+        GameObject localPlayerGO = NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject().gameObject;
+        Vector3 pointCloudOffset = enableHumanoid && enablePointCloud ? pointCloudGroundOffset + pointCloudsideOffset : pointCloudGroundOffset;
+
+        foreach (GameObject player in Players)
+        {
+            if (player == null) continue;
+            if (localPlayerGO == player && !changeLocalPlayerRepresentation) continue;
+
+            EnableSkinnedMeshRenderers(player, enableHumanoid);
+            EnablePointCloud(player, enablePointCloud, pointCloudOffset);
         }
     }
 }

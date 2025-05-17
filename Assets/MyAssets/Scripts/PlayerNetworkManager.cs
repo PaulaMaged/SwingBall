@@ -1,5 +1,6 @@
 using com.rfilkov.components;
 using com.rfilkov.kinect;
+using Microsoft.Azure.Kinect.Sensor;
 using System;
 using System.Collections;
 using System.Net;
@@ -73,9 +74,13 @@ public class PlayerNetworkManager : NetworkBehaviour
         {
             k4aInt.deviceStreamingMode = KinectInterop.DeviceStreamingMode.PlayRecording;
             k4aInt.recordingFile = IsHost ? "./Recordings/me.mkv" : "./Recordings/him.mkv";
-            k4aInt.bodyTrackingProcessingMode = Microsoft.Azure.Kinect.Sensor.k4abt_tracker_processing_mode_t.K4ABT_TRACKER_PROCESSING_MODE_GPU_DIRECTML;
             k4aInt.loopPlayback = true;
         }
+
+        k4aInt.bodyTrackingProcessingMode = SystemInfo.graphicsDeviceVendor.Contains("nvidia", StringComparison.OrdinalIgnoreCase) ?
+            k4abt_tracker_processing_mode_t.K4ABT_TRACKER_PROCESSING_MODE_GPU_CUDA :
+            k4abt_tracker_processing_mode_t.K4ABT_TRACKER_PROCESSING_MODE_GPU_DIRECTML;
+
 
         k4aInt.sensorPriority = index;
 
@@ -103,7 +108,6 @@ public class PlayerNetworkManager : NetworkBehaviour
 
         UserMeshRendererGpu userMeshRendererGpu = GetComponentInChildren<UserMeshRendererGpu>(true);
         userMeshRendererGpu.sensorIndex = index;
-        userMeshRendererGpu.enabled = true;
     }
 
     public void EnablePlayerMovement()

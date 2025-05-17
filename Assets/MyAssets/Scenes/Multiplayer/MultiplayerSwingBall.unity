@@ -622,6 +622,7 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   ExerciseProgram: {fileID: 233292201359990320, guid: 4e5611aa14ae4eb439c043da86f3c567, type: 3}
   SpawnPoint: {fileID: 1832576199}
+  switchRepresentationButton: {fileID: -323812964555706417, guid: c348712bda248c246b8c49b3db54643f, type: 3}
 --- !u!114 &738995348
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1198,7 +1199,7 @@ MonoBehaviour:
   m_HeartbeatTimeoutMS: 500
   m_ConnectTimeoutMS: 1000
   m_MaxConnectAttempts: 60
-  m_DisconnectTimeoutMS: 5000
+  m_DisconnectTimeoutMS: 30000
   ConnectionData:
     Address: 0.0.0.0
     Port: 7776
@@ -1280,7 +1281,7 @@ MonoBehaviour:
   _serverIPAddress: 192.168.175.10
   _portNumber: 7777
   UDPDiscoveryPort: 9000
-  connectionTimeout: 5
+  connectionTimeout: 10
 --- !u!4 &1389334781734439045
 Transform:
   m_ObjectHideFlags: 0

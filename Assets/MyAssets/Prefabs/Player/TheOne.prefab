@@ -10342,7 +10342,8 @@ MonoBehaviour:
   edgeCutoffFactor: 0.5
   meshTexture: 0
   applyLighting: 0
-  pointCloudOffset: {x: 0, y: 0, z: 0}
+  OverlapOnAvatar: 1
+  PointCloudOffset: {x: 0, y: 0, z: 0}
 --- !u!33 &9075288359457847643
 MeshFilter:
   m_ObjectHideFlags: 0

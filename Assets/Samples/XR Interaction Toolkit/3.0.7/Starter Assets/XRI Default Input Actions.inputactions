@@ -2075,6 +2075,15 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "Change Represenation",
+                    "type": "Button",
+                    "id": "6ecbe9bd-bcb9-4530-b4c8-1c43ee43a89a",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -2372,6 +2381,17 @@
                     "processors": "",
                     "groups": "",
                     "action": "Start Exercise Press",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "48d67960-1b38-49a1-906e-d3169a8e20ef",
+                    "path": "<XRController>{RightHand}/secondaryButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Change Represenation",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

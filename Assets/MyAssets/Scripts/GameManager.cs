@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Linq;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.Profiling;
 
 public class GameManager : NetworkBehaviour
@@ -18,6 +19,10 @@ public class GameManager : NetworkBehaviour
 
     private GameObject ProgramUI;
     private RehabProgram _RehabProgram;
+
+    [Tooltip("Choose which one to show on startup")]
+    [SerializeField] private Representation currentRepresentation = Representation.Both;
+    [SerializeField] private InputActionReference switchRepresentationButton;
 
     void Awake()
     {
@@ -35,11 +40,18 @@ public class GameManager : NetworkBehaviour
 
         SetupSensorsRpc();
 
+        SetupRepresentationChangeButton();
+
         //handoff ownership of rehabProgram to client
         ulong clientId = Array.Find<ulong>(PlayerManager.instance.PlayerClientIds, id => id != 0);
         ExerciseProgram.GetComponent<NetworkObject>().ChangeOwnership(clientId);
         _RehabProgram.SyncExerciseConfigurationRpc(_RehabProgram.GetExerciseConfigurations());
         _RehabProgram.InitiateExercisesRpc();
+    }
+
+    public void SetupRepresentationChangeButton()
+    {
+        switchRepresentationButton.action.started += SwitchRepresentationButtonHandler;
     }
 
     public override void OnNetworkSpawn()
@@ -93,5 +105,54 @@ public class GameManager : NetworkBehaviour
         UnityEngine.Debug.Log($"Time taken to start depth sensors: {sw.Elapsed.TotalSeconds}");
 
         playerNetworkManagers[localPlayerIndex].InitKinectServer(localPlayerIndex);
+
+        SwitchRepresentation(currentRepresentation);
     }
+
+    public void SwitchRepresentationButtonHandler(InputAction.CallbackContext ctx)
+    {
+        Representation nextRepresentation = (Representation)((int)(currentRepresentation + 1) % (int)Representation.Count);
+        SwitchRepresentation(nextRepresentation);
+        currentRepresentation = nextRepresentation;
+    }
+
+    public void SwitchRepresentation(Representation representation)
+    {
+
+        bool enableHumanoid = false;
+        bool enablePointCloud = false;
+
+        switch (representation)
+        {
+            case Representation.None:
+                break;
+            case Representation.Humanoid:
+                enableHumanoid = true;
+                break;
+            case Representation.PointCloud:
+                enablePointCloud = true;
+                break;
+            case Representation.Both:
+                enableHumanoid = true;
+                enablePointCloud = true;
+                break;
+        }
+
+        PlayerManager.instance.SwitchRepresnetationRpc(enableHumanoid, enablePointCloud);
+    }
+
+    public override void OnDestroy()
+    {
+        base.OnDestroy();
+
+        switchRepresentationButton.action.started -= SwitchRepresentationButtonHandler;
+    }
+}
+public enum Representation
+{
+    None,
+    Humanoid,
+    PointCloud,
+    Both,
+    Count
 }
