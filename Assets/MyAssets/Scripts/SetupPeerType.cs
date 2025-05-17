@@ -20,7 +20,9 @@ public class SetupPeerType : MonoBehaviour
     private float startTime;
     [SerializeField] private float connectionTimeout = 10.0f;
 
+    private readonly object responseLock = new object();
     private bool bBroadcastResponseReceived;
+    private UdpClient udpClient = null;
     private UdpBroadcastServer autoDiscoveryServer;
     private bool finishedStartup = false;
 
@@ -33,6 +35,7 @@ public class SetupPeerType : MonoBehaviour
     private void Update()
     {
         if (finishedStartup) return;
+        
         try
         {
             if (bBroadcastResponseReceived)
@@ -66,6 +69,12 @@ public class SetupPeerType : MonoBehaviour
 
                 NetworkManager.Singleton.StartHost();
                 finishedStartup = true;
+
+                lock (responseLock)
+                {
+                    bBroadcastResponseReceived = true; //just to avoid more incoming responses.
+                    udpClient?.Close();
+                }
             }
         } catch (SocketException e)
         {
@@ -79,9 +88,6 @@ public class SetupPeerType : MonoBehaviour
     private void BroadcastServerDiscovery()
     {
         Debug.Log("Searching for servers to connect to");
-
-        UdpClient udpClient = null;
-        //Debug.Log("Auto discovery - looking for net server...");
 
         udpClient = new UdpClient();
         IPEndPoint ep = new(IPAddress.Any, 0);
@@ -114,7 +120,7 @@ public class SetupPeerType : MonoBehaviour
                 if ((ulong)(timeNow - timeStart) > 10_000_000 * 1)
                 {
                     timeStart = System.DateTime.Now.Ticks;
-                    udpClient.Send(btRequestData, btRequestData.Length, new IPEndPoint(IPAddress.Broadcast, _portNumber));
+                    udpClient.Send(btRequestData, btRequestData.Length, new IPEndPoint(IPAddress.Broadcast, UDPDiscoveryPort));
                 }
             }
         }
@@ -122,38 +128,59 @@ public class SetupPeerType : MonoBehaviour
         {
             Debug.LogError($"Error occured while finding server ip: {ex}");
         }
-
-        udpClient?.Close();
     }
 
     // invoked when a response from the broadcast server gets received
     private void BroadcastServerResponseReceived(System.IAsyncResult ar)
     {
-        UdpState state = (UdpState)(ar.AsyncState);
-        UdpClient uc = state.uc;
-        IPEndPoint ep = state.ep;
-
-        byte[] btReceiveData = uc.EndReceive(ar, ref ep);
-        string sReceiveData = System.Text.Encoding.UTF8.GetString(btReceiveData);
-        Debug.Log("Received response from the broadcast server.");
-
-        if (!string.IsNullOrEmpty(sReceiveData))
+        try
         {
-            string[] asParts = sReceiveData.Split("|".ToCharArray());
-
-            if (asParts.Length >= 3 && asParts[0] == "NET")
+            lock (responseLock)
             {
-                _serverIPAddress = asParts[1];
-                ushort.TryParse(asParts[2], out _portNumber);
-                bBroadcastResponseReceived = true;
+                if (bBroadcastResponseReceived)
+                {
+                    Debug.Log("Disregarding response from broadcast Server");
+                    return;
+                }
+
+                UdpState state = (UdpState)(ar.AsyncState);
+                UdpClient uc = state.uc;
+                IPEndPoint ep = state.ep;
+
+                byte[] btReceiveData = uc.EndReceive(ar, ref ep);
+                string sReceiveData = System.Text.Encoding.UTF8.GetString(btReceiveData);
+                Debug.Log("Received response from the broadcast server.");
+
+                if (!string.IsNullOrEmpty(sReceiveData))
+                {
+                    string[] asParts = sReceiveData.Split("|".ToCharArray());
+
+                    if (asParts.Length >= 3 && asParts[0] == "NET")
+                    {
+                        _serverIPAddress = asParts[1];
+                        ushort.TryParse(asParts[2], out _portNumber);
+                        bBroadcastResponseReceived = true;
+                        uc?.Close();
+                        Debug.Log("Disposed udpClient");
+                    }
+                }
+                if (!bBroadcastResponseReceived)
+                {
+                    uc.BeginReceive(new System.AsyncCallback(BroadcastServerResponseReceived), state);
+                }
             }
-        }
-
-        if (!bBroadcastResponseReceived)
+        } catch (System.Net.Sockets.SocketException sockEx)
         {
-            uc.BeginReceive(new System.AsyncCallback(BroadcastServerResponseReceived), state);
+            Debug.LogError($"error receiving response: {sockEx.Message} (SocketErrorCode: {sockEx.SocketErrorCode} {sockEx.StackTrace})");
         }
-
+        catch (System.IO.IOException ioEx)
+        {
+            Debug.LogError($"IO errorReceving Response: {ioEx.Message} {ioEx.StackTrace}");
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"unexpected error sending to client: {ex.GetType().Name}: {ex.Message} {ex.StackTrace}");
+        }
     }
 
     private string GetLocalNameOrIP()
@@ -186,6 +213,7 @@ public class SetupPeerType : MonoBehaviour
 
     private void OnDestroy()
     {
-        NetworkManager.Singleton?.Shutdown();
+        if (NetworkManager.Singleton) NetworkManager.Singleton.Shutdown();
+        autoDiscoveryServer?.Close();
     }
 }
