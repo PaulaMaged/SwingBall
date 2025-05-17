@@ -589,8 +589,8 @@ MonoBehaviour:
     e32: 0
     e33: 1
   sensorRotValueY: 0
-  autoServerDiscovery: 0
-  serverHost: 192.168.26.10
+  autoServerDiscovery: 1
+  serverHost: 127.0.0.1
   serverBasePort: 11000
   getBodyIndexFrames: 1
   clientStatusText: {fileID: 0}
@@ -833,7 +833,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   sensorIndex: 1
   baseListenPort: 10000
-  listenForServerDiscovery: 0
+  listenForServerDiscovery: 1
   compressRawFrames: 1
   connStatusText: {fileID: 0}
   serverStatusText: {fileID: 0}
@@ -2219,7 +2219,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 100176, guid: ae23d50304c93b9418b65cec8f9fe954, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 400020, guid: ae23d50304c93b9418b65cec8f9fe954, type: 3}
       propertyPath: m_LocalPosition.x

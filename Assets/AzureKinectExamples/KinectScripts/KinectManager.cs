@@ -3235,10 +3235,11 @@ namespace com.rfilkov.kinect
 
 
         // tries to open the sensor interfaces
-        private void TryOpenSensors(List<DepthSensorBase> sensorInts, KinectInterop.FrameSource dwFlags)
+        private IEnumerator TryOpenSensors(List<DepthSensorBase> sensorInts, KinectInterop.FrameSource dwFlags)
         {
             for (int i = 0; i < sensorInts.Count; i++)
             {
+                yield return null;
                 if (sensorInts[i] is DepthSensorBase)
                 {
                     DepthSensorBase sensorInt = (DepthSensorBase)sensorInts[i];

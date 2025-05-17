@@ -30,16 +30,6 @@ public class PlayerNetworkManager : NetworkBehaviour
         Transform spawnPoint = GameManager.Instance.SpawnPoint;
         SetPlayerTransformData(spawnPoint.position, spawnPoint.rotation);
 
-        //Func<Vector3, Quaternion, bool> IsTransformChanged = (oldPosition, oldRotation) =>
-        //{
-        //    if (transform.position != oldPosition || transform.rotation != oldRotation)
-        //        return true;
-        //    else
-        //        return false;
-        //};
-
-        //StartCoroutine(ListenToTransformCoroutine(IsTransformChanged, spawnPoint.position, spawnPoint.rotation));
-
         //by default, all components for player movement are off for reasons beyond this comment
         EnablePlayerMovement();
         var netObjId = GetComponent<NetworkObject>().NetworkObjectId;
@@ -67,6 +57,7 @@ public class PlayerNetworkManager : NetworkBehaviour
         int serverBasePort = 10000 + 1000 * index;
         netClient.deviceIndex = index;
         netClient.serverBasePort = serverBasePort;
+        netClient.autoServerDiscovery = true;
 
         SetupKinectTracking(index);
     }
@@ -81,7 +72,7 @@ public class PlayerNetworkManager : NetworkBehaviour
         if (DEBUGGING)
         {
             k4aInt.deviceStreamingMode = KinectInterop.DeviceStreamingMode.PlayRecording;
-            k4aInt.recordingFile = IsHost ? "./Recordings/Azure Kinect-003.mkv" : "./Recordings/test.mkv";
+            k4aInt.recordingFile = IsHost ? "./Recordings/me.mkv" : "./Recordings/him.mkv";
             k4aInt.bodyTrackingProcessingMode = Microsoft.Azure.Kinect.Sensor.k4abt_tracker_processing_mode_t.K4ABT_TRACKER_PROCESSING_MODE_GPU_DIRECTML;
             k4aInt.loopPlayback = true;
         }
@@ -99,7 +90,7 @@ public class PlayerNetworkManager : NetworkBehaviour
         int serverBasePort = 10000 + 1000 * index;
         kinectNetServer.sensorIndex = index;
         kinectNetServer.baseListenPort = serverBasePort;
-        kinectNetServer.listenForServerDiscovery = true; //This might not be guaranteed to work correct as it might start listening to itself, and I don't know how to assert this hypothesis
+        kinectNetServer.listenForServerDiscovery = true;
 
         kinectNetServer.StartServer();
     }

@@ -962,6 +962,51 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   followPlayer: 1
   curveDuration: 1
+--- !u!1 &1302623679
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1302623681}
+  - component: {fileID: 1302623680}
+  m_Layer: 0
+  m_Name: Profiler
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1302623680
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1302623679}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 59e44eafdffcd2846b1738223cc72d53, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  CaptureFrameCount: 300
+--- !u!4 &1302623681
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1302623679}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -5.69894, y: 2.0808284, z: -5.4278574}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1488511843
 GameObject:
   m_ObjectHideFlags: 0
@@ -1235,6 +1280,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _serverIPAddress: 192.168.175.10
   _portNumber: 7777
+  UDPDiscoveryPort: 9000
   connectionTimeout: 5
 --- !u!4 &1389334781734439045
 Transform:
@@ -1473,3 +1519,4 @@ SceneRoots:
   - {fileID: 1527604754}
   - {fileID: 1832576199}
   - {fileID: 903982226}
+  - {fileID: 1302623681}

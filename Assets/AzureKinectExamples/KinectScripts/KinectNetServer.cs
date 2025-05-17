@@ -108,29 +108,31 @@ namespace com.rfilkov.kinect
 
         public void StartServer()
         {
-
-            kinectManager = KinectManager.Instance;
-            sensorData = kinectManager ? kinectManager.GetSensorData(sensorIndex) : null;
-            Debug.Log($"Starting server for sensor w index: {sensorIndex} and found sensor is <b>{(sensorData == null ? "NULL" : "Available")}</b>");
-            if(sensorData != null && sensorData.sensorInterface != null)
+            while (sensorData == null)
             {
-                // cache space tables
-                Debug.Log("Caching space tables of sensor " + sensorIndex + "...");
-                sensorData.sensorInterface.GetDepthCameraSpaceTable(sensorData);
-                sensorData.sensorInterface.GetColorCameraSpaceTable(sensorData);
-
-                // init servers
-                Debug.Log("Initing network servers of sensor " + sensorIndex + "...");
-                KinectInterop.FrameSource dwFlags = ((DepthSensorBase)sensorData.sensorInterface).frameSourceFlags;
-                InitNetServers(dwFlags);
-            }
-            else
-            {
-                Debug.LogError("KinectManager not found or not initialized.");
-
-                if (serverStatusText)
+                kinectManager = KinectManager.Instance;
+                sensorData = kinectManager ? kinectManager.GetSensorData(sensorIndex) : null;
+                Debug.Log($"Starting server for sensor w index: {sensorIndex} and found sensor is <b>{(sensorData == null ? "NULL" : "Available")}</b>");
+                if (sensorData != null && sensorData.sensorInterface != null)
                 {
-                    serverStatusText.text = "KinectManager not found or not initialized.";
+                    // cache space tables
+                    Debug.Log("Caching space tables of sensor " + sensorIndex + "...");
+                    sensorData.sensorInterface.GetDepthCameraSpaceTable(sensorData);
+                    sensorData.sensorInterface.GetColorCameraSpaceTable(sensorData);
+
+                    // init servers
+                    Debug.Log("Initing network servers of sensor " + sensorIndex + "...");
+                    KinectInterop.FrameSource dwFlags = ((DepthSensorBase)sensorData.sensorInterface).frameSourceFlags;
+                    InitNetServers(dwFlags);
+                }
+                else
+                {
+                    Debug.LogError("KinectManager not found or not initialized.");
+
+                    if (serverStatusText)
+                    {
+                        serverStatusText.text = "KinectManager not found or not initialized.";
+                    }
                 }
             }
         }
@@ -1042,6 +1044,7 @@ namespace com.rfilkov.kinect
 
             isServerRunning = true;
             Thread serverThread = new Thread(StartServer);
+            serverThread.Name = serverName;
             serverThread.Start();
         }
 
@@ -1200,18 +1203,34 @@ namespace com.rfilkov.kinect
             {
                 conn.stream.EndWrite(ar);
             }
-            catch (System.Exception ex)
+            catch (System.Net.Sockets.SocketException sockEx)
             {
-                if(conn.isActive)
+                if (conn.isActive)
                 {
-                    LogErrorToConsole(serverName + " error sending to client: " + ex.Message);
-                    //Debug.LogException(ex);
-
+                    LogErrorToConsole($"{serverName} error sending to client {conn.remoteIP}: {sockEx.Message} (SocketErrorCode: {sockEx.SocketErrorCode})");
                     conn.isActive = false;
                 }
             }
-
-            conn.readyToSend = true;
+            catch (System.IO.IOException ioEx)
+            {
+                if (conn.isActive)
+                {
+                    LogErrorToConsole($"{serverName} IO error sending to client {conn.remoteIP}: {ioEx.Message}");
+                    conn.isActive = false;
+                }
+            }
+            catch (System.Exception ex)
+            {
+                if (conn.isActive)
+                {
+                    LogErrorToConsole($"{serverName} unexpected error sending to client {conn.remoteIP}: {ex.GetType().Name}: {ex.Message}");
+                    conn.isActive = false;
+                }
+            }
+            finally
+            {
+                conn.readyToSend = true;
+            }
         }
 
         private void ProcessReceivedData(byte[] buffer, int bytesReceived, NetConnData conn)
@@ -1267,12 +1286,8 @@ namespace com.rfilkov.kinect
         // logs error message to the console
         private void LogErrorToConsole(string sMessage)
         {
-            Debug.LogError(sMessage);
-
-            //lock (sbConsole)
-            //{
-            //    sbConsole.Append(sMessage).AppendLine();
-            //}
+            string cleanMsg = sMessage.Replace("\0", "").Trim();
+            Debug.LogError(cleanMsg);
         }
 
 
@@ -1288,7 +1303,7 @@ namespace com.rfilkov.kinect
     /// <summary>
     /// UdpBroadcastServer provides broadcast functionality over the network.
     /// </summary>
-    internal class UdpBroadcastServer
+    public class UdpBroadcastServer
     {
         public int serverPort = 11000;
 

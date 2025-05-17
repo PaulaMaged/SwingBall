@@ -20,7 +20,6 @@ namespace com.rfilkov.kinect
     {
         [Tooltip("Whether to broadcast, in order to find automatically the first available server (local network only).")]
         public bool autoServerDiscovery = false;
-        private bool IsSearching = false;
 
         [Tooltip("Host name or IP address of the network server.")]
         public string serverHost = "localhost";
@@ -257,8 +256,18 @@ namespace com.rfilkov.kinect
                 alNetMessageTime = new List<ulong>();
             }
 
-            InitNetClientsAsync(dwFlags);
-            
+            if (autoServerDiscovery)
+            {
+                Thread broadServerCastDiscoveryThread = new(BroadcastServerDiscovery)
+                {
+                    Name = "broadServerCastDiscoveryThread"
+                };
+                broadServerCastDiscoveryThread.Start();
+            } else
+            {
+                InitNetClients(dwFlags);
+            }
+
             if (consoleLogMessages)
                 Debug.Log("D" + deviceIndex + " NetSensor opened: " + serverHost + ":" + serverBasePort + ", discovery: " + autoServerDiscovery);
 
@@ -297,6 +306,8 @@ namespace com.rfilkov.kinect
 
         public override bool UpdateSensorData(KinectInterop.SensorData sensorData, KinectManager kinectManager, bool isPlayMode)
         {
+            if(!bBroadcastResponseReceived) { return false; }
+
             // check for server timeout
             ulong ulTimeNow = (ulong)System.DateTime.Now.Ticks;
             bool isControlClientActive = controlFrameClient != null ? controlFrameClient.IsActive() : false;
@@ -320,12 +331,12 @@ namespace com.rfilkov.kinect
             }
 
             // try to reconnect
-            if(disconnectedAt != 0 && (ulTimeNow - disconnectedAt) >= reconnectAfter && !IsSearching)
+            if(disconnectedAt != 0 && (ulTimeNow - disconnectedAt) >= reconnectAfter)
             {
                 if (consoleLogMessages)
                     Debug.Log("Start reconnecting...");
 
-                InitNetClientsAsync(frameSourceFlags);
+                InitNetClients(frameSourceFlags);
                 return true;
             }
 
@@ -868,61 +879,57 @@ namespace com.rfilkov.kinect
         {
             Debug.Log("Inside Thread!");
             UdpClient udpClient = null;
-            if (bBroadcastResponseReceived)
-                return;
+            //Debug.Log("Auto discovery - looking for net server...");
 
-            try
+            udpClient = new UdpClient();
+            IPEndPoint ep = new IPEndPoint(IPAddress.Any, 0);
+
+            string sRequestData = "KNS";
+            byte[] btRequestData = System.Text.Encoding.UTF8.GetBytes(sRequestData);
+
+            udpClient.EnableBroadcast = true;
+
+            while (!bBroadcastResponseReceived)
             {
-                //Debug.Log("Auto discovery - looking for net server...");
-
-                udpClient = new UdpClient();
-                IPEndPoint ep = new IPEndPoint(IPAddress.Any, 0);
-
-                string sRequestData = "KNS";
-                byte[] btRequestData = System.Text.Encoding.UTF8.GetBytes(sRequestData);
-
-                udpClient.EnableBroadcast = true;
-                udpClient.Send(btRequestData, btRequestData.Length, new IPEndPoint(IPAddress.Broadcast, serverBasePort));
-
-                UdpState state = new UdpState();
-                state.ep = ep;
-                state.uc = udpClient;
-
-                udpClient.BeginReceive(new System.AsyncCallback(BroadcastServerResponseReceived), state);
-
-                // wait for response
-                // wait for net-cst
-                long timeStart = System.DateTime.Now.Ticks;
-                long timeNow = timeStart;
-
-                while (!bBroadcastResponseReceived && (timeNow - timeStart) < 50000000)  // timeout - 5 seconds
+                try
                 {
-                    Thread.Sleep(THREAD_WAIT_TIME_MS);
-                    Debug.Log("Waiting some more");
-                    timeNow = System.DateTime.Now.Ticks;
-                }
+                    udpClient.Send(btRequestData, btRequestData.Length, new IPEndPoint(IPAddress.Broadcast, serverBasePort));
 
-                if(bBroadcastResponseReceived)
-                {
+                    UdpState state = new UdpState();
+                    state.ep = ep;
+                    state.uc = udpClient;
+
+                    udpClient.BeginReceive(new System.AsyncCallback(BroadcastServerResponseReceived), state);
+
+                    // wait for response
+                    // wait for net-cst
+                    long timeStart = System.DateTime.Now.Ticks;
+                    long timeNow = timeStart;
+
+                    while (!bBroadcastResponseReceived)  // timeout - 5 seconds
+                    {
+                        Thread.Sleep(THREAD_WAIT_TIME_MS);
+                        timeNow = System.DateTime.Now.Ticks;
+
+                        if ((ulong)(timeNow - timeStart) > TICKSINASECOND * 5)
+                        {
+                            timeStart = System.DateTime.Now.Ticks;
+                            udpClient.Send(btRequestData, btRequestData.Length, new IPEndPoint(IPAddress.Broadcast, serverBasePort));
+                        }
+                    }
+
                     if (consoleLogMessages)
                         Debug.Log("Auto discovery - server host: " + serverHost + ", port: " + serverBasePort);
+
+                    InitNetClients(frameSourceFlags);
                 }
-                else
+                catch (System.Exception ex)
                 {
-                    Debug.LogWarning("Timed out waiting for response from the broadcast server.");
+                    Debug.LogError($"Error occured while finding server ip: {ex}");
                 }
             }
-            catch (System.Exception ex)
-            {
-                Debug.LogError($"Error occured while finding server ip: {ex}");
-            }
-            finally
-            {
-                if (udpClient != null)
-                {
-                    udpClient.Close();
-                }
-            }
+
+            udpClient?.Close();
         }
 
         // invoked when a response from the broadcast server gets received
@@ -934,9 +941,9 @@ namespace com.rfilkov.kinect
 
             byte[] btReceiveData = uc.EndReceive(ar, ref ep);
             string sReceiveData = System.Text.Encoding.UTF8.GetString(btReceiveData);
-            //Debug.Log("Received response from the broadcast server.");
+            Debug.Log("Received response from the broadcast server.");
 
-            if(!string.IsNullOrEmpty(sReceiveData))
+            if (!string.IsNullOrEmpty(sReceiveData))
             {
                 string[] asParts = sReceiveData.Split("|".ToCharArray());
 
@@ -948,11 +955,15 @@ namespace com.rfilkov.kinect
                 }
             }
 
+            if(!bBroadcastResponseReceived)
+            {
+                uc.BeginReceive(new System.AsyncCallback(BroadcastServerResponseReceived), state);
+            }
+
         }
 
-
         // initializes the network clients
-        private void InitNetClientsAsync(KinectInterop.FrameSource dwFlags)
+        private void InitNetClients(KinectInterop.FrameSource dwFlags)
         {
             try
             {
@@ -1989,42 +2000,53 @@ namespace com.rfilkov.kinect
         {
             try
             {
-                NetConnData conn = new NetConnData();
+                TcpClient tcpClient = (TcpClient)ar.AsyncState;
+                tcpClient.EndConnect(ar);
 
-                conn.client = (TcpClient)ar.AsyncState;
-                conn.client.EndConnect(ar);
-                conn.stream = conn.client.GetStream();
+                if (!tcpClient.Connected)
+                {
+                    LogErrorToConsole($"Connection to {streamDesc} server failed: TcpClient not connected.");
+                    return;
+                }
 
-                conn.remoteIP = conn.client.Client.RemoteEndPoint.ToString();
+                NetworkStream netStream = tcpClient.GetStream();
+                string remoteIP = tcpClient.Client.RemoteEndPoint.ToString();
 
-                Debug.Log($"Handling Net Server {conn.remoteIP}");
+                int ipIdx = remoteIP.IndexOf(':');
+                if (ipIdx >= 0)
+                    remoteIP = remoteIP.Substring(0, ipIdx);
 
-                int iP = conn.remoteIP.IndexOf(':');
-                if (iP >= 0)
-                    conn.remoteIP = conn.remoteIP.Substring(0, iP);
+                var conn = new NetConnData
+                {
+                    client = tcpClient,
+                    stream = netStream,
+                    remoteIP = remoteIP
+                };
 
                 connections.Add(conn);
-                //Debug.Log("Connected to server " + conn.remoteEP);
-                LogToConsole("Connected to " + streamDesc + " server " + conn.remoteIP);
+                LogToConsole($"Connected to {streamDesc} server {conn.remoteIP}");
 
-                if(sendMsgOnConnect != null)
+                if (sendMsgOnConnect != null)
                 {
                     SendMessageToConnection(sendMsgOnConnect, conn.ID);
                 }
 
                 NetClientProc(conn);
             }
+            catch (System.Net.Sockets.SocketException ex)
+            {
+                LogErrorToConsole($"Connection to {streamDesc} server failed: {ex.Message} (Code {ex.SocketErrorCode})");
+            }
             catch (System.ObjectDisposedException)
             {
-                // do nothing
+                // Expected in some disconnection scenarios
             }
             catch (System.Exception ex)
             {
-                //Debug.LogError("Connection to server failed: " + ex.Message);
-                LogErrorToConsole("Connection to " + streamDesc + " server failed: " + ex.Message);
-                //Debug.LogException(ex);
+                LogErrorToConsole($"Connection to {streamDesc} server failed: {ex.GetType().Name}: {ex.Message}");
             }
         }
+
 
         private void NetClientProc(NetConnData conn)
         {
@@ -2163,13 +2185,8 @@ namespace com.rfilkov.kinect
         // logs error message to the console
         private void LogErrorToConsole(string sMessage)
         {
-            Debug.LogError(sMessage);
-
-            //lock (sbConsole)
-            //{
-            //    sbConsole.Clear();
-            //    sbConsole.Append(sMessage); //.AppendLine();
-            //}
+            string cleanMsg = sMessage.Replace("\0", "").Trim();
+            Debug.LogError(cleanMsg);
         }
 
 

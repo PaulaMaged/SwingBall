@@ -2,9 +2,11 @@ using com.rfilkov.kinect;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 public class GameManager : NetworkBehaviour
 {
@@ -84,7 +86,11 @@ public class GameManager : NetworkBehaviour
             }
         }
 
-        KinectManager.Instance.StartDepthSensors();
+        Stopwatch sw = Stopwatch.StartNew();
+        //KinectManager.Instance.StartDepthSensors();
+        sw.Stop();
+
+        UnityEngine.Debug.Log($"Time taken to start depth sensors: {sw.Elapsed.TotalSeconds}");
 
         //playerNetworkManagers[localPlayerIndex].InitKinectServer(localPlayerIndex);
     }
