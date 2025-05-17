@@ -218,13 +218,6 @@ namespace com.rfilkov.kinect
                 Debug.LogWarning("Playback selected, but this is not applicable to the network sensor. Ignoring...");
             }
 
-            //List<KinectInterop.SensorDeviceInfo> alSensors = GetAvailableSensors();
-            //if (deviceIndex >= alSensors.Count)
-            //{
-            //    Debug.Log("  D" + deviceIndex + " is not available. You can set the device index to -1, to disable it.");
-            //    return null;
-            //}
-
             sensorData = new KinectInterop.SensorData();
             sensorData.sensorIntPlatform = KinectInterop.DepthSensorPlatform.NetSensor;
 
@@ -995,13 +988,6 @@ namespace com.rfilkov.kinect
                 NetMessageData msgGetData = GetControlMessage(ControlMessageType.GetSensorData);
                 controlFrameClient.ConnectToServerAsync(serverHost, serverBasePort + (int)NetMessageType.Control, "control", msgGetData);
                 controlFrameClient.ReceivedMessage += new ReceivedMessageEventHandler(ControlFrameReceived);
-
-                if ((dwFlags & KinectInterop.FrameSource.TypeColor) != 0)
-                {
-                    colorFrameClient = new TcpNetClient(sbConsole, null);
-                    colorFrameClient.ConnectToServerAsync(serverHost, serverBasePort + (int)NetMessageType.Color, "color", null);
-                    colorFrameClient.ReceivedMessage += new ReceivedMessageEventHandler(ColorFrameReceived);
-                }
 
                 if ((dwFlags & KinectInterop.FrameSource.TypeDepth) != 0)
                 {
