@@ -92,6 +92,6 @@ public class GameManager : NetworkBehaviour
 
         UnityEngine.Debug.Log($"Time taken to start depth sensors: {sw.Elapsed.TotalSeconds}");
 
-        //playerNetworkManagers[localPlayerIndex].InitKinectServer(localPlayerIndex);
+        playerNetworkManagers[localPlayerIndex].InitKinectServer(localPlayerIndex);
     }
 }
