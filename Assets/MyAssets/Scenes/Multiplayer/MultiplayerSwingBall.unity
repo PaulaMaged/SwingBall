@@ -991,7 +991,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 59e44eafdffcd2846b1738223cc72d53, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  CaptureFrameCount: 300
 --- !u!4 &1302623681
 Transform:
   m_ObjectHideFlags: 0
@@ -1199,7 +1198,7 @@ MonoBehaviour:
   m_HeartbeatTimeoutMS: 500
   m_ConnectTimeoutMS: 1000
   m_MaxConnectAttempts: 60
-  m_DisconnectTimeoutMS: 30000
+  m_DisconnectTimeoutMS: 10000
   ConnectionData:
     Address: 0.0.0.0
     Port: 7776

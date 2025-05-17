@@ -7,6 +7,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
+using Unity.Networking.Transport;
+using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
 public class SetupPeerType : MonoBehaviour
@@ -30,12 +32,39 @@ public class SetupPeerType : MonoBehaviour
     {
         startTime = Time.time;
         Task.Run(() => BroadcastServerDiscovery());
+
+        if (NetworkManager.Singleton != null)
+            LogDisconnectionMessages(NetworkManager.Singleton);
+        else
+            NetworkManager.OnInstantiated += (NetworkManager netManager) => LogDisconnectionMessages(netManager);
+
+        }
+    private void LogDisconnectionMessages(NetworkManager netManager)
+    {
+        netManager.OnClientDisconnectCallback += (ulong clientId) =>
+        {
+            var transport = (UnityTransport)netManager.NetworkConfig.NetworkTransport;
+
+            if (!netManager.IsServer)
+            {
+                NetworkEndpoint ep = transport.GetLocalEndpoint();
+                if(ep.IsValid) 
+                    Debug.LogError($"Disconnected from server. Local IP details:\nIP: {ep.Address} \nPort: {ep.Port}");
+            }
+            else
+            {
+                NetworkEndpoint ep = transport.GetEndpoint(clientId);
+                if(ep.IsValid)
+                    Debug.LogError($"Client disconnected from the server \nIP: {ep.Address} \nPort: {ep.Port}");
+            }
+
+        };
     }
 
     private void Update()
     {
         if (finishedStartup) return;
-        
+
         try
         {
             if (bBroadcastResponseReceived)
@@ -76,10 +105,12 @@ public class SetupPeerType : MonoBehaviour
                     udpClient?.Close();
                 }
             }
-        } catch (SocketException e)
+        }
+        catch (SocketException e)
         {
             Debug.LogError($"Socket Exception: Error Code ({e.SocketErrorCode}) \n {e.Message}");
-        } catch (Exception e)
+        }
+        catch (Exception e)
         {
             Debug.LogException(e);
         }
@@ -169,7 +200,8 @@ public class SetupPeerType : MonoBehaviour
                     uc.BeginReceive(new System.AsyncCallback(BroadcastServerResponseReceived), state);
                 }
             }
-        } catch (System.Net.Sockets.SocketException sockEx)
+        }
+        catch (System.Net.Sockets.SocketException sockEx)
         {
             Debug.LogError($"error receiving response: {sockEx.Message} (SocketErrorCode: {sockEx.SocketErrorCode} {sockEx.StackTrace})");
         }
