@@ -55,7 +55,7 @@ public class PlayerNetworkManager : NetworkBehaviour
         NetClientInterface netClient = go.AddComponent<NetClientInterface>();
 
         int serverBasePort = 10000 + 1000 * index;
-        netClient.deviceIndex = index;
+        netClient.sensorPriority = index;
         netClient.serverBasePort = serverBasePort;
         netClient.autoServerDiscovery = true;
 
@@ -77,7 +77,7 @@ public class PlayerNetworkManager : NetworkBehaviour
             k4aInt.loopPlayback = true;
         }
 
-        k4aInt.deviceIndex = index;
+        k4aInt.sensorPriority = index;
 
         SetupKinectTracking(index);
     }
