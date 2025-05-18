@@ -607,6 +607,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
   distanceToPole: 5
+  pointCloudGroundOffset: {x: 0, y: 1, z: 0}
+  pointCloudsideOffset: {x: 1.5, y: 1, z: 0}
+  changeLocalPlayerRepresentation: 0
 --- !u!114 &738995347
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -622,6 +625,7 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   ExerciseProgram: {fileID: 233292201359990320, guid: 4e5611aa14ae4eb439c043da86f3c567, type: 3}
   SpawnPoint: {fileID: 1832576199}
+  currentRepresentation: 3
   switchRepresentationButton: {fileID: -323812964555706417, guid: c348712bda248c246b8c49b3db54643f, type: 3}
 --- !u!114 &738995348
 MonoBehaviour:
@@ -745,7 +749,7 @@ MonoBehaviour:
   getInfraredFrames: 0
   getPoseFrames: 0
   getBodyFrames: 3
-  pollFramesInThread: 0
+  pollFramesInThread: 1
   syncDepthAndColor: 1
   syncBodyAndDepth: 1
   minUserDistance: 0
