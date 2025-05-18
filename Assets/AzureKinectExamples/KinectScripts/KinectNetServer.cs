@@ -194,6 +194,12 @@ namespace com.rfilkov.kinect
                 if (compressRawFrames)
                     controlFrameCompressor = LZ4CompressorFactory.CreateNew();
 
+                if ((dwFlags & KinectInterop.FrameSource.TypeColor) != 0 && sensorData.colorImageTexture != null)
+                {
+                    colorFrameServer = new TcpNetServer(baseListenPort + (int)NetMessageType.Color, "ColorServer", sbConsole);
+                    minPort = Mathf.Min(minPort, colorFrameServer.serverPort); maxPort = Mathf.Max(maxPort, colorFrameServer.serverPort);
+                }
+
                 if((dwFlags & KinectInterop.FrameSource.TypeDepth) != 0)
                 {
                     depthFrameServer = new TcpNetServer(baseListenPort + (int)NetMessageType.Depth, "DepthServer", sbConsole);
@@ -236,6 +242,30 @@ namespace com.rfilkov.kinect
                     depth2colorFrameServer = new TcpNetServer(baseListenPort + (int)NetMessageType.Depth2Color, "TColorServer", sbConsole);
                     minPort = Mathf.Min(minPort, depth2colorFrameServer.serverPort); maxPort = Mathf.Max(maxPort, depth2colorFrameServer.serverPort);
                 }
+
+                //if ((dwFlags & KinectInterop.FrameSource.TypeColor) != 0 && (dwFlags & KinectInterop.FrameSource.TypeDepth) != 0)
+                //{
+                //    color2depthFrameServer = new TcpNetServer(baseListenPort + (int)NetMessageType.Color2Depth, "TDepthServer", sbConsole);
+                //    minPort = Mathf.Min(minPort, color2depthFrameServer.serverPort); maxPort = Mathf.Max(maxPort, color2depthFrameServer.serverPort);
+
+                //    if (compressRawFrames)
+                //        color2depthFrameCompressor = LZ4CompressorFactory.CreateNew();
+                //}
+
+                //if ((dwFlags & KinectInterop.FrameSource.TypeColor) != 0 && (dwFlags & KinectInterop.FrameSource.TypeDepth) != 0)
+                //{
+                //    color2infraredFrameServer = new TcpNetServer(baseListenPort + (int)NetMessageType.Color2Infrared, "TInfraredServer", sbConsole);
+                //    minPort = Mathf.Min(minPort, color2infraredFrameServer.serverPort); maxPort = Mathf.Max(maxPort, color2infraredFrameServer.serverPort);
+                //}
+
+                //if ((dwFlags & KinectInterop.FrameSource.TypeColor) != 0 && (dwFlags & KinectInterop.FrameSource.TypeDepth) != 0 && (dwFlags & KinectInterop.FrameSource.TypeBodyIndex) != 0)
+                //{
+                //    color2bodyIndexFrameServer = new TcpNetServer(baseListenPort + (int)NetMessageType.Color2BodyIndex, "TBodyIndex", sbConsole);
+                //    minPort = Mathf.Min(minPort, color2bodyIndexFrameServer.serverPort); maxPort = Mathf.Max(maxPort, color2bodyIndexFrameServer.serverPort);
+
+                //    if (compressRawFrames)
+                //        color2bodyIndexFrameCompressor = LZ4CompressorFactory.CreateNew();
+                //}
 
                 // get server ip address
                 string serverName = GetLocalNameOrIP();

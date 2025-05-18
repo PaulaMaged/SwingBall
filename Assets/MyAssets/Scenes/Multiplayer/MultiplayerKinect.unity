@@ -870,7 +870,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5701454606920312454, guid: 3745e72f55fb371498969e3998834c73, type: 3}
       propertyPath: OverlapOnAvatar
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5701454606920312454, guid: 3745e72f55fb371498969e3998834c73, type: 3}
       propertyPath: showAsPointCloud
