@@ -26,7 +26,7 @@ public class PlayerManager : NetworkBehaviour
     private NetworkVariable<int> currentPlayerTurnIndex = new(0);
 
     [SerializeField] private Vector3 pointCloudGroundOffset = new(0, 1, 0);
-    [SerializeField] private Vector3 pointCloudsideOffset = new(1.5f, 1, 0);
+    [SerializeField] private Vector3 pointCloudsideOffset = new(1.5f, 0, 0);
     [SerializeField] private bool changeLocalPlayerRepresentation = false;
 
     private void Awake()
