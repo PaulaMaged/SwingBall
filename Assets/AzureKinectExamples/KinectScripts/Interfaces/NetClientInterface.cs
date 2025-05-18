@@ -1035,7 +1035,7 @@ namespace com.rfilkov.kinect
             catch (System.Exception ex)
             {
                 Debug.LogError("Error while initing the net clients.");
-                Debug.LogException(ex);
+                Debug.LogError(ex.StackTrace);
             }
         }
 

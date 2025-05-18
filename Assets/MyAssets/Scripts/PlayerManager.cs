@@ -173,16 +173,16 @@ public class PlayerManager : NetworkBehaviour
 
     private void EnablePointCloud(GameObject player, bool enable, Vector3 pointCloudOffset)
     {
-        MeshRenderer[] meshRenderers = player.GetComponentsInChildren<MeshRenderer>(true);
-        foreach (MeshRenderer meshRenderer in meshRenderers)
+        UserMeshRendererGpu[] userMeshRenderers = player.GetComponentsInChildren<UserMeshRendererGpu>(true);
+        foreach (UserMeshRendererGpu userMeshRenderer in userMeshRenderers)
         {
-            meshRenderer.enabled = enable;
-
             //stop processing when false, the userMeshRendererGpu to limit processing
-            if (meshRenderer.TryGetComponent(out UserMeshRendererGpu userMeshRendererGpu))
+            userMeshRenderer.enabled = enable;
+            userMeshRenderer.PointCloudOffset = pointCloudOffset;
+
+            if (userMeshRenderer.TryGetComponent(out MeshRenderer meshRenderer))
             {
-                userMeshRendererGpu.enabled = enable;
-                userMeshRendererGpu.PointCloudOffset = pointCloudOffset;
+                meshRenderer.enabled = enable;
             }
         }
     }

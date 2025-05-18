@@ -625,7 +625,7 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   ExerciseProgram: {fileID: 233292201359990320, guid: 4e5611aa14ae4eb439c043da86f3c567, type: 3}
   SpawnPoint: {fileID: 1832576199}
-  currentRepresentation: 3
+  currentRepresentation: 1
   switchRepresentationButton: {fileID: -323812964555706417, guid: c348712bda248c246b8c49b3db54643f, type: 3}
 --- !u!114 &738995348
 MonoBehaviour:
