@@ -22,7 +22,7 @@ public class SetupPeerType : MonoBehaviour
     private float startTime;
     [SerializeField] private float connectionTimeout = 10.0f;
 
-    private readonly object responseLock = new object();
+    private readonly object responseLock = new();
     private bool bBroadcastResponseReceived;
     private UdpClient udpClient = null;
     private UdpBroadcastServer autoDiscoveryServer;

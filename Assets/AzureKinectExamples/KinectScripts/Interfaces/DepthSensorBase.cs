@@ -3394,5 +3394,6 @@ namespace com.rfilkov.kinect
             return sensorData.colorCamBodyIndexImage;
         }
 
+        public virtual void UpdateUI() { }
     }
 }

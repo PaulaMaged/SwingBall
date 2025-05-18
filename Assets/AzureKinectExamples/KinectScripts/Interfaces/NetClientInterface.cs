@@ -1,15 +1,13 @@
 ﻿using LZ4Sharp;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
-using System.Threading.Tasks;
+using UnityEditor.MemoryProfiler;
 using UnityEngine;
-using static Unity.IO.LowLevel.Unsafe.AsyncReadManagerMetrics;
-
+using UnityEngine.UI;
 
 namespace com.rfilkov.kinect
 {
@@ -19,7 +17,7 @@ namespace com.rfilkov.kinect
     public class NetClientInterface : DepthSensorBase
     {
         [Tooltip("Whether to broadcast, in order to find automatically the first available server (local network only).")]
-        public bool autoServerDiscovery = false;
+        public bool autoServerDiscovery = true;
 
         [Tooltip("Host name or IP address of the network server.")]
         public string serverHost = "localhost";
@@ -30,9 +28,20 @@ namespace com.rfilkov.kinect
         [Tooltip("Whether to get the body index frames from the server along with the body frames.")]
         public bool getBodyIndexFrames = true;
 
-        [Tooltip("UI-Text to display client status messages.")]
-        public UnityEngine.UI.Text clientStatusText;
+        [Tooltip("UI-Text to display the connection status messages.")]
+        public Text connStatusText;
 
+        [Tooltip("UI-Text to display the server status messages.")]
+        public Text ClientStatusText;
+
+        [Tooltip("UI-Text to display the server console messages.")]
+        public Text consoleText;
+
+        object responseLock = new();
+
+        // console buffer
+        private System.Text.StringBuilder sbConsole = new System.Text.StringBuilder();
+        private System.Text.StringBuilder sbClientStatus = new System.Text.StringBuilder();
 
         // sensor frame servers
         private TcpNetClient controlFrameClient = null;
@@ -63,10 +72,6 @@ namespace com.rfilkov.kinect
 
         // thread sleep time in milliseconds, to wait for server response
         private const int THREAD_WAIT_TIME_MS = 100;
-
-        //const int MAX_MESSAGE_SIZE = 1024 * 1024 * 10; // 10 MB (To be used as an upper limit for message processing size)
-
-        const ulong TICKSINASECOND = 10_000_000;
 
         // keep-alive
         private ulong lastKeepAliveFrameTime = 0;
@@ -127,9 +132,6 @@ namespace com.rfilkov.kinect
         private ILZ4Decompressor bodyIndexFrameDecompressor = null;
         private ILZ4Decompressor color2depthFrameDecompressor = null;
         private ILZ4Decompressor color2bodyIndexFrameDecompressor = null;
-
-        // console buffer
-        private System.Text.StringBuilder sbConsole = new System.Text.StringBuilder();
 
         // whether the server broadcast response is received
         private bool bBroadcastResponseReceived = false;
@@ -256,13 +258,14 @@ namespace com.rfilkov.kinect
                     Name = "broadServerCastDiscoveryThread"
                 };
                 broadServerCastDiscoveryThread.Start();
-            } else
+
+            }
+            else
             {
                 InitNetClients(dwFlags);
             }
 
-            if (consoleLogMessages)
-                Debug.Log("D" + deviceIndex + " NetSensor opened: " + serverHost + ":" + serverBasePort + ", discovery: " + autoServerDiscovery);
+            LogToConsole("D" + deviceIndex + " NetSensor opened: " + serverHost + ":" + serverBasePort + ", discovery: " + autoServerDiscovery);
 
             return sensorData;
         }
@@ -276,7 +279,7 @@ namespace com.rfilkov.kinect
             base.CloseSensor(sensorData);
 
             // finish frame sync
-            if(isFrameSyncNeeded)
+            if (isFrameSyncNeeded)
             {
                 isFrameSyncNeeded = false;
 
@@ -291,24 +294,98 @@ namespace com.rfilkov.kinect
                 Debug.Log("D" + deviceIndex + " NetSensor closed: " + serverHost + ":" + serverBasePort + ", discovery: " + autoServerDiscovery);
         }
 
+        private int GetConnectionsCount()
+        {
+            int numConn = 0;
+
+            if (controlFrameClient != null)
+                numConn += controlFrameClient.GetConnCount();
+            if (colorFrameClient != null)
+                numConn += colorFrameClient.GetConnCount();
+            if (depthFrameClient != null)
+                numConn += depthFrameClient.GetConnCount();
+            if (infraredFrameClient != null)
+                numConn += infraredFrameClient.GetConnCount();
+            if (bodyDataFrameClient != null)
+                numConn += bodyDataFrameClient.GetConnCount();
+            if (bodyIndexFrameClient != null)
+                numConn += bodyIndexFrameClient.GetConnCount();
+            if (poseFrameClient != null)
+                numConn += poseFrameClient.GetConnCount();
+            if (depth2colorFrameClient != null)
+                numConn += depth2colorFrameClient.GetConnCount();
+            if (color2depthFrameClient != null)
+                numConn += color2depthFrameClient.GetConnCount();
+            if (color2infraredFrameClient != null)
+                numConn += color2infraredFrameClient.GetConnCount();
+            if (color2bodyIndexFrameClient != null)
+                numConn += color2bodyIndexFrameClient.GetConnCount();
+
+            return numConn;
+        }
 
         public override bool IsSensorDataValid()
         {
             return controlFrameClient?.IsActive() ?? false;
         }
 
+        public override void UpdateUI()
+        {
+            if (connStatusText)
+            {
+                // update conn status
+                int connCount = GetConnectionsCount();
+                connStatusText.text = $"NetClient running: {connCount} connections";
+            }
+
+            if (sbConsole.Length > 0)
+            {
+                // update console
+                lock (sbConsole)
+                {
+                    if (consoleText)
+                        consoleText.text += sbConsole.ToString();
+
+                    sbConsole.Clear();
+                }
+
+                // scroll to end
+                ScrollRect scrollRect = consoleText ? consoleText.gameObject.GetComponentInParent<ScrollRect>() : null;
+                if (scrollRect)
+                {
+                    Canvas.ForceUpdateCanvases();
+                    scrollRect.verticalScrollbar.value = 0f;
+                    Canvas.ForceUpdateCanvases();
+                }
+            }
+
+            if(sbClientStatus.Length > 0)
+            {
+                lock(sbClientStatus)
+                {
+                    ClientStatusText.text = sbClientStatus.ToString();
+                    sbClientStatus.Clear();
+                }
+            }
+        }
+
         public override bool UpdateSensorData(KinectInterop.SensorData sensorData, KinectManager kinectManager, bool isPlayMode)
         {
-            if(!bBroadcastResponseReceived) { return false; }
+            UpdateUI();
+
+            lock (responseLock)
+            {
+                if (autoServerDiscovery && !bBroadcastResponseReceived) { return false; }
+            }
 
             // check for server timeout
             ulong ulTimeNow = (ulong)System.DateTime.Now.Ticks;
             bool isControlClientActive = controlFrameClient != null ? controlFrameClient.IsActive() : false;
 
             latestDataReceivedAt = GetLatestTimestamp();
-            if(latestDataReceivedAt != 0 && (ulTimeNow - latestDataReceivedAt) >= disconnectAfter && isControlClientActive)
+            if (latestDataReceivedAt != 0 && (ulTimeNow - latestDataReceivedAt) >= disconnectAfter && isControlClientActive)
             {
-                Debug.LogWarning("Server timeout detected. Disconnecting...");
+                LogToConsole("Server timeout detected. Disconnecting...");
 
                 disconnectedAt = ulTimeNow;
                 CloseNetClients();
@@ -318,17 +395,17 @@ namespace com.rfilkov.kinect
             // check for server disconnection
             if (disconnectedAt == 0 && (ulTimeNow - startedConnectingAt) >= disconnectAfter && controlFrameClient != null && !isControlClientActive)
             {
-                Debug.LogError("Server disconnection detected.");
+                LogToConsole("Server disconnection detected.");
                 CloseNetClients();
                 disconnectedAt = ulTimeNow;
             }
 
             // try to reconnect
-            if(disconnectedAt != 0 && (ulTimeNow - disconnectedAt) >= reconnectAfter)
+            if (disconnectedAt != 0 && (ulTimeNow - disconnectedAt) >= reconnectAfter)
             {
-                if (consoleLogMessages)
-                    Debug.Log("Start reconnecting...");
+                LogToConsole("Start reconnecting...");
 
+                CloseNetClients();
                 InitNetClients(frameSourceFlags);
                 return true;
             }
@@ -361,16 +438,16 @@ namespace com.rfilkov.kinect
             }
 
             // check for depth texture
-            if((sensorData.depthImageTexture == null && sensorData.depthImage != null && 
+            if ((sensorData.depthImageTexture == null && sensorData.depthImage != null &&
                     kinectManager.getDepthFrames == KinectManager.DepthTextureType.DepthTexture) ||
-                (sensorData.bodyImageTexture == null && sensorData.bodyIndexImage != null && 
+                (sensorData.bodyImageTexture == null && sensorData.bodyIndexImage != null &&
                     (kinectManager.getBodyFrames == KinectManager.BodyTextureType.UserTexture || kinectManager.getBodyFrames == KinectManager.BodyTextureType.BodyTexture)))
             {
                 KinectInterop.InitSensorData(sensorData, kinectManager);
             }
 
             // infrared frame
-            if(infraredImageData != null && sensorData.lastInfraredImageTime != lastInfraredImageTime && !isPlayMode)
+            if (infraredImageData != null && sensorData.lastInfraredImageTime != lastInfraredImageTime && !isPlayMode)
             {
                 if (sensorData.infraredImageTexture == null && infraredImageWidth > 0 && infraredImageHeight > 0)
                 {
@@ -399,7 +476,7 @@ namespace com.rfilkov.kinect
             // pose frame
             if (netPoseData != null && sensorData.lastSensorPoseFrameTime != netPoseData.sensorPoseTime && !isPlayMode)
             {
-                lock(netPoseLock)
+                lock (netPoseLock)
                 {
                     SetSensorNetPoseData(netPoseData, sensorData, kinectManager);
                     ApplySensorPoseUpdate(kinectManager);
@@ -449,7 +526,7 @@ namespace com.rfilkov.kinect
             if (intr == null || depth <= 0f)
                 return point;
 
-            if(sensorPlatform == KinectInterop.DepthSensorPlatform.Kinect4Azure || sensorPlatform == KinectInterop.DepthSensorPlatform.DummyK4A)
+            if (sensorPlatform == KinectInterop.DepthSensorPlatform.Kinect4Azure || sensorPlatform == KinectInterop.DepthSensorPlatform.DummyK4A)
             {
                 depth = depth * 1000f;
             }
@@ -462,12 +539,12 @@ namespace com.rfilkov.kinect
                     GetDepthCameraSpaceTable(sensorData);
                 }
 
-                if(depth2SpaceTable != null && di >= 0 && di < depth2SpaceTable.Length)
+                if (depth2SpaceTable != null && di >= 0 && di < depth2SpaceTable.Length)
                 {
                     point = depth2SpaceTable[di] * depth;
                 }
             }
-            else if(intr.cameraType == 1)  // color
+            else if (intr.cameraType == 1)  // color
             {
                 if (color2SpaceTable == null)
                 {
@@ -530,7 +607,7 @@ namespace com.rfilkov.kinect
             if (sensorData == null)
                 return null;
 
-            if(bGotDST && depth2SpaceTable != null)
+            if (bGotDST && depth2SpaceTable != null)
                 return depth2SpaceTable;
 
             if (depth2SpaceTable == null || depth2SpaceWidth != sensorData.depthImageWidth || depth2SpaceHeight != sensorData.depthImageHeight)
@@ -607,7 +684,7 @@ namespace com.rfilkov.kinect
         {
             base.DisposePointCloudVertexShader(sensorData);
 
-            if(color2depthFrameClient != null)
+            if (color2depthFrameClient != null)
             {
                 color2depthFrameClient.ReceivedMessage -= Color2DepthFrameReceived;
                 color2depthFrameClient.Close();
@@ -647,7 +724,7 @@ namespace com.rfilkov.kinect
         // disposes the point-cloud color shader and its respective buffers
         protected override void DisposePointCloudColorShader(KinectInterop.SensorData sensorData)
         {
-            if(depth2colorFrameClient != null)
+            if (depth2colorFrameClient != null)
             {
                 depth2colorFrameClient.ReceivedMessage -= Depth2ColorFrameReceived;
                 depth2colorFrameClient.Close();
@@ -694,7 +771,7 @@ namespace com.rfilkov.kinect
                                 Graphics.CopyTexture(pointCloudAlignedColorTex, sensorData.depthCamColorImageTexture);
                             }
 
-                            if(pointCloudColorTexture != null && pointCloudColorTexture.width != 0 && pointCloudColorTexture.height != 0) //avoids issues when the pointcloudcolorTexture isn't 0x0
+                            if (pointCloudColorTexture != null)
                             {
                                 Graphics.Blit(pointCloudAlignedColorTex, pointCloudColorTexture);
                             }
@@ -870,90 +947,119 @@ namespace com.rfilkov.kinect
         // broadcasts to discover the 1st available net-server
         private void BroadcastServerDiscovery()
         {
-            Debug.Log("Inside Thread!");
+            if (bBroadcastResponseReceived)
+                return;
+
             UdpClient udpClient = null;
-            //Debug.Log("Auto discovery - looking for net server...");
-
-            udpClient = new UdpClient();
-            IPEndPoint ep = new IPEndPoint(IPAddress.Any, 0);
-
-            string sRequestData = "KNS";
-            byte[] btRequestData = System.Text.Encoding.UTF8.GetBytes(sRequestData);
-
-            udpClient.EnableBroadcast = true;
-
-            while (!bBroadcastResponseReceived)
+            try
             {
-                try
+                LogToConsole("Searching for hosting servers");
+                udpClient = new UdpClient();
+                IPEndPoint ep = new(IPAddress.Any, 0);
+                IPEndPoint targetEndPoint = new(IPAddress.Broadcast, serverBasePort);
+
+                string sRequestData = "KNS";
+                byte[] btRequestData = System.Text.Encoding.UTF8.GetBytes(sRequestData);
+
+                udpClient.EnableBroadcast = true;
+
+                UdpState state = new()
                 {
-                    udpClient.Send(btRequestData, btRequestData.Length, new IPEndPoint(IPAddress.Broadcast, serverBasePort));
+                    ep = ep,
+                    uc = udpClient
+                };
 
-                    UdpState state = new UdpState();
-                    state.ep = ep;
-                    state.uc = udpClient;
+                udpClient.BeginReceive(new System.AsyncCallback(BroadcastServerResponseReceived), state);
 
-                    udpClient.BeginReceive(new System.AsyncCallback(BroadcastServerResponseReceived), state);
+                udpClient.Send(btRequestData, btRequestData.Length, targetEndPoint);
 
-                    // wait for response
-                    // wait for net-cst
-                    long timeStart = System.DateTime.Now.Ticks;
-                    long timeNow = timeStart;
+                // wait for response
+                // wait for net-cst
+                DateTime lastSendTime = DateTime.Now;
 
-                    while (!bBroadcastResponseReceived)  // timeout - 5 seconds
+                while (!bBroadcastResponseReceived)
+                {
+                    Thread.Sleep(THREAD_WAIT_TIME_MS);
+
+                    if ((DateTime.Now - lastSendTime).TotalSeconds > 1.0f)
                     {
-                        Thread.Sleep(THREAD_WAIT_TIME_MS);
-                        timeNow = System.DateTime.Now.Ticks;
-
-                        if ((ulong)(timeNow - timeStart) > TICKSINASECOND * 5)
-                        {
-                            timeStart = System.DateTime.Now.Ticks;
-                            udpClient.Send(btRequestData, btRequestData.Length, new IPEndPoint(IPAddress.Broadcast, serverBasePort));
-                        }
+                        lastSendTime = DateTime.Now;
+                        udpClient.Send(btRequestData, btRequestData.Length, targetEndPoint);
                     }
-
-                    if (consoleLogMessages)
-                        Debug.Log("Auto discovery - server host: " + serverHost + ", port: " + serverBasePort);
-
-                    InitNetClients(frameSourceFlags);
                 }
-                catch (System.Exception ex)
-                {
-                    Debug.LogError($"Error occured while finding server ip: {ex}");
-                }
+
+                string message;
+
+                message = "Auto discovery - server host: " + serverHost + ", port: " + serverBasePort;
+                if (consoleLogMessages)
+                    Debug.Log(message);
+
+                LogToConsole(message);
             }
-
-            udpClient?.Close();
+            catch (System.Exception ex)
+            {
+                LogErrorToConsole(ex, "Failed to find a server host");
+            }
+            finally
+            {
+                udpClient?.Close();
+            }
         }
 
         // invoked when a response from the broadcast server gets received
         private void BroadcastServerResponseReceived(System.IAsyncResult ar)
         {
-            UdpState state = (UdpState)(ar.AsyncState);
-            UdpClient uc = state.uc;
-            IPEndPoint ep = state.ep;
-
-            byte[] btReceiveData = uc.EndReceive(ar, ref ep);
-            string sReceiveData = System.Text.Encoding.UTF8.GetString(btReceiveData);
-            Debug.Log("Received response from the broadcast server.");
-
-            if (!string.IsNullOrEmpty(sReceiveData))
+            try
             {
-                string[] asParts = sReceiveData.Split("|".ToCharArray());
-
-                if(asParts.Length >= 3 && asParts[0] == "KNS")
+                lock (responseLock)
                 {
-                    serverHost = asParts[1];
-                    int.TryParse(asParts[2], out serverBasePort);
-                    bBroadcastResponseReceived = true;
+                    if (bBroadcastResponseReceived)
+                    {
+                        LogToConsole("Disregard Received response");
+                        return;
+                    }
+
+                    UdpState state = (UdpState)(ar.AsyncState);
+                    UdpClient uc = state.uc;
+                    IPEndPoint ep = state.ep;
+
+                    byte[] btReceiveData = uc.EndReceive(ar, ref ep);
+                    string sReceiveData = System.Text.Encoding.UTF8.GetString(btReceiveData);
+                    //Debug.Log("Received response from the broadcast server.");
+
+                    if (!string.IsNullOrEmpty(sReceiveData))
+                    {
+                        string[] asParts = sReceiveData.Split("|".ToCharArray());
+
+                        if (asParts.Length >= 3 && asParts[0] == "KNS")
+                        {
+                            serverHost = asParts[1];
+                            int.TryParse(asParts[2], out serverBasePort);
+                            bBroadcastResponseReceived = true;
+                            InitNetClients(frameSourceFlags);
+                        }
+                    }
+
+                    if (!bBroadcastResponseReceived)
+                    {
+                        uc.BeginReceive(new System.AsyncCallback(BroadcastServerResponseReceived), state);
+                    }
                 }
             }
-
-            if(!bBroadcastResponseReceived)
+            catch (System.Net.Sockets.SocketException sockEx)
             {
-                uc.BeginReceive(new System.AsyncCallback(BroadcastServerResponseReceived), state);
+                LogErrorToConsole($"error receiving response: {sockEx.Message} (SocketErrorCode: {sockEx.SocketErrorCode} {sockEx.StackTrace})");
             }
-
+            catch (System.IO.IOException ioEx)
+            {
+                LogErrorToConsole($"IO errorReceving Response: {ioEx.Message} {ioEx.StackTrace}");
+            }
+            catch (System.Exception ex)
+            {
+                LogErrorToConsole($"unexpected error sending to client: {ex.GetType().Name}: {ex.Message} {ex.StackTrace}");
+            }
         }
+
 
         // initializes the network clients
         private void InitNetClients(KinectInterop.FrameSource dwFlags)
@@ -981,7 +1087,7 @@ namespace com.rfilkov.kinect
                 lastColor2depthFrameTime = 0;
                 lastColor2bodyIndexFrameTime = 0;
 
-                //init clients
+                // init clients
                 controlFrameDecompressor = LZ4DecompressorFactory.CreateNew();
                 controlFrameClient = new TcpNetClient(sbConsole, controlFrameDecompressor);
 
@@ -1035,14 +1141,17 @@ namespace com.rfilkov.kinect
                     poseFrameClient.ReceivedMessage += new ReceivedMessageEventHandler(PoseFrameReceived);
                 }
 
-                Debug.Log("Started Connecting To All Servers");
+
+                sbClientStatus.Append($"Net Clients listening on: {serverHost}, {serverBasePort}");
+
                 startedConnectingAt = (ulong)System.DateTime.Now.Ticks;
 
             }
             catch (System.Exception ex)
             {
-                Debug.LogError("Error while initing the net clients.");
-                Debug.LogError(ex.StackTrace);
+                LogErrorToConsole(ex, "Error while initiating the net clients.");
+
+                sbClientStatus.Append($"Failed to init net clients: {ex.Message}");
             }
         }
 
@@ -1132,8 +1241,8 @@ namespace com.rfilkov.kinect
             }
             catch (System.Exception ex)
             {
-                Debug.LogError("Error while closing the net servers.");
-                Debug.LogException(ex);
+                string message = "Error while closing the net servers.";
+                LogErrorToConsole(ex, message);
             }
         }
 
@@ -1146,9 +1255,9 @@ namespace com.rfilkov.kinect
             try
             {
                 // ignore keep-alives from the server
-                if(args.message.frameData.Length > 2)
+                if (args.message.frameData.Length > 2)
                 {
-                    switch(args.message.encType)
+                    switch (args.message.encType)
                     {
                         case FrameEncodeType.SensorDataJson:  // get-sensor-data
                             CtrlGotNetSensorData(args.message.frameData);
@@ -1168,7 +1277,7 @@ namespace com.rfilkov.kinect
             }
             catch (System.Exception ex)
             {
-                Debug.LogException(ex);
+                LogErrorToConsole(ex);
             }
         }
 
@@ -1253,7 +1362,7 @@ namespace com.rfilkov.kinect
             }
             catch (System.Exception ex)
             {
-                Debug.LogException(ex);
+                LogErrorToConsole(ex);
             }
         }
 
@@ -1273,7 +1382,7 @@ namespace com.rfilkov.kinect
                     sensorData.depthImage = new ushort[sensorData.depthImageWidth * sensorData.depthImageHeight];
                 }
 
-                if(isFrameSyncNeeded && !args.synched)
+                if (isFrameSyncNeeded && !args.synched)
                 {
                     SyncReceivedFrame(args.message);
                     return;
@@ -1290,7 +1399,7 @@ namespace com.rfilkov.kinect
             }
             catch (System.Exception ex)
             {
-                Debug.LogException(ex);
+                LogErrorToConsole(ex);
             }
         }
 
@@ -1324,7 +1433,7 @@ namespace com.rfilkov.kinect
             }
             catch (System.Exception ex)
             {
-                Debug.LogException(ex);
+                LogErrorToConsole(ex);
             }
         }
 
@@ -1352,7 +1461,7 @@ namespace com.rfilkov.kinect
                     Matrix4x4 sensorToWorld = GetSensorToWorldMatrix();
 
                     string sBodyFrameData = System.Text.Encoding.UTF8.GetString(args.message.frameData);
-                    sensorData.trackedBodiesCount = KinectInterop.SetBodyFrameFromCsv(sBodyFrameData, "\t", sensorData, ref sensorData.alTrackedBodies, 
+                    sensorData.trackedBodiesCount = KinectInterop.SetBodyFrameFromCsv(sBodyFrameData, "\t", sensorData, ref sensorData.alTrackedBodies,
                         ref sensorToWorld, bIgnoreZcoords, out rawBodyTimestamp);
                     sensorData.lastBodyFrameTime = currentBodyTimestamp = rawBodyTimestamp = args.message.timestamp;
                     //Debug.Log("ReceivedBodyTimestamp: " + rawBodyTimestamp);
@@ -1362,7 +1471,7 @@ namespace com.rfilkov.kinect
             }
             catch (System.Exception ex)
             {
-                Debug.LogException(ex);
+                LogErrorToConsole(ex);
             }
         }
 
@@ -1396,7 +1505,7 @@ namespace com.rfilkov.kinect
             }
             catch (System.Exception ex)
             {
-                Debug.LogException(ex);
+                LogErrorToConsole(ex);
             }
         }
 
@@ -1408,7 +1517,7 @@ namespace com.rfilkov.kinect
 
             try
             {
-                lock(netPoseLock)
+                lock (netPoseLock)
                 {
                     string sNetPoseData = System.Text.Encoding.UTF8.GetString(args.message.frameData);
                     netPoseData = JsonUtility.FromJson<KinectInterop.NetPoseData>(sNetPoseData);
@@ -1418,7 +1527,7 @@ namespace com.rfilkov.kinect
             }
             catch (System.Exception ex)
             {
-                Debug.LogException(ex);
+                LogErrorToConsole(ex);
             }
         }
 
@@ -1453,7 +1562,7 @@ namespace com.rfilkov.kinect
             }
             catch (System.Exception ex)
             {
-                Debug.LogException(ex);
+                LogErrorToConsole(ex);
             }
         }
 
@@ -1487,7 +1596,7 @@ namespace com.rfilkov.kinect
             }
             catch (System.Exception ex)
             {
-                Debug.LogException(ex);
+                LogErrorToConsole(ex);
             }
         }
 
@@ -1522,7 +1631,7 @@ namespace com.rfilkov.kinect
             }
             catch (System.Exception ex)
             {
-                Debug.LogException(ex);
+                LogErrorToConsole(ex);
             }
         }
 
@@ -1556,7 +1665,7 @@ namespace com.rfilkov.kinect
             }
             catch (System.Exception ex)
             {
-                Debug.LogException(ex);
+                LogErrorToConsole(ex);
             }
         }
 
@@ -1711,7 +1820,7 @@ namespace com.rfilkov.kinect
             }
 
             // clean up
-            if(alNetMessageTime != null && dictNetMessageData != null)
+            if (alNetMessageTime != null && dictNetMessageData != null)
             {
                 while (alNetMessageTime.Count > 0)
                 {
@@ -1753,7 +1862,7 @@ namespace com.rfilkov.kinect
         // sends control message to the server
         private void SendControlMessage(ControlMessageType messageType)
         {
-            if(controlFrameClient != null && controlFrameClient.IsActive())
+            if (controlFrameClient != null && controlFrameClient.IsActive())
             {
                 NetMessageData msg = GetControlMessage(messageType);
 
@@ -1792,6 +1901,40 @@ namespace com.rfilkov.kinect
             return maxFrameTime;
         }
 
+        // logs message to the console
+        private void LogToConsole(string sMessage)
+        {
+            Debug.Log(sMessage);
+
+            lock (sbConsole)
+            {
+                sbConsole.Append(sMessage).AppendLine();
+            }
+        }
+
+        // logs error message to the console
+        private void LogErrorToConsole(string sMessage)
+        {
+            Debug.LogError(sMessage);
+
+            lock (sbConsole)
+            {
+                sbConsole.Append(sMessage).AppendLine();
+            }
+        }
+
+
+        // logs error message to the console
+        private void LogErrorToConsole(System.Exception ex, string sMessage = "")
+        {
+            string cleanMsg = sMessage.Replace("\0", "").Trim();
+            Debug.LogError(sMessage + "\n" + ex.Message + "\n" + ex.StackTrace);
+
+            lock (sbConsole)
+            {
+                sbConsole.Append(sMessage + "\n" + ex.Message).AppendLine();
+            }
+        }
     }
 
 
@@ -2028,15 +2171,16 @@ namespace com.rfilkov.kinect
             }
             catch (System.Net.Sockets.SocketException ex)
             {
-                LogErrorToConsole($"Connection to {streamDesc} server failed: {ex.Message} (Code {ex.SocketErrorCode})");
+                LogErrorToConsole(ex, $"Connection to {streamDesc} server failed: {ex.Message} (Code {ex.SocketErrorCode})");
             }
-            catch (System.ObjectDisposedException)
+            catch (System.ObjectDisposedException ex)
             {
                 // Expected in some disconnection scenarios
+                LogErrorToConsole(ex, $"Connection to {streamDesc} server failed: {ex.Message}");
             }
             catch (System.Exception ex)
             {
-                LogErrorToConsole($"Connection to {streamDesc} server failed: {ex.GetType().Name}: {ex.Message}");
+                LogErrorToConsole(ex, $"Connection to {streamDesc} server failed: {ex.GetType().Name}: {ex.Message}");
             }
         }
 
@@ -2076,7 +2220,7 @@ namespace com.rfilkov.kinect
             }
             catch (System.Exception ex)
             {
-                Debug.LogException(ex);
+                LogErrorToConsole(ex);
             }
 
             conn.isActive = false;
@@ -2104,7 +2248,7 @@ namespace com.rfilkov.kinect
             }
             catch (System.Exception ex)
             {
-                if(conn.isActive)
+                if (conn.isActive)
                 {
                     //Debug.LogError("Exception occured while sending message to server.");
                     LogErrorToConsole("Error sending to " + streamDesc + " server: " + ex.Message);
@@ -2156,10 +2300,11 @@ namespace com.rfilkov.kinect
                     System.Array.Copy(buffer, copyLen, newBuffer, 0, bytesReceived - copyLen);
                     ProcessReceivedData(newBuffer, bytesReceived - copyLen, conn);
                 }
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 Debug.LogError("An Error occured while processing received data");
-                Debug.LogException(ex);
+                LogErrorToConsole(ex);
             }
         }
 
@@ -2168,27 +2313,35 @@ namespace com.rfilkov.kinect
         {
             Debug.Log(sMessage);
 
-            //lock (sbConsole)
-            //{
-            //    sbConsole.Clear();
-            //    sbConsole.Append(sMessage); //.AppendLine();
-            //}
+            lock (sbConsole)
+            {
+                sbConsole.Append(sMessage).AppendLine();
+            }
         }
 
         // logs error message to the console
         private void LogErrorToConsole(string sMessage)
         {
-            string cleanMsg = sMessage.Replace("\0", "").Trim();
-            Debug.LogError(cleanMsg);
+            Debug.LogError(sMessage);
+
+            lock (sbConsole)
+            {
+                sbConsole.Append(sMessage).AppendLine();
+            }
         }
 
 
         // logs error message to the console
-        private void LogErrorToConsole(System.Exception ex)
+        private void LogErrorToConsole(System.Exception ex, string sMessage = "")
         {
-            LogErrorToConsole(ex.Message + "\n" + ex.StackTrace);
+            string cleanMsg = sMessage.Replace("\0", "").Trim();
+            Debug.LogError(sMessage + "\n" + ex.Message + "\n" + ex.StackTrace);
+
+            lock (sbConsole)
+            {
+                sbConsole.Append(sMessage + "\n" + ex.Message).AppendLine();
+            }
         }
 
     }
-
 }

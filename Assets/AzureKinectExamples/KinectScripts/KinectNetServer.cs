@@ -110,31 +110,31 @@ namespace com.rfilkov.kinect
         {
             while (sensorData == null)
             {
-                kinectManager = KinectManager.Instance;
-                sensorData = kinectManager ? kinectManager.GetSensorData(sensorIndex) : null;
+            kinectManager = KinectManager.Instance;
+            sensorData = kinectManager ? kinectManager.GetSensorData(sensorIndex) : null;
                 Debug.Log($"Starting server for sensor w index: {sensorIndex} and found sensor is <b>{(sensorData == null ? "NULL" : "Available")}</b>");
                 if (sensorData != null && sensorData.sensorInterface != null)
-                {
-                    // cache space tables
-                    Debug.Log("Caching space tables of sensor " + sensorIndex + "...");
-                    sensorData.sensorInterface.GetDepthCameraSpaceTable(sensorData);
-                    sensorData.sensorInterface.GetColorCameraSpaceTable(sensorData);
+            {
+                // cache space tables
+                Debug.Log("Caching space tables of sensor " + sensorIndex + "...");
+                sensorData.sensorInterface.GetDepthCameraSpaceTable(sensorData);
+                sensorData.sensorInterface.GetColorCameraSpaceTable(sensorData);
 
-                    // init servers
-                    Debug.Log("Initing network servers of sensor " + sensorIndex + "...");
-                    KinectInterop.FrameSource dwFlags = ((DepthSensorBase)sensorData.sensorInterface).frameSourceFlags;
-                    InitNetServers(dwFlags);
-                }
-                else
-                {
-                    Debug.LogError("KinectManager not found or not initialized.");
+                // init servers
+                Debug.Log("Initing network servers of sensor " + sensorIndex + "...");
+                KinectInterop.FrameSource dwFlags = ((DepthSensorBase)sensorData.sensorInterface).frameSourceFlags;
+                InitNetServers(dwFlags);
+            }
+            else
+            {
+                Debug.LogError("KinectManager not found or not initialized.");
 
-                    if (serverStatusText)
-                    {
-                        serverStatusText.text = "KinectManager not found or not initialized.";
-                    }
+                if (serverStatusText)
+                {
+                    serverStatusText.text = "KinectManager not found or not initialized.";
                 }
             }
+        }
         }
 
         void OnDestroy()
@@ -155,13 +155,13 @@ namespace com.rfilkov.kinect
 
             if(sbConsole.Length > 0)
             {
-                //// update console
-                //lock(sbConsole)
-                //{
-                //    if(consoleText)
-                //        consoleText.text += sbConsole.ToString();
-                //    sbConsole.Clear();
-                //}
+                // update console
+                lock(sbConsole)
+                {
+                    if(consoleText)
+                        consoleText.text += sbConsole.ToString();
+                    sbConsole.Clear();
+                }
 
                 // scroll to end
                 ScrollRect scrollRect = consoleText ? consoleText.gameObject.GetComponentInParent<ScrollRect>() : null;
@@ -1229,8 +1229,8 @@ namespace com.rfilkov.kinect
             }
             finally
             {
-                conn.readyToSend = true;
-            }
+            conn.readyToSend = true;
+        }
         }
 
         private void ProcessReceivedData(byte[] buffer, int bytesReceived, NetConnData conn)
@@ -1277,10 +1277,10 @@ namespace com.rfilkov.kinect
         {
             Debug.Log(sMessage);
 
-            //lock(sbConsole)
-            //{
-            //    sbConsole.Append(sMessage).AppendLine();
-            //}
+            lock(sbConsole)
+            {
+                sbConsole.Append(sMessage).AppendLine();
+            }
         }
 
         // logs error message to the console
@@ -1288,6 +1288,10 @@ namespace com.rfilkov.kinect
         {
             string cleanMsg = sMessage.Replace("\0", "").Trim();
             Debug.LogError(cleanMsg);
+            lock (sbConsole)
+            {
+                sbConsole.Append(sMessage).AppendLine();
+            }
         }
 
 
@@ -1411,7 +1415,6 @@ namespace com.rfilkov.kinect
             catch (System.Exception ex)
             {
                 LogErrorToConsole(serverName + " error while connecting: " + ex.Message);
-                //Debug.LogException(ex);
             }
 
             allDoneServer.Set();
@@ -1437,10 +1440,10 @@ namespace com.rfilkov.kinect
         {
             Debug.Log(sMessage);
 
-            //lock (sbConsole)
-            //{
-            //    sbConsole.Append(sMessage).AppendLine();
-            //}
+            lock (sbConsole)
+            {
+                sbConsole.Append(sMessage).AppendLine();
+            }
         }
 
         // logs error message to the console
@@ -1448,17 +1451,23 @@ namespace com.rfilkov.kinect
         {
             Debug.LogError(sMessage);
 
-            //lock (sbConsole)
-            //{
-            //    sbConsole.Append(sMessage).AppendLine();
-            //}
+            lock (sbConsole)
+            {
+                sbConsole.Append(sMessage).AppendLine();
+            }
         }
 
 
         // logs error message to the console
-        private void LogErrorToConsole(System.Exception ex)
+        private void LogErrorToConsole(System.Exception ex, string sMessage = "")
         {
-            LogErrorToConsole(ex.Message + "\n" + ex.StackTrace);
+            string cleanMsg = sMessage.Replace("\0", "").Trim();
+            Debug.LogError(sMessage + "\n" + ex.Message + "\n" + ex.StackTrace);
+
+            lock (sbConsole)
+            {
+                sbConsole.Append(sMessage + "\n" + ex.Message).AppendLine();
+            }
         }
 
     }

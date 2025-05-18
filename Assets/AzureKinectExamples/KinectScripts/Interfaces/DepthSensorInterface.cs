@@ -164,5 +164,6 @@ namespace com.rfilkov.kinect
 
         // returns the latest color camera body-index frame along with the last frame time
         byte[] GetColorCameraBodyIndexFrame(KinectInterop.SensorData sensorData, ref byte[] copyToFrame, ref ulong frameTime);
+        void UpdateUI();
     }
 }

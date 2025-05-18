@@ -1,9 +1,13 @@
-﻿using System;
+﻿using Codice.CM.Common;
+using Codice.CM.Common.Serialization.Replication;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using UnityEditor.VersionControl;
 using UnityEngine;
+using static Codice.Client.Common.EventTracking.TrackFeatureUseEvent.Features.DesktopGUI.Filters;
 using static com.rfilkov.kinect.KinectInterop;
 
 namespace com.rfilkov.kinect
@@ -132,6 +136,10 @@ namespace com.rfilkov.kinect
         [Range(0.1f, 0.5f)]
         public float displayImageWidthPercent = 0.2f;
 
+        [Tooltip("UI-Text to display status messages.")]
+        public UnityEngine.UI.Text ConsoleText;
+
+        [HideInInspector]
         [Tooltip("UI-Text to display status messages.")]
         public UnityEngine.UI.Text statusInfoText;
 
@@ -2932,11 +2940,11 @@ namespace com.rfilkov.kinect
             }
 
             // bone orientation constraints
-            //if (boneOrientationConstraints)
+            if (boneOrientationConstraints)
             {
                 boneConstraints = new BoneOrientationConstraints();
                 boneConstraints.AddDefaultConstraints();
-                boneConstraints.SetDebugText(statusInfoText);
+                //boneConstraints.SetDebugText(ConsoleText);
             }
         }
 
@@ -3088,13 +3096,15 @@ namespace com.rfilkov.kinect
                 //order sensorInts according to their sensor priorities, assume that the index range within the set of indicies matches their count 0-based
                 sensorInts.Sort((x, y) => x.sensorPriority.CompareTo(y.sensorPriority));
 
-                string sensorListString = "List of sensors";
-                sensorInts.ForEach(sensor => sensorListString += $"\nSensor:{sensor.name}: {sensor.sensorPriority}");
-                Debug.Log(sensorListString + "\n-----------------------");
+                string sensorListString = "";
+                sensorInts.ForEach(sensor => sensorListString += $"\n\t{sensor.name} : {sensor.sensorPriority}");
+                sensorListString += "\n-----------------------";
+
+                LogToConsole("Available List of Sensors:" + sensorListString);
 
                 if (sensorInts.Select((sensor, index) => new { sensor, index }).Any(x => x.index != x.sensor.sensorPriority))
                 {
-                    Debug.LogWarning("Note: Priorities aren't equivalent to sensor indicies");
+                    LogToConsole("Note: Priorities aren't equivalent to sensor indicies");
                 }
 
                 // check for multi-camera config
@@ -3161,9 +3171,6 @@ namespace com.rfilkov.kinect
                     sensorInts.Clear();
                 }
 
-                if (consoleLogMessages)
-                    Debug.Log(string.Format("{0} sensor(s) opened.", sensorDatas.Count));
-
                 // set initialization status
                 if (sensorInterfaces.Count > 0)
                 {
@@ -3187,6 +3194,9 @@ namespace com.rfilkov.kinect
                         }
                     }
 
+                    LogToConsole($"Number of sensors opened successfully: {sensorInterfaces.Count}");
+                    LogToConsole("Opened sensor names and indexes:" + sensorListString);
+
                     // fires the depth-sensors-started event
                     FireOnDepthSensorsStarted();
                 }
@@ -3195,12 +3205,7 @@ namespace com.rfilkov.kinect
                     kinectInitialized = false;
 
                     string sErrorMessage = "No suitable depth-sensor found. Please check the connected devices and installed SDKs.";
-                    Debug.LogError(sErrorMessage);
-
-                    if (statusInfoText != null)
-                    {
-                        statusInfoText.text = sErrorMessage;
-                    }
+                    LogToConsole("Note: " + sErrorMessage);
                 }
             }
             //catch (DllNotFoundException ex)
@@ -3219,15 +3224,10 @@ namespace com.rfilkov.kinect
             //}
             catch (Exception ex)
             {
-                string message = ex.Message;
+                LogErrorToConsole(ex);
 
-                Debug.LogError(message);
+                Debug.LogError(ex.Message);
                 Debug.LogException(ex);
-
-                if (statusInfoText != null)
-                {
-                    statusInfoText.text = message;
-                }
 
                 return;
             }
@@ -3244,15 +3244,23 @@ namespace com.rfilkov.kinect
                     DepthSensorBase sensorInt = (DepthSensorBase)sensorInts[i];
                     if (!sensorInt.enabled || sensorInt.deviceStreamingMode == KinectInterop.DeviceStreamingMode.Disabled || sensorInt.deviceIndex < 0)
                     {
+                        string message = string.Format("S{0}: {1} disabled.", i, sensorInt.GetType().Name);
+                        LogToConsole(message);
+
                         if (consoleLogMessages)
-                            Debug.Log(string.Format("S{0}: {1} disabled.", i, sensorInt.GetType().Name));
+                            Debug.Log(message);
+
                         continue;
                     }
 
                     try
                     {
+                        string message = string.Format("Opening S{0}: {1}, device-index: {2}", i, sensorInt.GetType().Name, sensorInt.deviceIndex);
+                        LogToConsole(message);
+
                         if (consoleLogMessages)
-                            Debug.Log(string.Format("Opening S{0}: {1}, device-index: {2}", i, sensorInt.GetType().Name, sensorInt.deviceIndex));
+                            Debug.Log(message);
+
                         KinectInterop.SensorData sensorData = sensorInt.OpenSensor(this, dwFlags, syncDepthAndColor, syncBodyAndDepth);
 
                         if (sensorData != null)
@@ -3278,8 +3286,12 @@ namespace com.rfilkov.kinect
                     }
                     catch (Exception ex)
                     {
+                        string message = "Failed opening " + sensorInt.GetType().Name + ", device-index: " + sensorInt.deviceIndex;
+                        
+                        LogErrorToConsole(ex, message);
+
                         Debug.LogException(ex);
-                        Debug.LogError("Failed opening " + sensorInt.GetType().Name + ", device-index: " + sensorInt.deviceIndex);
+                        Debug.LogError(message);
                     }
                 }
             }
@@ -3318,9 +3330,10 @@ namespace com.rfilkov.kinect
             {
                 ulong userId = sensorData.alTrackedBodies[0].liTrackingID; // copies struct every access - expensive
                 mergedUserId = userBodyMerger?.GetmergedUserId(sensorIndex, userId) ?? userId;
-            } else
+            }
+            else
             {
-                mergedUserId = 0;   
+                mergedUserId = 0;
             }
 
             return mergedUserId;
@@ -3337,8 +3350,10 @@ namespace com.rfilkov.kinect
                 {
                     KinectInterop.SensorData sensorData = sensorDatas[i];
                     DepthSensorInterface sensorInt = sensorData.sensorInterface;
-                    if (consoleLogMessages)
-                        Debug.Log(string.Format("Closing S{0}: {1}", i, sensorInt.GetType().Name));
+
+                    string message = string.Format("Closing S{0}: {1}", i, sensorInt.GetType().Name);
+
+                    LogToConsole(message);
 
                     if (sensorData.pollFramesThread != null)
                     {
@@ -3432,6 +3447,11 @@ namespace com.rfilkov.kinect
                 {
                     UpdateTrackedBodies(i, sensorData, prevBodyFrameTime);
                 }
+            }
+
+            foreach(DepthSensorInterface sensor in sensorInterfaces)
+            {
+                sensor.UpdateUI();
             }
 
             //// filter orientation constraints - moved to UpdateTrackedBodies()
@@ -3819,14 +3839,12 @@ namespace com.rfilkov.kinect
 
             if (uidIndex >= 0)
             {
-                if (consoleLogMessages)
-                {
-                    int sensorIndex = userBodyMerger?.GetSensorIndex(userId) ?? 0;
+                int sensorIndex = userBodyMerger?.GetSensorIndex(userId) ?? 0;
+                string message = $"Sensor {sensorIndex} added user at index" + uidIndex + ", ID: " + userId;
+                LogToConsole(message);
 
+                if (consoleLogMessages)
                     Debug.Log($"Sensor <size=18><color=#ff0000><b>{sensorIndex}</b></color></size> added user at index" + uidIndex + ", ID: " + userId + ", Body: " + bodyIndex + ", Pos: " + userPos + ", Time: " + userManager.dictUserIdToTime[userId]);
-                }
-                // update userIds of the avatar controllers
-                //RefreshAvatarUserIds();
 
                 // notify the gesture manager for the newly detected user
                 gestureManager.UserWasAdded(userId, uidIndex);
@@ -3848,19 +3866,39 @@ namespace com.rfilkov.kinect
 
             if (uidIndex >= 0)
             {
-                if (consoleLogMessages)
-                    Debug.Log("Removing user " + uidIndex + ", ID: " + userId + ", Body: " + bodyIndex + ", Time: " + Time.time);
+                string message = "Removing user " + uidIndex + ", ID: " + userId;
+                LogToConsole(message);
 
                 // clear gestures list for this user
                 gestureManager.UserWasRemoved(userId, uidIndex);
-
-                // update userIds of the avatar controllers
-                //RefreshAvatarUserIds();
 
                 // fire event
                 userManager.FireOnUserRemoved(userId, uidIndex);
             }
         }
+        private void LogToConsole(string sMessage)
+        {
+            Debug.Log(sMessage);
 
+            ConsoleText.text += sMessage + "\n";
+        }
+
+        // logs error message to the console
+        private void LogErrorToConsole(string sMessage)
+        {
+            Debug.LogError(sMessage);
+
+            ConsoleText.text += sMessage + "\n";
+        }
+
+
+        // logs error message to the console
+        private void LogErrorToConsole(System.Exception ex, string sMessage = "")
+        {
+            string cleanMsg = sMessage.Replace("\0", "").Trim();
+            Debug.LogError(sMessage + "\n" + ex.Message + "\n" + ex.StackTrace);
+
+            ConsoleText.text += sMessage + "\n" + ex.Message + "\n";
+        }
     }
 }
