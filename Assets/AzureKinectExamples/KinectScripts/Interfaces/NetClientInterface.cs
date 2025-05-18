@@ -989,6 +989,13 @@ namespace com.rfilkov.kinect
                 controlFrameClient.ConnectToServerAsync(serverHost, serverBasePort + (int)NetMessageType.Control, "control", msgGetData);
                 controlFrameClient.ReceivedMessage += new ReceivedMessageEventHandler(ControlFrameReceived);
 
+                if ((dwFlags & KinectInterop.FrameSource.TypeColor) != 0)
+                {
+                    colorFrameClient = new TcpNetClient(sbConsole, null);
+                    colorFrameClient.ConnectToServerAsync(serverHost, serverBasePort + (int)NetMessageType.Color, "color", null);
+                    colorFrameClient.ReceivedMessage += new ReceivedMessageEventHandler(ColorFrameReceived);
+                }
+
                 if ((dwFlags & KinectInterop.FrameSource.TypeDepth) != 0)
                 {
                     depthFrameDecompressor = LZ4DecompressorFactory.CreateNew();
