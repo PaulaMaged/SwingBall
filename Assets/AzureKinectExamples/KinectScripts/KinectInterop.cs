@@ -985,8 +985,7 @@ namespace com.rfilkov.kinect
 
                 bResult = sensorData.sensorInterface.UpdateSensorData(sensorData, kinectManager, isPlayMode);
 
-                if(sensorData.lastDepthFrameTime != sensorData.prevDepthFrameTime && 
-                    sensorData.lastColorFrameTime != sensorData.prevColorFrameTime && !isPlayMode)
+                if(sensorData.lastDepthFrameTime != sensorData.prevDepthFrameTime && !isPlayMode)
                 {
                     sensorData.sensorInterface.UpdateTransformedFrameTextures(sensorData, kinectManager);
                 }

@@ -194,11 +194,11 @@ namespace com.rfilkov.kinect
                 if (compressRawFrames)
                     controlFrameCompressor = LZ4CompressorFactory.CreateNew();
 
-                if ((dwFlags & KinectInterop.FrameSource.TypeColor) != 0 && sensorData.colorImageTexture != null)
-                {
-                    colorFrameServer = new TcpNetServer(baseListenPort + (int)NetMessageType.Color, "ColorServer", sbConsole);
-                    minPort = Mathf.Min(minPort, colorFrameServer.serverPort); maxPort = Mathf.Max(maxPort, colorFrameServer.serverPort);
-                }
+                //if ((dwFlags & KinectInterop.FrameSource.TypeColor) != 0 && sensorData.colorImageTexture != null)
+                //{
+                //    colorFrameServer = new TcpNetServer(baseListenPort + (int)NetMessageType.Color, "ColorServer", sbConsole);
+                //    minPort = Mathf.Min(minPort, colorFrameServer.serverPort); maxPort = Mathf.Max(maxPort, colorFrameServer.serverPort);
+                //}
 
                 if((dwFlags & KinectInterop.FrameSource.TypeDepth) != 0)
                 {
