@@ -114,10 +114,13 @@ public class GameManager : NetworkBehaviour
 
         netServer = playerNetworkManagers[localPlayerIndex].InitKinectServer(localPlayerIndex);
 
-        if (kinectManager != null && netServer != null && netClient != null)
-            SetupPanels(kinectManager, netServer, netClient);
-        else
-            UnityEngine.Debug.LogWarning("One of the the three essential components aren't initialized");
+        //if (kinectManager != null && netServer != null && netClient != null)
+        //{
+        //    SetupPanels(kinectManager, netServer, netClient);
+        //}
+
+        //else
+        //    UnityEngine.Debug.LogWarning("One of the the three essential components aren't initialized");
 
         SwitchRepresentation(currentRepresentation);
     }
@@ -125,22 +128,22 @@ public class GameManager : NetworkBehaviour
     private void SetupPanels(KinectManager kinectManager, KinectNetServer netServer, NetClientInterface netClient)
     {
         List<UnitUI> panels = new();
-        for (int i = 0; i < 3; i++)
+        for (int i = 1; i <= 3; i++)
         {
-            float angle = ((float)i - (3 - 1) / 2f) * spreadAngle;
-            Vector3 dir = Quaternion.Euler(0, angle, 0) * -Camera.main.transform.forward;
+            Vector3 dir = Quaternion.Euler(0, 90 * i, 0) * Camera.main.transform.forward;
             Vector3 pos = Camera.main.transform.position + dir.normalized * distance;
 
             pos.y = 0;
             UnitUI panel = Instantiate(panelPrefab, pos, Quaternion.identity);
             panels.Add(panel);
             panel.canvas.worldCamera = Camera.main;
-            
-            // Make it face the camera
-            panel.transform.LookAt(Camera.main.transform);
+
+            Vector3 toPlayer = Camera.main.transform.position - panel.transform.position;
+            toPlayer.y = 0;
+
+            panel.transform.rotation = Quaternion.LookRotation(toPlayer);
             panel.transform.Rotate(0, 180, 0); // because LookAt flips canvas back
     }
-
 
         kinectManager.ConsoleText = panels[0].consoleText;
         panels[0].header.text = "Kinect Manager";
