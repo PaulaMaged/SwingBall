@@ -29,6 +29,33 @@ public class PlayerManager : NetworkBehaviour
     [SerializeField] private Vector3 pointCloudsideOffset = new(1.5f, 0, 0);
     [SerializeField] private bool changeLocalPlayerRepresentation = false;
 
+    public Transform GetLocalPlayer()
+    {
+        int i = 0;
+
+        for (i = 0; i < PlayerClientIds.Length; i++)
+        {
+            if (PlayerClientIds[i] == NetworkManager.Singleton.LocalClientId)
+            {
+                break;
+            }
+        }
+
+        if (i == PlayerClientIds.Length)
+        {
+            Debug.Log("Local Player not inside of list of Players");
+            return null;
+        }
+
+        if (Players[i] == null)
+        {
+            Debug.Log("Local Player is NUll");
+            return null;
+        }
+
+        return Players[i].transform;
+    }
+
     private void Awake()
     {
         if (instance == null)

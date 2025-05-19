@@ -108,33 +108,30 @@ namespace com.rfilkov.kinect
 
         public void StartServer()
         {
-            while (sensorData == null)
-            {
             kinectManager = KinectManager.Instance;
             sensorData = kinectManager ? kinectManager.GetSensorData(sensorIndex) : null;
-                Debug.Log($"Starting server for sensor w index: {sensorIndex} and found sensor is <b>{(sensorData == null ? "NULL" : "Available")}</b>");
-                if (sensorData != null && sensorData.sensorInterface != null)
+            LogToConsole($"Starting server for sensor w index: {sensorIndex} and found sensor is {(sensorData == null ? "NULL" : "Available")}");
+            if (sensorData != null && sensorData.sensorInterface != null)
             {
                 // cache space tables
-                Debug.Log("Caching space tables of sensor " + sensorIndex + "...");
+                LogToConsole("Caching space tables of sensor " + sensorIndex + "...");
                 sensorData.sensorInterface.GetDepthCameraSpaceTable(sensorData);
                 sensorData.sensorInterface.GetColorCameraSpaceTable(sensorData);
 
                 // init servers
-                Debug.Log("Initing network servers of sensor " + sensorIndex + "...");
+                LogToConsole("Initing network servers of sensor " + sensorIndex + "...");
                 KinectInterop.FrameSource dwFlags = ((DepthSensorBase)sensorData.sensorInterface).frameSourceFlags;
                 InitNetServers(dwFlags);
             }
             else
             {
-                Debug.LogError("KinectManager not found or not initialized.");
+                LogToConsole("KinectManager not found or not initialized.");
 
                 if (serverStatusText)
                 {
                     serverStatusText.text = "KinectManager not found or not initialized.";
                 }
             }
-        }
         }
 
         void OnDestroy()
@@ -146,19 +143,19 @@ namespace com.rfilkov.kinect
 
         void Update()
         {
-            if(connStatusText)
+            if (connStatusText)
             {
                 // update conn status
                 int connCount = GetConnectionsCount();
                 connStatusText.text = string.Format("NetServer running: {0} connections.", connCount);
             }
 
-            if(sbConsole.Length > 0)
+            if (sbConsole.Length > 0)
             {
                 // update console
-                lock(sbConsole)
+                lock (sbConsole)
                 {
-                    if(consoleText)
+                    if (consoleText)
                         consoleText.text += sbConsole.ToString();
 
                     sbConsole.Clear();
@@ -201,12 +198,12 @@ namespace com.rfilkov.kinect
                 //    minPort = Mathf.Min(minPort, colorFrameServer.serverPort); maxPort = Mathf.Max(maxPort, colorFrameServer.serverPort);
                 //}
 
-                if((dwFlags & KinectInterop.FrameSource.TypeDepth) != 0)
+                if ((dwFlags & KinectInterop.FrameSource.TypeDepth) != 0)
                 {
                     depthFrameServer = new TcpNetServer(baseListenPort + (int)NetMessageType.Depth, "DepthServer", sbConsole);
                     minPort = Mathf.Min(minPort, depthFrameServer.serverPort); maxPort = Mathf.Max(maxPort, depthFrameServer.serverPort);
 
-                    if(compressRawFrames)
+                    if (compressRawFrames)
                         depthFrameCompressor = LZ4CompressorFactory.CreateNew();
                 }
 
@@ -375,7 +372,7 @@ namespace com.rfilkov.kinect
                     color2bodyIndexFrameCompressor = null;
                 }
 
-                if(autoDiscoveryServer != null)
+                if (autoDiscoveryServer != null)
                 {
                     autoDiscoveryServer.Close();
                     autoDiscoveryServer = null;
@@ -421,7 +418,7 @@ namespace com.rfilkov.kinect
                 // color frame
                 if (colorFrameServer != null && colorFrameServer.GetConnCount() > 0)
                 {
-                    if(sensorData.lastColorFrameTime != lastColorFrameTime)
+                    if (sensorData.lastColorFrameTime != lastColorFrameTime)
                     {
                         lastColorFrameTime = sensorData.lastColorFrameTime;
 
@@ -520,7 +517,7 @@ namespace com.rfilkov.kinect
                         lastPoseFrameTime = sensorData.lastSensorPoseFrameTime;
 
                         string curSensorPoseStr = sensorData.sensorPosePosition.ToString() + " " + sensorData.sensorPoseRotation.eulerAngles.ToString();
-                        if(lastSensorPoseStr != curSensorPoseStr)
+                        if (lastSensorPoseStr != curSensorPoseStr)
                         {
                             lastSensorPoseStr = curSensorPoseStr;
 
@@ -539,7 +536,7 @@ namespace com.rfilkov.kinect
                 // depth2color frame
                 if (depth2colorFrameServer != null && depth2colorFrameServer.GetConnCount() > 0)
                 {
-                    if(depth2colorTex2d == null)
+                    if (depth2colorTex2d == null)
                     {
                         depth2colorTex2d = new Texture2D(sensorData.depthImageWidth, sensorData.depthImageHeight, sensorData.colorImageFormat, false);
                         sensorData.sensorInterface.EnableDepthCameraColorFrame(sensorData, true);
@@ -572,7 +569,7 @@ namespace com.rfilkov.kinect
                 // color2depth frame
                 if (color2depthFrameServer != null && color2depthFrameServer.GetConnCount() > 0)
                 {
-                    if(colorCamDepthFrameData == null)
+                    if (colorCamDepthFrameData == null)
                     {
                         colorCamDepthFrameData = new byte[sensorData.colorImageWidth * sensorData.colorImageHeight * sizeof(ushort)];
                         sensorData.sensorInterface.EnableColorCameraDepthFrame(sensorData, true);
@@ -642,7 +639,7 @@ namespace com.rfilkov.kinect
                 // color2bodyIndex frame
                 if (color2bodyIndexFrameServer != null && color2bodyIndexFrameServer.GetConnCount() > 0)
                 {
-                    if(colorCamBodyIndexFrameData == null)
+                    if (colorCamBodyIndexFrameData == null)
                     {
                         colorCamBodyIndexFrameData = new byte[sensorData.colorImageWidth * sensorData.colorImageHeight];
                         sensorData.sensorInterface.EnableColorCameraBodyIndexFrame(sensorData, true);
@@ -693,11 +690,11 @@ namespace com.rfilkov.kinect
 
             try
             {
-                if(args.message.frameData != null && args.message.frameData.Length > 0)
+                if (args.message.frameData != null && args.message.frameData.Length > 0)
                 {
                     ControlMessageType ctrlMsgType = (ControlMessageType)args.message.frameData[0];
 
-                    switch(ctrlMsgType)
+                    switch (ctrlMsgType)
                     {
                         case ControlMessageType.GetSensorData:
                             CtrlSendGetSensorData();
@@ -756,7 +753,7 @@ namespace com.rfilkov.kinect
         {
             Vector3[] avSpaceTable = sensorData.sensorInterface.GetDepthCameraSpaceTable(sensorData);
 
-            if(avSpaceTable != null)
+            if (avSpaceTable != null)
             {
                 byte[] btSpaceTable = new byte[avSpaceTable.Length * 3 * sizeof(float)];
                 KinectInterop.CopyBytes(avSpaceTable, 3 * sizeof(float), btSpaceTable, sizeof(byte));
@@ -885,6 +882,41 @@ namespace com.rfilkov.kinect
 
                 controlFrameServer.SendMessageToAllConnections(msg);
                 //Debug.Log("Sending ctrl message " + messageType);
+            }
+        }
+
+        // logs message to the console
+        private void LogToConsole(string sMessage)
+        {
+            Debug.Log(sMessage);
+
+            lock (sbConsole)
+            {
+                sbConsole.Append(sMessage).AppendLine();
+            }
+        }
+
+        // logs error message to the console
+        private void LogErrorToConsole(string sMessage)
+        {
+            Debug.LogError(sMessage);
+
+            lock (sbConsole)
+            {
+                sbConsole.Append(sMessage).AppendLine();
+            }
+        }
+
+
+        // logs error message to the console
+        private void LogErrorToConsole(System.Exception ex, string sMessage = "")
+        {
+            string cleanMsg = sMessage.Replace("\0", "").Trim();
+            Debug.LogError(sMessage + "\n" + ex.Message + "\n" + ex.StackTrace);
+
+            lock (sbConsole)
+            {
+                sbConsole.Append(sMessage + "\n" + ex.Message).AppendLine();
             }
         }
 
@@ -1132,7 +1164,7 @@ namespace com.rfilkov.kinect
 
                 NetClientProc(conn);
             }
-            catch(System.ObjectDisposedException)
+            catch (System.ObjectDisposedException)
             {
                 // do nothing
             }
@@ -1190,7 +1222,7 @@ namespace com.rfilkov.kinect
             conn.stream.Close();
             conn.client.Close();
 
-            if(connections.Contains(conn))
+            if (connections.Contains(conn))
             {
                 connections.Remove(conn);
             }
@@ -1230,8 +1262,8 @@ namespace com.rfilkov.kinect
             }
             finally
             {
-            conn.readyToSend = true;
-        }
+                conn.readyToSend = true;
+            }
         }
 
         private void ProcessReceivedData(byte[] buffer, int bytesReceived, NetConnData conn)

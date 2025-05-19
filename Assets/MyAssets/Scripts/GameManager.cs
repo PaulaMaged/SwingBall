@@ -24,7 +24,7 @@ public class GameManager : NetworkBehaviour
     [SerializeField] private Representation currentRepresentation = Representation.Both;
     [SerializeField] private InputActionReference switchRepresentationButton;
 
-    public UnitUI panelPrefab;
+    public UnitUI panelPrefab = null;
     public float spreadAngle = 30f;
     public float distance = 2f;
 
@@ -97,12 +97,20 @@ public class GameManager : NetworkBehaviour
 
         for(int i = 0; i < playerNetworkManagers?.Length; i++)
         {
+
+            PlayerNetworkManager playerNetworkManager = playerNetworkManagers[i];
+
+            if (playerNetworkManager == null)
+            {
+                continue;
+            }
+            
             if(i == localPlayerIndex)
             {
-                playerNetworkManagers[i].InitLocalSenosr(localPlayerIndex);
+                playerNetworkManager.InitLocalSenosr(localPlayerIndex);
             } else
             {
-                netClient = playerNetworkManagers[i].InitNetClient(i);
+                netClient = playerNetworkManager.InitNetClient(i);
             }
         }
 
@@ -114,50 +122,60 @@ public class GameManager : NetworkBehaviour
 
         netServer = playerNetworkManagers[localPlayerIndex].InitKinectServer(localPlayerIndex);
 
-        //if (kinectManager != null && netServer != null && netClient != null)
-        //{
-        //    SetupPanels(kinectManager, netServer, netClient);
-        //}
-
-        //else
-        //    UnityEngine.Debug.LogWarning("One of the the three essential components aren't initialized");
+        SetupPanels(kinectManager, netServer, netClient);
 
         SwitchRepresentation(currentRepresentation);
     }
 
     private void SetupPanels(KinectManager kinectManager, KinectNetServer netServer, NetClientInterface netClient)
     {
+        Transform localPlayerTransform = PlayerManager.instance.GetLocalPlayer();
+        Vector3 forwardDirection = BallManager.instance.poleTransform.position - localPlayerTransform.position;
+
+        if(panelPrefab == null)
+        {
+            UnityEngine.Debug.Log("Please set panel prefab");
+            return;
+        }
+
         List<UnitUI> panels = new();
         for (int i = 1; i <= 3; i++)
         {
-            Vector3 dir = Quaternion.Euler(0, 90 * i, 0) * Camera.main.transform.forward;
-            Vector3 pos = Camera.main.transform.position + dir.normalized * distance;
-
+            Vector3 dir = Quaternion.Euler(0, 90 * i, 0) * forwardDirection;
+            Vector3 pos = localPlayerTransform.position + dir.normalized * distance;
             pos.y = 0;
+
             UnitUI panel = Instantiate(panelPrefab, pos, Quaternion.identity);
             panels.Add(panel);
             panel.canvas.worldCamera = Camera.main;
 
-            Vector3 toPlayer = Camera.main.transform.position - panel.transform.position;
+            Vector3 toPlayer = localPlayerTransform.position - panel.transform.position;
             toPlayer.y = 0;
 
             panel.transform.rotation = Quaternion.LookRotation(toPlayer);
             panel.transform.Rotate(0, 180, 0); // because LookAt flips canvas back
-    }
+        }
 
-        kinectManager.ConsoleText = panels[0].consoleText;
         panels[0].header.text = "Kinect Manager";
-
+        if (kinectManager != null) {
+            kinectManager.ConsoleText = panels[0].consoleText;
+        }
+        
         panels[1].header.text = "Net Servers";
-        netServer.consoleText = panels[1].consoleText;
-        netServer.connStatusText = panels[1].connStatusText;
-        netServer.serverStatusText = panels[1].StatusText;
-
-
+        if (netServer != null)
+        {
+            netServer.consoleText = panels[1].consoleText;
+            netServer.connStatusText = panels[1].connStatusText;
+            netServer.serverStatusText = panels[1].StatusText;
+        }
+        
         panels[2].header.text = "Net Clients";
-        netClient.consoleText = panels[2].consoleText;
-        netClient.connStatusText = panels[2].connStatusText;
-        netClient.ClientStatusText = panels[2].StatusText;
+        if (netClient != null)
+        {
+            netClient.consoleText = panels[2].consoleText;
+            netClient.connStatusText = panels[2].connStatusText;
+            netClient.ClientStatusText = panels[2].StatusText;
+        }
     }
 
     public void SwitchRepresentationButtonHandler(InputAction.CallbackContext ctx)
