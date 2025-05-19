@@ -40,8 +40,8 @@ namespace com.rfilkov.kinect
         object responseLock = new();
 
         // console buffer
-        private System.Text.StringBuilder sbConsole = new System.Text.StringBuilder();
-        private System.Text.StringBuilder sbClientStatus = new System.Text.StringBuilder();
+        private System.Text.StringBuilder sbConsole = new();
+        private System.Text.StringBuilder sbClientStatus = new();
 
         // sensor frame servers
         private TcpNetClient controlFrameClient = null;

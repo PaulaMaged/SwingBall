@@ -24,6 +24,10 @@ public class GameManager : NetworkBehaviour
     [SerializeField] private Representation currentRepresentation = Representation.Both;
     [SerializeField] private InputActionReference switchRepresentationButton;
 
+    public UnitUI panelPrefab;
+    public float spreadAngle = 30f;
+    public float distance = 2f;
+
     void Awake()
     {
         Instance = this;
@@ -75,6 +79,10 @@ public class GameManager : NetworkBehaviour
     [Rpc(SendTo.Everyone)]
     private void SetupSensorsRpc()
     {
+        NetClientInterface netClient = null;
+        KinectNetServer netServer = null;
+        KinectManager kinectManager = KinectManager.Instance;
+
         int localPlayerIndex = -1;
 
         PlayerNetworkManager[] playerNetworkManagers = null;
@@ -94,7 +102,7 @@ public class GameManager : NetworkBehaviour
                 playerNetworkManagers[i].InitLocalSenosr(localPlayerIndex);
             } else
             {
-                playerNetworkManagers[i].InitNetClient(i);
+                netClient = playerNetworkManagers[i].InitNetClient(i);
             }
         }
 
@@ -104,9 +112,42 @@ public class GameManager : NetworkBehaviour
 
         UnityEngine.Debug.Log($"Time taken to start depth sensors: {sw.Elapsed.TotalSeconds}");
 
-        playerNetworkManagers[localPlayerIndex].InitKinectServer(localPlayerIndex);
+        netServer = playerNetworkManagers[localPlayerIndex].InitKinectServer(localPlayerIndex);
+
+        if (kinectManager != null && netServer != null && netClient != null)
+            SetupPanels(kinectManager, netServer, netClient);
+        else
+            UnityEngine.Debug.LogWarning("One of the the three essential components aren't initialized");
 
         SwitchRepresentation(currentRepresentation);
+    }
+
+    private void SetupPanels(KinectManager kinectManager, KinectNetServer netServer, NetClientInterface netClient)
+    {
+        List<UnitUI> panels = new();
+        for (int i = 0; i < 3; i++)
+        {
+            float angle = ((float)i - (3 - 1) / 2f) * spreadAngle;
+            Vector3 dir = Quaternion.Euler(0, angle, 0) * -Camera.main.transform.forward;
+            Vector3 pos = Camera.main.transform.position + dir.normalized * distance;
+
+            UnitUI panel = Instantiate(panelPrefab, pos, Quaternion.identity);
+            panel.canvas.worldCamera = Camera.main;
+            
+            // Make it face the camera
+            panel.transform.LookAt(Camera.main.transform);
+            panel.transform.Rotate(0, 180, 0); // because LookAt flips canvas back
+    }
+
+        kinectManager.ConsoleText = panels[0].consoleText;
+
+        netServer.consoleText = panels[1].consoleText;
+        netServer.connStatusText = panels[1].connStatusText;
+        netServer.serverStatusText = panels[1].StatusText;
+
+        netClient.consoleText = panels[2].consoleText;
+        netClient.connStatusText = panels[2].connStatusText;
+        netClient.ClientStatusText = panels[2].StatusText;
     }
 
     public void SwitchRepresentationButtonHandler(InputAction.CallbackContext ctx)

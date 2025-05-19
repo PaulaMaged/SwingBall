@@ -103,7 +103,7 @@ namespace com.rfilkov.kinect
         private ILZ4Compressor color2bodyIndexFrameCompressor = null;
 
         // console buffer
-        private System.Text.StringBuilder sbConsole = new System.Text.StringBuilder();
+        private System.Text.StringBuilder sbConsole = new();
 
 
         public void StartServer()
@@ -160,6 +160,7 @@ namespace com.rfilkov.kinect
                 {
                     if(consoleText)
                         consoleText.text += sbConsole.ToString();
+
                     sbConsole.Clear();
                 }
 
@@ -900,7 +901,7 @@ namespace com.rfilkov.kinect
         //private const int bufferSize = 10240000;
         public int tmpBufferSize = 640000;
 
-        private System.Text.StringBuilder sbConsole = null;
+        private System.Text.StringBuilder sbConsole;
 
         private TcpListener server;
         private List<NetConnData> connections = new List<NetConnData>();
@@ -1277,7 +1278,7 @@ namespace com.rfilkov.kinect
         {
             Debug.Log(sMessage);
 
-            lock(sbConsole)
+            lock (sbConsole)
             {
                 sbConsole.Append(sMessage).AppendLine();
             }
@@ -1286,8 +1287,8 @@ namespace com.rfilkov.kinect
         // logs error message to the console
         private void LogErrorToConsole(string sMessage)
         {
-            string cleanMsg = sMessage.Replace("\0", "").Trim();
-            Debug.LogError(cleanMsg);
+            Debug.LogError(sMessage);
+
             lock (sbConsole)
             {
                 sbConsole.Append(sMessage).AppendLine();
@@ -1296,9 +1297,15 @@ namespace com.rfilkov.kinect
 
 
         // logs error message to the console
-        private void LogErrorToConsole(System.Exception ex)
+        private void LogErrorToConsole(System.Exception ex, string sMessage = "")
         {
-            LogErrorToConsole(ex.Message + "\n" + ex.StackTrace);
+            string cleanMsg = sMessage.Replace("\0", "").Trim();
+            Debug.LogError(sMessage + "\n" + ex.Message + "\n" + ex.StackTrace);
+
+            lock (sbConsole)
+            {
+                sbConsole.Append(sMessage + "\n" + ex.Message).AppendLine();
+            }
         }
 
     }
@@ -1324,8 +1331,7 @@ namespace com.rfilkov.kinect
         public string sResponseData = string.Empty;
         public byte[] btResponseData = new byte[0];
 
-        private System.Text.StringBuilder sbConsole = null;
-
+        private System.Text.StringBuilder sbConsole;
 
         public UdpBroadcastServer(int port, string name, string requestKey, string responseData, System.Text.StringBuilder sbConsole)
         {

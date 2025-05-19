@@ -45,7 +45,7 @@ public class PlayerNetworkManager : NetworkBehaviour
     /// Instantiates a netclient with server base port reflecting the index that this player takes inside of the networked playernetworkobj refs
     /// The netclient is to be spawned on the kinectmanager's gameobject.
     /// </summary>
-    public void InitNetClient(int index)
+    public NetClientInterface InitNetClient(int index)
     {
         Debug.Log($"Creating a netclient for player with network object refs index: {index}");
         if (index == -1) throw new Exception("Player network Object must exist inside of list");
@@ -61,6 +61,7 @@ public class PlayerNetworkManager : NetworkBehaviour
         netClient.autoServerDiscovery = true;
 
         SetupKinectTracking(index);
+        return netClient;
     }
 
     public void InitLocalSenosr(int index)
@@ -87,7 +88,7 @@ public class PlayerNetworkManager : NetworkBehaviour
         SetupKinectTracking(index);
     }
 
-    public void InitKinectServer(int index)
+    public KinectNetServer InitKinectServer(int index)
     {
         GameObject go = new("KinectNetServer");
         KinectNetServer kinectNetServer = go.AddComponent<KinectNetServer>();
@@ -98,6 +99,7 @@ public class PlayerNetworkManager : NetworkBehaviour
         kinectNetServer.listenForServerDiscovery = true;
 
         kinectNetServer.StartServer();
+        return kinectNetServer;
     }
 
     private void SetupKinectTracking(int index)

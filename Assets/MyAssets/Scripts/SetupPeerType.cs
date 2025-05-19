@@ -86,7 +86,7 @@ public class SetupPeerType : MonoBehaviour
 
                 _serverIPAddress = GetLocalNameOrIP();
                 string responseData = string.Format("NET|{0}|{1}", _serverIPAddress, _portNumber);
-                autoDiscoveryServer = new UdpBroadcastServer(UDPDiscoveryPort, "DiscoveryServer", "NET", responseData, null);
+                autoDiscoveryServer = new UdpBroadcastServer(UDPDiscoveryPort, "DiscoveryServer", "NET", responseData, new System.Text.StringBuilder());
 
                 NetworkManager.Singleton.GetComponent<UnityTransport>().SetConnectionData(
                     _serverIPAddress,
