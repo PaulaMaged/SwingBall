@@ -608,7 +608,7 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   distanceToPole: 5
   pointCloudGroundOffset: {x: 0, y: 1, z: 0}
-  pointCloudsideOffset: {x: 1.5, y: 1, z: 0}
+  pointCloudsideOffset: {x: 1.5, y: 0, z: 0}
   changeLocalPlayerRepresentation: 0
 --- !u!114 &738995347
 MonoBehaviour:

@@ -31,13 +31,13 @@ namespace com.rfilkov.kinect
         public bool compressRawFrames = true;
 
         [Tooltip("UI-Text to display the connection status messages.")]
-        public Text connStatusText;
+        public Text connStatusText = null;
 
         [Tooltip("UI-Text to display the server status messages.")]
-        public Text serverStatusText;
+        public Text serverStatusText = null;
 
         [Tooltip("UI-Text to display the server console messages.")]
-        public Text consoleText;
+        public Text consoleText = null;
 
 
         // references

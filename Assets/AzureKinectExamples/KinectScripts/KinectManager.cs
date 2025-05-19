@@ -137,11 +137,11 @@ namespace com.rfilkov.kinect
         public float displayImageWidthPercent = 0.2f;
 
         [Tooltip("UI-Text to display status messages.")]
-        public UnityEngine.UI.Text ConsoleText;
+        public UnityEngine.UI.Text ConsoleText = null;
 
         [HideInInspector]
         [Tooltip("UI-Text to display status messages.")]
-        public UnityEngine.UI.Text statusInfoText;
+        public UnityEngine.UI.Text statusInfoText = null;
 
         [Tooltip("Whether to log the KinectManager info messages to the console or not.")]
         public bool consoleLogMessages = true;
@@ -3879,8 +3879,8 @@ namespace com.rfilkov.kinect
         private void LogToConsole(string sMessage)
         {
             Debug.Log(sMessage);
-
-            ConsoleText.text += sMessage + "\n";
+            if(ConsoleText)
+                ConsoleText.text += sMessage + "\n";
         }
 
         // logs error message to the console
@@ -3888,7 +3888,8 @@ namespace com.rfilkov.kinect
         {
             Debug.LogError(sMessage);
 
-            ConsoleText.text += sMessage + "\n";
+            if(ConsoleText)
+                ConsoleText.text += sMessage + "\n";
         }
 
 
@@ -3898,7 +3899,8 @@ namespace com.rfilkov.kinect
             string cleanMsg = sMessage.Replace("\0", "").Trim();
             Debug.LogError(sMessage + "\n" + ex.Message + "\n" + ex.StackTrace);
 
-            ConsoleText.text += sMessage + "\n" + ex.Message + "\n";
+            if(ConsoleText)
+                ConsoleText.text += sMessage + "\n" + ex.Message + "\n";
         }
     }
 }

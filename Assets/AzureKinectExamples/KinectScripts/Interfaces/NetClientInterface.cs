@@ -29,13 +29,13 @@ namespace com.rfilkov.kinect
         public bool getBodyIndexFrames = true;
 
         [Tooltip("UI-Text to display the connection status messages.")]
-        public Text connStatusText;
+        public Text connStatusText = null;
 
         [Tooltip("UI-Text to display the server status messages.")]
-        public Text ClientStatusText;
+        public Text ClientStatusText = null;
 
         [Tooltip("UI-Text to display the server console messages.")]
-        public Text consoleText;
+        public Text consoleText = null;
 
         object responseLock = new();
 
@@ -341,12 +341,13 @@ namespace com.rfilkov.kinect
             if (sbConsole.Length > 0)
             {
                 // update console
-                lock (sbConsole)
+                if (consoleText)
                 {
-                    if (consoleText)
+                    lock (sbConsole)
+                    {
                         consoleText.text += sbConsole.ToString();
-
-                    sbConsole.Clear();
+                        sbConsole.Clear();
+                    }
                 }
 
                 // scroll to end
@@ -359,12 +360,15 @@ namespace com.rfilkov.kinect
                 }
             }
 
-            if(sbClientStatus.Length > 0)
+            if (ClientStatusText)
             {
-                lock(sbClientStatus)
+                if (sbClientStatus.Length > 0)
                 {
-                    ClientStatusText.text = sbClientStatus.ToString();
-                    sbClientStatus.Clear();
+                    lock (sbClientStatus)
+                    {
+                        ClientStatusText.text = sbClientStatus.ToString();
+                        sbClientStatus.Clear();
+                    }
                 }
             }
         }
@@ -1154,7 +1158,6 @@ namespace com.rfilkov.kinect
                 sbClientStatus.Append($"Failed to init net clients: {ex.Message}");
             }
         }
-
 
         // closes all network clients
         private void CloseNetClients()
