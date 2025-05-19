@@ -15,8 +15,6 @@ public class PlayerNetworkManager : NetworkBehaviour
 {
     public Camera mainCamera;
 
-    private const bool DEBUGGING = true;
-
     public override void OnNetworkSpawn()
     {
         base.OnNetworkSpawn();
@@ -71,7 +69,7 @@ public class PlayerNetworkManager : NetworkBehaviour
         go.transform.SetParent(KinectManager.Instance.transform);
         Kinect4AzureInterface k4aInt = go.AddComponent<Kinect4AzureInterface>();
 
-        if (DEBUGGING)
+        if (GameManager.DEBUGGING)
         {
             k4aInt.deviceStreamingMode = KinectInterop.DeviceStreamingMode.PlayRecording;
             k4aInt.recordingFile = IsHost ? "./Recordings/me.mkv" : "./Recordings/him.mkv";

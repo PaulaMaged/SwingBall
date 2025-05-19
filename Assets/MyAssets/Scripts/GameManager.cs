@@ -12,6 +12,8 @@ using UnityEngine.Profiling;
 public class GameManager : NetworkBehaviour
 {
     public static GameManager Instance { get; private set; }
+
+    public static bool DEBUGGING = true;
     public bool GameStarted { get; private set; } = false;
 
     [SerializeField] private GameObject ExerciseProgram;
