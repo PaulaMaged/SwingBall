@@ -628,7 +628,7 @@ MonoBehaviour:
   currentRepresentation: 1
   switchRepresentationButton: {fileID: -323812964555706417, guid: c348712bda248c246b8c49b3db54643f, type: 3}
   panelPrefab: {fileID: 7386421544627790639, guid: afdf3baa7fef5c74989b04a728ac73f5, type: 3}
-  spreadAngle: 30
+  spreadAngle: 60
   distance: 2
 --- !u!114 &738995348
 MonoBehaviour:

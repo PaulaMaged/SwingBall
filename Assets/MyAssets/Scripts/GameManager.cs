@@ -131,7 +131,9 @@ public class GameManager : NetworkBehaviour
             Vector3 dir = Quaternion.Euler(0, angle, 0) * -Camera.main.transform.forward;
             Vector3 pos = Camera.main.transform.position + dir.normalized * distance;
 
+            pos.y = 0;
             UnitUI panel = Instantiate(panelPrefab, pos, Quaternion.identity);
+            panels.Add(panel);
             panel.canvas.worldCamera = Camera.main;
             
             // Make it face the camera
@@ -139,12 +141,17 @@ public class GameManager : NetworkBehaviour
             panel.transform.Rotate(0, 180, 0); // because LookAt flips canvas back
     }
 
-        kinectManager.ConsoleText = panels[0].consoleText;
 
+        kinectManager.ConsoleText = panels[0].consoleText;
+        panels[0].header.text = "Kinect Manager";
+
+        panels[1].header.text = "Net Servers";
         netServer.consoleText = panels[1].consoleText;
         netServer.connStatusText = panels[1].connStatusText;
         netServer.serverStatusText = panels[1].StatusText;
 
+
+        panels[2].header.text = "Net Clients";
         netClient.consoleText = panels[2].consoleText;
         netClient.connStatusText = panels[2].connStatusText;
         netClient.ClientStatusText = panels[2].StatusText;

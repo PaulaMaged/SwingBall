@@ -306,6 +306,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   canvas: {fileID: 4961424506199221762}
+  header: {fileID: 8922571096057237644}
   consoleText: {fileID: 2857835634034684223}
   connStatusText: {fileID: 3507027236282649247}
   StatusText: {fileID: 7290659619692888001}
@@ -885,7 +886,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0.00002865462, y: -0.001081169}
+  m_AnchoredPosition: {x: 0.00002865462, y: 0.001150453}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!222 &3627127147942954325
@@ -1064,8 +1065,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 2959128467739920877}
   m_HandleRect: {fileID: 4682195905040196690}
   m_Direction: 2
-  m_Value: 1
-  m_Size: 0.99999636
+  m_Value: 0
+  m_Size: 0.99999756
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
