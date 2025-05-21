@@ -135,7 +135,7 @@ namespace com.rfilkov.components
                 // get the difference
                 GetPoseDifference(IsMirrored);
 
-                if (infoText != null)
+                if (sbDebug != null)
                 {
                     string sPoseMessage = string.Format("Pose match: {0:F0}% {1}", fMatchPercent.Value * 100, (fMatchPercent.Value >= matchThreshold ? "- Matched" : ""));
                     if (sbDebug != null)
@@ -143,7 +143,9 @@ namespace com.rfilkov.components
                         sbDebug.Clear();
                         sbDebug.AppendLine(sPoseMessage);
                     }
-                    infoText.text = sPoseMessage;
+
+                    if(infoText != null)
+                        infoText.text = sPoseMessage;
                 }
             }
             else
