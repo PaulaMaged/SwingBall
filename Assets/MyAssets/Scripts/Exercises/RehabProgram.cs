@@ -7,6 +7,8 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 using com.rfilkov.components;
+using Unity.Collections;
+using System.Text;
 
 public class RehabProgram : NetworkBehaviour
 {
@@ -25,6 +27,10 @@ public class RehabProgram : NetworkBehaviour
     private Dictionary<string, TMP_Text> FieldNameReferencePair = new();
     public NetworkVariable<ExerciseProgress> exerciseProgress { get; private set; } = new(writePerm: NetworkVariableWritePermission.Owner);
 
+    public NetworkVariable<FixedString512Bytes> PoseInfo { get; private set; } = new("No Pose Information Present", writePerm: NetworkVariableWritePermission.Owner);
+
+    public StringBuilder sbPoseDebug = new();
+    
     public bool IsPatient { get; private set; } = true;
     public bool IsBreakTime { get; private set; } = false;
 
@@ -40,6 +46,7 @@ public class RehabProgram : NetworkBehaviour
     {
         Instance = this;
     }
+
     public override void OnNetworkSpawn()
     {
         base.OnNetworkSpawn();
@@ -51,6 +58,13 @@ public class RehabProgram : NetworkBehaviour
         ConfigureExercises();
     }
 
+    private void Update()
+    {
+        if (IsOwner)
+        {
+            PoseInfo.Value = sbPoseDebug.ToString();
+        }
+    }
     private void ConfigureExercises()
     {
         foreach (Exercise exercise in Exercises)
@@ -125,6 +139,7 @@ public class RehabProgram : NetworkBehaviour
 
         exerciseProgress.OnValueChanged += UpdateProgressUI;
         PoseConfirmationButton.action.started += SetupAnchorPoint;
+        PoseInfo.OnValueChanged += UpdateAccuracyUI;
 
         if (!IsOwner) return;
 
@@ -140,7 +155,7 @@ public class RehabProgram : NetworkBehaviour
     {
         staticPoseDetector = gameObject.AddComponent<StaticPoseDetector>();
         if (!NetworkManager.Singleton.SpawnManager.GetLocalPlayerObject().gameObject.TryGetComponent(out PoseModelHelper playerModelHelper)) return;
-        staticPoseDetector.Init(ReferenceCharacterInstance, playerModelHelper);
+        staticPoseDetector.Init(ReferenceCharacterInstance, playerModelHelper, sbPoseDebug);
     }
 
     //conditional statements for context checking
@@ -344,6 +359,9 @@ public class RehabProgram : NetworkBehaviour
             else if (gameObjectName == "BreakTime")
             {
                 FieldNameReferencePair.Add("BreakTime", tmp);
+            } else if(gameObjectName == "Accuracy")
+            {
+                FieldNameReferencePair.Add("Accuracy", tmp);
             }
         }
 
@@ -363,6 +381,15 @@ public class RehabProgram : NetworkBehaviour
 
         FieldNameReferencePair.TryGetValue("BreakTime", out tmp);
         tmp.text = current.breakTimeLeft.ToString();
+    }
+
+
+    public void UpdateAccuracyUI(FixedString512Bytes oldValue, FixedString512Bytes newValue)
+    {
+        if(FieldNameReferencePair.TryGetValue("Accuracy", out var tmp))
+        {
+            tmp.text = newValue.ToString();
+        }
     }
 
     public ExerciseConfiguration[] GetExerciseConfigurations()

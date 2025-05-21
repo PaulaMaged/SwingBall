@@ -19,4 +19,9 @@ public class ObservableFloat
 
         }
     }
+    
+    public ObservableFloat(float value)
+    {
+        _value = value;
+    }
 }

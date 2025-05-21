@@ -44,8 +44,9 @@ namespace com.rfilkov.components
 
         // whether the pose is matched or not
         private bool bPoseMatched = false;
+
         // match percent (between 0 and 1)
-        private float fMatchPercent = 0f;
+        public ObservableFloat fMatchPercent = new(0.0f);
 
         // initial rotation
         private Quaternion initialAvatarRotation = Quaternion.identity;
@@ -55,7 +56,7 @@ namespace com.rfilkov.components
         private AvatarController _avatarController = null;
 
         // uncomment to get debug info
-        private StringBuilder sbDebug = new StringBuilder();
+        private StringBuilder sbDebug;
 
         // data for each saved pose
         private class PoseModelData
@@ -94,13 +95,11 @@ namespace com.rfilkov.components
         /// <returns>The match percent (value between 0 and 1).</returns>
         public float GetMatchPercent()
         {
-            return fMatchPercent;
+            return fMatchPercent.Value;
         }
 
-        public void Init(PoseModelHelper referenceModel, PoseModelHelper avatarModel, TextMeshProUGUI text = null)
+        public void Init(PoseModelHelper referenceModel, PoseModelHelper avatarModel, StringBuilder sbDebug = null)
         {
-            if (text != null) infoText = text;
-
             ReferenceModel = referenceModel;
             AvatarModel = avatarModel;
 
@@ -108,6 +107,8 @@ namespace com.rfilkov.components
             {
                 _avatarController = avatarController;
             }
+
+            this.sbDebug = sbDebug;
         }
 
         private void Awake()
@@ -136,16 +137,19 @@ namespace com.rfilkov.components
 
                 if (infoText != null)
                 {
-                    string sPoseMessage = string.Format("Pose match: {0:F0}% {1}", fMatchPercent * 100, (fMatchPercent >= matchThreshold ? "- Matched" : ""));
+                    string sPoseMessage = string.Format("Pose match: {0:F0}% {1}", fMatchPercent.Value * 100, (fMatchPercent.Value >= matchThreshold ? "- Matched" : ""));
                     if (sbDebug != null)
-                        sPoseMessage += sbDebug.ToString();
+                    {
+                        sbDebug.Clear();
+                        sbDebug.AppendLine(sPoseMessage);
+                    }
                     infoText.text = sPoseMessage;
                 }
             }
             else
             {
                 // no user found
-                fMatchPercent = 0f;
+                fMatchPercent.Value = 0f;
                 bPoseMatched = false;
 
                 if (infoText != null)
@@ -350,11 +354,11 @@ namespace com.rfilkov.components
             if (poseJoints.Count == 0)
                 return;
 
-            if (sbDebug != null)
-            {
-                sbDebug.Clear();
-                sbDebug.AppendLine();
-            }
+            //if (sbDebug != null)
+            //{
+            //    sbDebug.Clear();
+            //    sbDebug.AppendLine();
+            //}
 
             float totalWeighedMatch = 0f;
 
@@ -386,16 +390,16 @@ namespace com.rfilkov.components
                 float weighedMatch = (1 - (fDiff / maxAngle)) * jointWeight;
                 totalWeighedMatch += weighedMatch;
 
-                if (sbDebug != null)
-                {
-                    sbDebug.AppendFormat("{0} - angle diff: {1:F0}, Max Angle: {4}, match: {2:F0}%, total Effect: {3:F2}", poseJoints[i], fDiff, (1f - fDiff / maxAngle) * 100f, weighedMatch, maxAngle);
-                    sbDebug.AppendLine();
-                }
+                //if (sbDebug != null)
+                //{
+                //    sbDebug.AppendFormat("{0} - angle diff: {1:F0}, Max Angle: {4}, match: {2:F0}%, total Effect: {3:F2}", poseJoints[i], fDiff, (1f - fDiff / maxAngle) * 100f, weighedMatch, maxAngle);
+                //    sbDebug.AppendLine();
+                //}
             }
 
-            float matchChange = totalWeighedMatch - fMatchPercent;
-            fMatchPercent = AccuracySettleTimeSeconds == 0 ? totalWeighedMatch : fMatchPercent + matchChange * Time.deltaTime * AccuracySettleTimeSeconds;
-            bPoseMatched = fMatchPercent >= matchThreshold;
+            float matchChange = totalWeighedMatch - fMatchPercent.Value;
+            fMatchPercent.Value = AccuracySettleTimeSeconds == 0 ? totalWeighedMatch : fMatchPercent.Value + matchChange * Time.deltaTime * AccuracySettleTimeSeconds;
+            bPoseMatched = fMatchPercent.Value >= matchThreshold;
         }
 
     }
