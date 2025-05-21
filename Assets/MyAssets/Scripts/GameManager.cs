@@ -13,7 +13,7 @@ public class GameManager : NetworkBehaviour
 {
     public static GameManager Instance { get; private set; }
 
-    public static bool DEBUGGING = true;
+    public static bool DEBUGGING = false;
     public bool GameStarted { get; private set; } = false;
 
     [SerializeField] private GameObject ExerciseProgram;
